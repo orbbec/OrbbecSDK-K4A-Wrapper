@@ -66,15 +66,17 @@ target_link_libraries(k4a PRIVATE
 get_target_property(OrbbecSDK_DLL OrbbecSDK::OrbbecSDK IMPORTED_LOCATION)
 get_target_property(K4A_OUTPUT_DIR k4a RUNTIME_OUTPUT_DIRECTORY)
 
-execute_process(COMMAND ${CMAKE_COMMAND} -E copy ${OrbbecSDK_DLL} ${K4A_OUTPUT_DIR})
+file(MAKE_DIRECTORY ${K4A_OUTPUT_DIR}/)
+file(MAKE_DIRECTORY ${K4A_OUTPUT_DIR}/${CMAKE_BUILD_TYPE}/)
+execute_process(COMMAND ${CMAKE_COMMAND} -E copy ${OrbbecSDK_DLL} ${K4A_OUTPUT_DIR}/${CMAKE_BUILD_TYPE}/)
 
 if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
     if(CMAKE_SIZEOF_VOID_P EQUAL 8)
-        set(DEPTHENGINE20_DLL ${CMAKE_CURRENT_LIST_DIR}/k4adepthengine/win_x64/depthengine_2_0.dll)
+        set(DEPTHENGINE_2_0_DLL ${CMAKE_CURRENT_LIST_DIR}/OrbbecSDK/lib/win_x64/depthengine_2_0.dll)
     endif()
 endif()
 
-execute_process(COMMAND ${CMAKE_COMMAND} -E copy ${DEPTHENGINE20_DLL} ${K4A_OUTPUT_DIR})
+execute_process(COMMAND ${CMAKE_COMMAND} -E copy ${DEPTHENGINE_2_0_DLL} ${K4A_OUTPUT_DIR}/${CMAKE_BUILD_TYPE}/)
 
 # Define alias for k4a
 add_library(k4a::k4a ALIAS k4a)
@@ -168,8 +170,6 @@ install(
     COMPONENT
         development
 )
-
-set(OrbbecSDK_INSTALL "")
 
 if(CMAKE_SYSTEM_PROCESSOR MATCHES "arm")
     if(CMAKE_SIZEOF_VOID_P EQUAL 4)
