@@ -445,7 +445,7 @@ public:
 
     /** Sets capture to a shallow copy of the other image
      */
-    //TODO:
+    // TODO:
     capture &operator=(const capture &other) noexcept
     {
         if (this != &other)
@@ -1376,6 +1376,9 @@ public:
     /** Get the device jack status for the synchronization in connector
      * Throws error on failure.
      *
+     * \attention The Orbbec device does not support retrieving the jack connection status, so this function will always
+     * return false (disconnected).
+     *
      * \sa k4a_device_get_sync_jack
      */
     bool is_sync_in_connected() const
@@ -1392,6 +1395,9 @@ public:
 
     /** Get the device jack status for the synchronization out connector
      * Throws error on failure.
+     *
+     * \attention The Orbbec device does not support retrieving the jack connection status, so this function will
+     * always return false (disconnected).
      *
      * \sa k4a_device_get_sync_jack
      */

@@ -290,7 +290,7 @@ K4ADeviceDockControl::K4ADeviceDockControl(k4a::device &&device) : m_device(std:
     m_microphone = K4AAudioManager::Instance().GetMicrophoneForDevice(m_deviceSerialNumber);
 
     LoadColorSettingsCache();
-    // RefreshSyncCableStatus();
+    RefreshSyncCableStatus();
 }
 
 K4ADeviceDockControl::~K4ADeviceDockControl()
@@ -762,8 +762,7 @@ K4ADockControlStatus K4ADeviceDockControl::Show()
     }
     if (ImGui::TreeNode("External Sync"))
     {
-        /*
-        //TODO: Mega 获取不到连接状态
+
         ImGui::Text("Sync cable state");
         ImGuiExtensions::K4ARadioButton("In", m_syncInConnected, false);
         ImGui::SameLine();
@@ -773,7 +772,6 @@ K4ADockControlStatus K4ADeviceDockControl::Show()
         {
             RefreshSyncCableStatus();
         }
-        */
 
         const char *syncModesSupportedTooltip = "Requires at least one camera and a connected sync cable!";
         const bool syncModesSupported = //(m_syncInConnected || m_syncOutConnected) &&

@@ -5,15 +5,6 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
 add_subdirectory(frame_queue)
 add_subdirectory(imu_sync)
 
-option(USER_LOCAL_ORBBECSDK "Use local OrbbecSDK" OFF)
-if(USER_LOCAL_ORBBECSDK)
-    set(OrbbecSDK_DIR ${CMAKE_CURRENT_SOURCE_DIR}/OrbbecSDK_local)
-else()
-    set(OrbbecSDK_DIR ${CMAKE_CURRENT_SOURCE_DIR}/OrbbecSDK)
-endif()
-
-add_subdirectory(${OrbbecSDK_DIR})
-
 # Create K4A library
 add_library(k4a SHARED
             ob_k4a_impl.c
@@ -52,6 +43,17 @@ target_include_directories(k4a PUBLIC
     $<INSTALL_INTERFACE:include>
     )
 
+# Find OrbbecSDK
+option(USER_LOCAL_ORBBECSDK "Use local OrbbecSDK" OFF)
+if(USER_LOCAL_ORBBECSDK)
+    # custom path such as:
+    set(OrbbecSDK_DIR ${CMAKE_CURRENT_SOURCE_DIR}/OrbbecSDK_local)
+else()
+    # git submodule
+    set(OrbbecSDK_DIR ${CMAKE_CURRENT_SOURCE_DIR}/OrbbecSDK)
+endif()
+find_package(OrbbecSDK REQUIRED)
+
 # Link in libraries
 target_link_libraries(k4a PRIVATE
     k4ainternal::calibration
@@ -62,21 +64,6 @@ target_link_libraries(k4a PRIVATE
 	k4ainternal::imusync
     OrbbecSDK::OrbbecSDK
 	)
-
-get_target_property(OrbbecSDK_DLL OrbbecSDK::OrbbecSDK IMPORTED_LOCATION)
-get_target_property(K4A_OUTPUT_DIR k4a RUNTIME_OUTPUT_DIRECTORY)
-
-file(MAKE_DIRECTORY ${K4A_OUTPUT_DIR}/)
-file(MAKE_DIRECTORY ${K4A_OUTPUT_DIR}/${CMAKE_BUILD_TYPE}/)
-execute_process(COMMAND ${CMAKE_COMMAND} -E copy ${OrbbecSDK_DLL} ${K4A_OUTPUT_DIR}/${CMAKE_BUILD_TYPE}/)
-
-if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
-    if(CMAKE_SIZEOF_VOID_P EQUAL 8)
-        set(DEPTHENGINE_2_0_DLL ${CMAKE_CURRENT_LIST_DIR}/OrbbecSDK/lib/win_x64/depthengine_2_0.dll)
-    endif()
-endif()
-
-execute_process(COMMAND ${CMAKE_COMMAND} -E copy ${DEPTHENGINE_2_0_DLL} ${K4A_OUTPUT_DIR}/${CMAKE_BUILD_TYPE}/)
 
 # Define alias for k4a
 add_library(k4a::k4a ALIAS k4a)
@@ -98,6 +85,13 @@ if(${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.12.0")
 endif()
 
 add_subdirectory(docs)
+
+if(UNIX)
+    set(CMAKE_SKIP_BUILD_RPATH FALSE)
+    set(CMAKE_BUILD_WITH_INSTALL_RPATH FALSE)
+    set(CMAKE_INSTALL_RPATH "$ORIGIN:$ORIGIN/../lib")
+    set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
+endif()
 
 # Setup install
 include(GNUInstallDirs)
@@ -123,8 +117,6 @@ install(
         COMPONENT
             runtime
 )
-
-install(FILES ${OrbbecSDK_DLLS} DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT runtime)
 
 include(CMakePackageConfigHelpers)
 write_basic_package_version_file(
@@ -171,30 +163,18 @@ install(
         development
 )
 
-if(CMAKE_SYSTEM_PROCESSOR MATCHES "arm")
-    if(CMAKE_SIZEOF_VOID_P EQUAL 4)
-        set(OrbbecSDK_INSTALL "/OrbbecSDK/lib/arm32/libOrbbecSDK.so")
-    elseif(CMAKE_SIZEOF_VOID_P EQUAL 8)
-        set(OrbbecSDK_INSTALL "/OrbbecSDK/lib/arm64/libOrbbecSDK.so")
-    endif()
-elseif(CMAKE_SYSTEM_NAME MATCHES "Linux")
-    set(OrbbecSDK_INSTALL "/OrbbecSDK/lib/linux_x64/libOrbbecSDK.so")
-elseif(CMAKE_SYSTEM_NAME MATCHES "Windows")
-    if(CMAKE_SIZEOF_VOID_P EQUAL 4)
-        set(OrbbecSDK_INSTALL "/OrbbecSDK/lib/win_x86/OrbbecSDK.dll")
-    elseif(CMAKE_SIZEOF_VOID_P EQUAL 8)
-        set(OrbbecSDK_INSTALL "/OrbbecSDK/lib/win_x64/OrbbecSDK.dll")
-    endif()
-endif()
 
-install(
-    FILES
-    ${CMAKE_CURRENT_SOURCE_DIR}${OrbbecSDK_INSTALL}
-    DESTINATION
-        ${CMAKE_INSTALL_BINDIR}
-    COMPONENT
-        development
-)
+get_target_property(K4A_OUTPUT_DIR k4a RUNTIME_OUTPUT_DIRECTORY)
+
+# file(MAKE_DIRECTORY ${K4A_OUTPUT_DIR}/)
+# file(MAKE_DIRECTORY ${K4A_OUTPUT_DIR}/${CMAKE_BUILD_TYPE}/)
+file(COPY ${OrbbecSDK_DLL_FILES} DESTINATION ${K4A_OUTPUT_DIR}/${CMAKE_BUILD_TYPE}/)
+
+if(WIN32)
+    install(FILES ${OrbbecSDK_DLL_FILES} DESTINATION ${CMAKE_INSTALL_BINDIR})
+else()
+    install(FILES ${OrbbecSDK_DLL_FILES} DESTINATION ${CMAKE_INSTALL_LIBDIR})
+endif()
 
 if ("${CMAKE_SYSTEM_NAME}" STREQUAL "Windows")
     install(

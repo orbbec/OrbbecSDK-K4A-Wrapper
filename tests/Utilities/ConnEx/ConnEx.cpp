@@ -9,7 +9,7 @@
 #include <stdio.h>
 
 #include <k4ainternal/logging.h>
-
+#include <new>
 #define CONNEX_CMD_PORT "port"
 #define CONNEX_CMD_VOLTS "volts"
 #define CONNEX_CMD_AMPS "amps"
