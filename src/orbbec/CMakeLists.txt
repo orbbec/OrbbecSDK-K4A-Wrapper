@@ -156,7 +156,6 @@ install(
         development
 )
 
-
 get_target_property(K4A_OUTPUT_DIR k4a RUNTIME_OUTPUT_DIRECTORY)
 
 # file(MAKE_DIRECTORY ${K4A_OUTPUT_DIR}/)
@@ -171,6 +170,7 @@ else()
 endif()
 
 install(FILES ${OrbbecSDK_RUNTIME_RESOURCE_FILES} DESTINATION ${CMAKE_INSTALL_BINDIR})
+install(FILES ${OrbbecSDK_SCRIPT_FILES} DESTINATION ${CMAKE_INSTALL_PREFIX}/scripts)
 
 if ("${CMAKE_SYSTEM_NAME}" STREQUAL "Windows")
     install(
