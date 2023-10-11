@@ -42,3 +42,4 @@
 [submodule "src/orbbec/OrbbecSDK"]
 	path = src/orbbec/OrbbecSDK
 	url = https://github.com/orbbec/OrbbecSDK.git
+	branch = 1.8.x-dev

@@ -6,4 +6,7 @@ add_subdirectory(k4aviewer)
 add_subdirectory(k4afastcapture_streaming)
 add_subdirectory(k4afastcapture_trigger)
 add_subdirectory(k4arecorder)
-add_subdirectory(updater)
+
+if(NOT ${BUILD_OB_K4A_WRAPPER})
+    add_subdirectory(updater)
+endif()

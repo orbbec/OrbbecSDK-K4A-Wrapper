@@ -134,6 +134,12 @@ endif()
 # same folder.
 if ("${CMAKE_SYSTEM_NAME}" STREQUAL "Linux")
     set(CMAKE_BUILD_RPATH "\$ORIGIN")
+    if(${BUILD_OB_K4A_WRAPPER})
+        set(CMAKE_SKIP_BUILD_RPATH FALSE)
+        set(CMAKE_BUILD_WITH_INSTALL_RPATH FALSE)
+        set(CMAKE_INSTALL_RPATH "\$ORIGIN:\$ORIGIN/../lib")
+        set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
+    endif()
 endif()
 
 include(DetermineTargetArch)
