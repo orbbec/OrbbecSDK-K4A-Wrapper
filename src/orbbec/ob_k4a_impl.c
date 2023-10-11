@@ -21,6 +21,7 @@
 #include <k4ainternal/calibration.h>
 #include <k4ainternal/transformation.h>
 #include <k4ainternal/logging.h>
+#include <k4ainternal/transformation.h>
 
 #include <imusync.h>
 #include <frame_queue.h>
@@ -48,6 +49,11 @@ char K4A_ENV_VAR_LOG_TO_A_FILE[] = K4A_ENABLE_LOG_TO_A_FILE;
 #define ORBBEC_BOLT_PID 0x066B
 #define MAX_DELAY_TIME 33333
 #define MIN_DELAY_TIME -33333
+
+k4a_result_t k4a_device_get_calibration_from_json(k4a_device_t device_handle,
+                                                  const k4a_depth_mode_t depth_mode,
+                                                  const k4a_color_resolution_t color_resolution,
+                                                  k4a_calibration_t *calibration);
 
 typedef enum _ir_mode
 {
@@ -81,6 +87,7 @@ typedef struct _k4a_device_context_t
     ob_sensor *accel_sensor;
     ob_sensor *gyro_sensor;
     calibration_json_t *json;
+    k4a_transformation_t transformation;
 } k4a_device_context_t;
 
 K4A_DECLARE_CONTEXT(k4a_device_t, k4a_device_context_t);
@@ -1560,8 +1567,13 @@ static k4a_result_t validate_configuration(k4a_device_context_t *device, const k
 
 k4a_result_t k4a_device_start_cameras(k4a_device_t device_handle, const k4a_device_configuration_t *config)
 {
+
     RETURN_VALUE_IF_HANDLE_INVALID(K4A_RESULT_FAILED, k4a_device_t, device_handle);
     k4a_device_context_t *device = k4a_device_t_get_context(device_handle);
+
+    k4a_calibration_t calibration;
+    k4a_device_get_calibration_from_json(device_handle, config->depth_mode, config->color_resolution, &calibration);
+    device->transformation = k4a_transformation_create(&calibration);
 
     k4a_result_t result = K4A_RESULT_SUCCEEDED;
     if (device_handle == NULL || config == NULL || device == NULL || device->dev == NULL)
@@ -1959,6 +1971,10 @@ void k4a_device_stop_cameras(k4a_device_t device_handle)
     k4a_device_context_t *device = k4a_device_t_get_context(device_handle);
     if (device != NULL)
     {
+        if(device->transformation != NULL){
+            k4a_transformation_destroy(device->transformation);
+            device->transformation = NULL;
+        }
         ob_error *ob_err = NULL;
 
         if (device->pipe != NULL)
