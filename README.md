@@ -12,13 +12,6 @@ Welcome to the Orbbec SDK K4A Wrapper!
 
 **Wrapper** is contain the K4A wrapper for Orbbec SDK. It's mean that user can use this library to develop the application with K4A API, but use to access the Orbbec camera. Also user can use this library to replace native K4A library in your application to access the Orbbec camera without any code change.
 
-**Support camera and platform:**  
-
-Orbbec Femto Mega: Windows10+, Ubuntu20.04+;
-
-x64 Orbbec Femto Bolt: Windows10+, Ubuntu18.04+;
-
-x64 Other Orbbec cameras and platforms without test, don't use it in production environment.
 
 **What we did?**
 
@@ -29,7 +22,7 @@ The [k4a.h](./include/k4a/k4a.h) is the header file of K4A API, and the source c
 
 ## Why use the Orbbec SDK K4A Wrapper
 
-The Orbbec SDK K4A Wrapper enables you to get the most out of your orbbec camera. Features include:
+The Wrapper enables you to get the most out of your orbbec camera. Features include:
 
 * Depth camera access
 * RGB camera access and control (e.g. exposure and white balance)
@@ -40,7 +33,22 @@ The Orbbec SDK K4A Wrapper enables you to get the most out of your orbbec camera
 * Device calibration data access
 
 ## Installation
-TODO
+* Windows Device Setup
+
+On Windows, once attached, the device should automatically enumerate and load
+all drivers.
+
+* Linux Device Setup
+
+On Linux, once attached, the device should automatically enumerate and load
+all drivers. However, in order to use the Orbbec SDK K4A Wrapper with the device and without
+being 'root', you will need to setup udev rules. We have these rules checked
+into this repo under 'scripts/99-k4a.rules'. To do so:
+
+* Copy 'scripts/99-k4a.rules' into '/etc/udev/rules.d/'.
+* Detach and reattach Azure Kinect devices if attached during this process.
+
+Once complete, the orbbec camera is available without being 'root'.
 
 ## Documentation
 
@@ -128,7 +136,12 @@ Quick Instructions:
         ```
 
 ## Versioning
-TODO
+
+| **products list** | **firmware version** |**platform**|
+| --- | --- | --- |
+| Femto Bolt          | 1.1.7                     |Windows10+, Ubuntu20.04+ |
+| Femto Mega          | 1.0.6                     |Windows10+, Ubuntu18.04+ |
+
 
 ## Testing
 
@@ -139,7 +152,7 @@ TODO
 
 ## Feedback
 
-For Orbbec SDK K4A Wrapper feedback or to report a bug, please file a [GitHub Issue](https://github.com/orbbec/OrbbecSDK-K4A-Wrapper/issues). For general suggestions or ideas, visit our [feedback forum](https://developer.orbbec.com.cn/).
+For Orbbec SDK K4A Wrapper feedback or to report a bug, please file a [GitHub Issue](https://github.com/orbbec/OrbbecSDK-K4A-Wrapper/issues). For general suggestions or ideas, visit our [feedback forum](https://3dclub.orbbec3d.com/).
 
 ## Sample Code
 
@@ -153,13 +166,15 @@ There are several places where the sample code can be found.
 TODO
 
 ## Join Our Developer Program
-TODO
+Complete your developer profile [here](https://3dclub.orbbec3d.com/) to get connected with our Mixed Reality Developer Program. 
 
 ## Code of Conduct
 TODO
 
 ## Reporting Security Issues
-TODO
-
+Security issues and bugs should be reported privately, via email, to the
+administrators at <[it@orbbec.com](mailto:it@orbbec.com)>.
+You should receive a response within 24 hours. If for some reason you do not, please follow up via
+email to ensure we received your original message. 
 ## License Support for Orbbec SDK K4A Wrapper
 [MIT License](LICENSE)
