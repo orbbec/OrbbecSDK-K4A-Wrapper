@@ -194,7 +194,7 @@ Complete your developer profile [here](https://3dclub.orbbec3d.com/) to get conn
 
 ## Reporting Security Issues
 
-Security issues and bugs should be reported privately, via email, to the administrators at <[it@orbbec.com](mailto:it@orbbec.com)>. You should receive a response within 24 hours. If for some reason you do not, please follow up via email to ensure we received your original message. 
+Security issues and bugs should be reported privately, via email, to the administrators at <[it@orbbec.com](mailto:it@orbbec.com)>.
 
 ## License Support for Orbbec SDK K4A Wrapper
 
