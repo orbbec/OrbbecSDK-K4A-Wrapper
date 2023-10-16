@@ -148,8 +148,8 @@ API documentation is available [here](https://orbbec.github.io/docs/OrbbecSDK_K4
 
 | **products list** | **firmware version** |**platform**|
 | --- | --- | --- |
-| Orbbec Femto Bolt  | 1.0.6  |Windows10+, Ubuntu20.04+ |
-| Orbbec Femto Mega  | 1.1.7  |Windows10+, Ubuntu18.04+ |
+| Orbbec Femto Bolt  | 1.0.6  |Windows10+, Ubuntu18.04+ |
+| Orbbec Femto Mega  | 1.1.7  |Windows10+, Ubuntu20.04+ |
 
 
 ## Testing
