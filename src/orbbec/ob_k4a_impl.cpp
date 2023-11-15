@@ -163,6 +163,12 @@ K4A_DECLARE_CONTEXT(k4a_device_t, k4a_device_context_t);
     case fps:                                                                                                          \
         return #fps
 
+<<<<<<< HEAD
+=======
+void k4a_context_pre_initialize(void){
+    get_depthengine_context_instance();
+}
+>>>>>>> 7aa4bcf ([feat] : pre initialize depthengine)
 
 uint32_t k4a_device_get_installed_count(void)
 {
@@ -1800,10 +1806,6 @@ k4a_result_t k4a_device_start_cameras(k4a_device_t device_handle, const k4a_devi
     CHECK_AND_TRY_INIT_DEVICE_CONTEXT(K4A_RESULT_FAILED, device_handle);
     k4a_device_context_t *device_ctx = k4a_device_t_get_context(device_handle);
 
-    k4a_calibration_t calibration;
-    k4a_device_get_calibration_from_json(device_handle, config->depth_mode, config->color_resolution, &calibration);
-    device_ctx->transformation = k4a_transformation_create(&calibration);
-
     k4a_result_t result = K4A_RESULT_SUCCEEDED;
     if (config == NULL)
     {
@@ -2235,16 +2237,12 @@ k4a_result_t k4a_device_start_cameras(k4a_device_t device_handle, const k4a_devi
 
 void k4a_device_stop_cameras(k4a_device_t device_handle)
 {
+    LOG_ERROR("stop1", 0);
     RETURN_VALUE_IF_HANDLE_INVALID(VOID_VALUE, k4a_device_t, device_handle);
     CHECK_AND_TRY_INIT_DEVICE_CONTEXT(VOID_VALUE, device_handle);
     k4a_device_context_t *device_ctx = k4a_device_t_get_context(device_handle);
     if (device_ctx != NULL)
     {
-        if (device_ctx->transformation != NULL)
-        {
-            k4a_transformation_destroy(device_ctx->transformation);
-            device_ctx->transformation = NULL;
-        }
         ob_error *ob_err = NULL;
 
         if (device_ctx->pipe != NULL)
@@ -2260,6 +2258,8 @@ void k4a_device_stop_cameras(k4a_device_t device_handle)
         frame_queue_disable(device_ctx->frameset_queue);
     }
     device_ctx->is_streaming = false;
+    LOG_ERROR("stop2", 0);
+
 }
 
 k4a_buffer_result_t k4a_device_get_serialnum(k4a_device_t device_handle,

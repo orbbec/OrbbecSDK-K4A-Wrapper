@@ -963,9 +963,6 @@ K4ADockControlStatus K4ADeviceDockControl::Show()
 
 void K4ADeviceDockControl::Start()
 {
-    GLFWwindow *currentContext = glfwGetCurrentContext();
-    glfwMakeContextCurrent(NULL);
-
     const bool enableCameras = m_config.EnableColorCamera || m_config.EnableDepthCamera;
     if (enableCameras)
     {
@@ -977,13 +974,12 @@ void K4ADeviceDockControl::Start()
         }
     }
 
-    glfwMakeContextCurrent(currentContext);
 
     // don't support
-    // if (m_config.EnableMicrophone)
-    //{
-    //     StartMicrophone();
-    // }
+    if (m_config.EnableMicrophone)
+    {
+        StartMicrophone();
+    }
 
     SetViewType(K4AWindowSet::ViewType::Normal);
     m_paused = false;
