@@ -56,6 +56,23 @@ void orbbec_sdk_log(ob_log_severity severity, const char *message, void *user_da
 }
 
 
+#ifdef CACHE_OB_CONTEXT
+std::shared_ptr<depthengine_context> depthengine_instance = nullptr;
+#else
+std::weak_ptr<depthengine_context> depthengine_instance;
+#endif
+
+std::mutex depthengine_instance_mutex;
+std::shared_ptr<depthengine_context> depthengine_instance_create()
+{
+    std::lock_guard<std::mutex> lock(depthengine_instance_mutex);
+    if (depthengine_instance == nullptr)
+    {
+        depthengine_instance =  std::make_shared<depthengine_context>();
+    }
+    return depthengine_instance;
+}
+
 std::mutex ob_ctx_mtx;
 #ifdef CACHE_OB_CONTEXT
 std::shared_ptr<ob_context_handler> ob_context_handler_instance = nullptr;
@@ -65,7 +82,7 @@ std::weak_ptr<ob_context_handler> ob_context_handler_instance;
 
 std::shared_ptr<ob_context_handler> get_ob_context_handler_instance(){
     std::lock_guard<std::mutex> lock(ob_ctx_mtx);
-    
+
     #ifdef CACHE_OB_CONTEXT
     auto handler = ob_context_handler_instance;
     #else

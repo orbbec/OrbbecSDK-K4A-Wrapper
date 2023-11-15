@@ -245,7 +245,7 @@ void deloader_transform_engine_destroy(k4a_transform_engine_context_t **context)
 {
     deloader_global_context_t *global = deloader_global_context_t_get();
 
-    if (!is_plugin_loaded(global))
+    if (!global->handle || !is_plugin_loaded(global))
     {
         return;
     }
@@ -260,5 +260,6 @@ void deloader_deinit(void)
     if (global->handle)
     {
         dynlib_destroy(global->handle);
+        global->handle = NULL;
     }
 }

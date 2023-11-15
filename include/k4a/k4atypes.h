@@ -65,6 +65,34 @@ extern "C" {
  */
 K4A_DECLARE_HANDLE(k4a_device_t);
 
+/**
+ * \defgroup csdk C Reference
+ *
+ */
+/**
+ * \defgroup Handles Handles
+ * \ingroup csdk
+ * Handles represent object instances.
+ *
+ * Handles are opaque pointers returned by the SDK which represent an object.
+ *
+ * @{
+ */
+
+/** \class k4a_depthengine_t k4a.h <k4a/k4a.h>
+ * Handle to an depthengine instance.
+ *
+ * \remarks
+ * Handles are created with k4a_depth_engine_helper_create(k4a_depthengine_t* handle) and closed with k4a_depth_engine_helper_release(). Invalid handles are set to 0.
+ *
+ * \xmlonly
+ * <requirements>
+ *   <requirement name="Header">k4atypes.h (include k4a/k4a.h)</requirement>
+ * </requirements>
+ * \endxmlonly
+ */
+K4A_DECLARE_HANDLE(k4a_depthengine_t);
+
 /** \class k4a_capture_t k4a.h <k4a/k4a.h>
  * Handle to an Azure Kinect capture.
  *
