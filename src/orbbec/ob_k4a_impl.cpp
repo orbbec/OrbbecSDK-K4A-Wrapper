@@ -147,6 +147,12 @@ typedef struct _k4a_device_context_t
 
 K4A_DECLARE_CONTEXT(k4a_device_t, k4a_device_context_t);
 
+typedef struct _k4a_depthengine_instance_helper_t
+{
+    std::shared_ptr<depthengine_context> depthengine_instance_helper;
+} k4a_depthengine_instance_helper_t;
+K4A_DECLARE_CONTEXT(k4a_depthengine_t, k4a_depthengine_instance_helper_t);
+
 #define DEPTH_CAPTURE (false)
 #define COLOR_CAPTURE (true)
 #define TRANSFORM_ENABLE_GPU_OPTIMIZATION (true)
@@ -163,6 +169,28 @@ K4A_DECLARE_CONTEXT(k4a_device_t, k4a_device_context_t);
     case fps:                                                                                                          \
         return #fps
 
+k4a_result_t k4a_depth_engine_helper_create(k4a_depthengine_t* handle){
+    RETURN_VALUE_IF_ARG(K4A_RESULT_FAILED, handle == NULL);
+    auto ob_depth_engine_handler = depthengine_instance_create();
+    k4a_depthengine_t depthengine_handle = NULL;
+    k4a_depthengine_instance_helper_t *depthengine_ctx = k4a_depthengine_t_create(&depthengine_handle);
+    depthengine_ctx->depthengine_instance_helper = ob_depth_engine_handler;
+
+    k4a_result_t result = K4A_RESULT_FROM_BOOL(depthengine_ctx != NULL);
+    if (K4A_FAILED(result))
+    {
+        k4a_depthengine_t_destroy(depthengine_handle);
+        depthengine_handle = NULL;
+        return result;
+    }
+    *handle = depthengine_handle;
+    return result;
+}
+void k4a_depth_engine_helper_release(k4a_depthengine_t handle){
+    k4a_depthengine_instance_helper_t *depthengine_ctx = k4a_depthengine_t_get_context(handle);
+    depthengine_ctx->depthengine_instance_helper.reset();
+    k4a_depthengine_t_destroy(handle);
+}
 
 uint32_t k4a_device_get_installed_count(void)
 {
@@ -362,7 +390,7 @@ k4a_result_t update_imu_raw_calibration_data_from_orbbec_sdk(k4a_device_context_
     begin = calibration_json_str.find("\"Rt\": {\"Rotation\": [", offset);
     end = calibration_json_str.find("]},", begin) +3;
 
-   k4a_calibration_extrinsics_t *depth_to_accel_extrinsics  = (k4a_calibration_extrinsics_t*)&calibration_param.extrinsics[OB_SENSOR_DEPTH][OB_SENSOR_ACCEL];
+    k4a_calibration_extrinsics_t *depth_to_accel_extrinsics  = (k4a_calibration_extrinsics_t*)&calibration_param.extrinsics[OB_SENSOR_DEPTH][OB_SENSOR_ACCEL];
     std::stringstream ss2;
     ss2 << "\"Rt\": {\"Rotation\": [" << depth_to_accel_extrinsics->rotation[0] << ","
         << depth_to_accel_extrinsics->rotation[1] << ","<< depth_to_accel_extrinsics->rotation[2] << ","
@@ -1800,10 +1828,6 @@ k4a_result_t k4a_device_start_cameras(k4a_device_t device_handle, const k4a_devi
     CHECK_AND_TRY_INIT_DEVICE_CONTEXT(K4A_RESULT_FAILED, device_handle);
     k4a_device_context_t *device_ctx = k4a_device_t_get_context(device_handle);
 
-    k4a_calibration_t calibration;
-    k4a_device_get_calibration_from_json(device_handle, config->depth_mode, config->color_resolution, &calibration);
-    device_ctx->transformation = k4a_transformation_create(&calibration);
-
     k4a_result_t result = K4A_RESULT_SUCCEEDED;
     if (config == NULL)
     {
@@ -2235,16 +2259,12 @@ k4a_result_t k4a_device_start_cameras(k4a_device_t device_handle, const k4a_devi
 
 void k4a_device_stop_cameras(k4a_device_t device_handle)
 {
+    LOG_ERROR("stop1", 0);
     RETURN_VALUE_IF_HANDLE_INVALID(VOID_VALUE, k4a_device_t, device_handle);
     CHECK_AND_TRY_INIT_DEVICE_CONTEXT(VOID_VALUE, device_handle);
     k4a_device_context_t *device_ctx = k4a_device_t_get_context(device_handle);
     if (device_ctx != NULL)
     {
-        if (device_ctx->transformation != NULL)
-        {
-            k4a_transformation_destroy(device_ctx->transformation);
-            device_ctx->transformation = NULL;
-        }
         ob_error *ob_err = NULL;
 
         if (device_ctx->pipe != NULL)
@@ -2259,7 +2279,8 @@ void k4a_device_stop_cameras(k4a_device_t device_handle)
 
         frame_queue_disable(device_ctx->frameset_queue);
     }
-    device_ctx->is_streaming = false;
+    LOG_ERROR("stop2", 0);
+
 }
 
 k4a_buffer_result_t k4a_device_get_serialnum(k4a_device_t device_handle,
