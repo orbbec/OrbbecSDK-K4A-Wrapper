@@ -39,6 +39,8 @@ K4AViewerArgs ProcessArgs(int argc, char **argv)
 
 int main(int argc, char **argv)
 {
+    // add this to avoid failure during depth engine init when multi opengl context using on user app and inside SDK!
+    k4a::context::pre_initialize();
     k4aviewer::K4AViewer viewer(ProcessArgs(argc, argv));
     viewer.Run();
     return 0;

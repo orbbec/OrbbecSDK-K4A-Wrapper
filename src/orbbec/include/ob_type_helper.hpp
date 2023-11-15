@@ -47,6 +47,7 @@ k4a_result_t check_ob_error(ob_error *error);
 
 ob_context *get_ob_context_instance();
 
+<<<<<<< HEAD:src/orbbec/include/ob_type_helper.hpp
 void on_device_changed_callback(ob_device_list *removed, ob_device_list *added, void *user_data);
 struct ob_context_handler
 {
@@ -84,3 +85,10 @@ struct ob_context_handler
     std::vector<std::string> device_uid_list;
 };
 std::shared_ptr<ob_context_handler> get_ob_context_handler_instance();
+=======
+void get_depthengine_context_instance();
+
+#ifdef __cplusplus
+}
+#endif
+>>>>>>> c92d4fd ([feat] : pre initialize depthengine):src/orbbec/include/ob_type_helper.h

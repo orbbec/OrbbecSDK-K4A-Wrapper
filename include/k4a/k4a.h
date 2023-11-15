@@ -24,6 +24,8 @@ extern "C" {
 #define WRAPPER_VERSION_MINOR 8
 #define WRAPPER_VERSION_PATCH 1
 
+
+
 /**
  * \defgroup Functions Functions
  * \ingroup csdk
@@ -32,6 +34,22 @@ extern "C" {
  *
  * @{
  */
+
+/** Pre initialize context
+ *
+ * \relates k4a_transformation_t
+ * 
+ * \remarks This API is currently mainly used to initialize depthengine, This function only needs to be called when on the Linux platform
+ *
+ * \xmlonly
+ * <requirements>
+ *   <requirement name="Header">k4a.h (include k4a/k4a.h)</requirement>
+ *   <requirement name="Library">k4a.lib</requirement>
+ *   <requirement name="DLL">k4a.dll</requirement>
+ * </requirements>
+ * \endxmlonly
+*/
+K4A_EXPORT void k4a_context_pre_initialize();
 
 /** Gets the number of connected devices
  *
