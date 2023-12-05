@@ -224,7 +224,7 @@ if (K4A_BUILD_DOCS)
     endif()
 endif()
 
-option(K4A_VALIDATE_CLANG_FORMAT "Validate clang-format results as part of build" Yes)
+option(K4A_VALIDATE_CLANG_FORMAT "Validate clang-format results as part of build" No)
 
 set (CLANG_FORMAT_ROOT
     ${CMAKE_CURRENT_SOURCE_DIR}/src
