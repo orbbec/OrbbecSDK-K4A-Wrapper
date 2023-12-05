@@ -611,6 +611,7 @@ typedef enum
      *
      * \details
      * May only be set to ::K4A_COLOR_CONTROL_MODE_MANUAL.
+     * Must stop color camera before setting HDR mode.
      *
      * \details
      * Value of 0 means HDR is disabled. Value of 1 means HDR is enabled.
