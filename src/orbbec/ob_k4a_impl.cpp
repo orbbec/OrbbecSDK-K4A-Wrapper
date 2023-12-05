@@ -2616,6 +2616,21 @@ k4a_result_t k4a_device_get_color_control_capabilities(k4a_device_t device_handl
         }
     }
     break;
+    case K4A_COLOR_CONTROL_HDR:{
+        ob_bool_property_range colorParamRange = ob_device_get_bool_property_range(obDevice,
+                                                                                 OB_PROP_COLOR_HDR_BOOL,
+                                                                                 &ob_err);
+        CHECK_OB_ERROR_RETURN_K4A_RESULT(ob_err);
+
+        *supports_auto = false;
+        *min_value = colorParamRange.min;
+        *max_value = colorParamRange.max;
+        *step_value = colorParamRange.step;
+        *default_value = colorParamRange.def;
+        *default_mode = K4A_COLOR_CONTROL_MODE_MANUAL;
+        result = K4A_RESULT_SUCCEEDED;
+    }
+    break;
     default:
         LOG_WARNING("unsupport control command ", 0);
         break;
@@ -2737,6 +2752,19 @@ k4a_result_t k4a_device_get_color_control(k4a_device_t device_handle,
         int32_t obValue = ob_device_get_int_property(obDevice, OB_PROP_COLOR_AUTO_EXPOSURE_PRIORITY_INT, &ob_err);
         CHECK_OB_ERROR_RETURN_K4A_RESULT(ob_err);
         *value = obValue;
+    }
+    break;
+    case K4A_COLOR_CONTROL_HDR:{
+        bool supported = ob_device_is_property_supported(obDevice,
+                                                         OB_PROP_COLOR_HDR_BOOL,
+                                                         OB_PERMISSION_READ,
+                                                         &ob_err);
+        CHECK_OB_ERROR_RETURN_K4A_RESULT(ob_err);
+        if(supported){
+            bool obValue = ob_device_get_bool_property(obDevice, OB_PROP_COLOR_HDR_BOOL, &ob_err);
+            CHECK_OB_ERROR_RETURN_K4A_RESULT(ob_err);
+            *value = obValue;
+        }
     }
     break;
     default:
@@ -3036,6 +3064,18 @@ k4a_result_t k4a_device_set_color_control(k4a_device_t device_handle,
         {
             LOG_WARNING("k4a color control set powerline frequency failed [get powerline frequency range failed]", 0);
             result = K4A_RESULT_FAILED;
+        }
+    }
+    break;
+    case K4A_COLOR_CONTROL_HDR:{
+        bool supported = ob_device_is_property_supported(obDevice,
+                                                         OB_PROP_COLOR_HDR_BOOL,
+                                                         OB_PERMISSION_READ,
+                                                         &ob_err);
+        CHECK_OB_ERROR_RETURN_K4A_RESULT(ob_err);
+        if(supported){
+            ob_device_set_bool_property(obDevice, OB_PROP_COLOR_HDR_BOOL, value, &ob_err);
+            CHECK_OB_ERROR_RETURN_K4A_RESULT(ob_err);
         }
     }
     break;

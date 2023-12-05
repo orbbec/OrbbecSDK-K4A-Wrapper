@@ -198,11 +198,6 @@ void K4ADeviceDockControl::ApplyColorSetting(k4a_color_control_command_t command
 
 void K4ADeviceDockControl::ApplyDefaultColorSettings()
 {
-    // The color settings get persisted in the camera's firmware, so there isn't a way
-    // to know if the setting's value at the time we started K4AViewer is the default.
-    // However, the default settings are the same for all devices, so we just hardcode
-    // them here.
-    //
     m_colorSettingsCache.ExposureTimeUs = { K4A_COLOR_CONTROL_MODE_AUTO, 20000 };
     ApplyColorSetting(K4A_COLOR_CONTROL_EXPOSURE_TIME_ABSOLUTE, &m_colorSettingsCache.ExposureTimeUs);
 
@@ -229,6 +224,9 @@ void K4ADeviceDockControl::ApplyDefaultColorSettings()
 
     m_colorSettingsCache.PowerlineFrequency = { K4A_COLOR_CONTROL_MODE_MANUAL, 2 };
     ApplyColorSetting(K4A_COLOR_CONTROL_POWERLINE_FREQUENCY, &m_colorSettingsCache.PowerlineFrequency);
+
+    m_colorSettingsCache.HDR = { K4A_COLOR_CONTROL_MODE_MANUAL, 0};
+    ApplyColorSetting(K4A_COLOR_CONTROL_HDR, &m_colorSettingsCache.HDR);
 }
 
 // 获取RGB参数
@@ -260,6 +258,7 @@ void K4ADeviceDockControl::LoadColorSettingsCache()
     ReadColorSetting(K4A_COLOR_CONTROL_BACKLIGHT_COMPENSATION, &m_colorSettingsCache.BacklightCompensation);
     ReadColorSetting(K4A_COLOR_CONTROL_GAIN, &m_colorSettingsCache.Gain);
     ReadColorSetting(K4A_COLOR_CONTROL_POWERLINE_FREQUENCY, &m_colorSettingsCache.PowerlineFrequency);
+    ReadColorSetting(K4A_COLOR_CONTROL_HDR, &m_colorSettingsCache.HDR);
 }
 
 void K4ADeviceDockControl::RefreshSyncCableStatus()
@@ -610,6 +609,17 @@ K4ADockControlStatus K4ADeviceDockControl::Show()
                 updated |= ImGui::RadioButton("50Hz", &cacheEntry->Value, 1);
                 ImGui::SameLine();
                 updated |= ImGui::RadioButton("60Hz", &cacheEntry->Value, 2);
+                return updated ? ColorControlAction::SetManual : ColorControlAction::None;
+         });
+
+        ShowColorControl(K4A_COLOR_CONTROL_HDR, &m_colorSettingsCache.HDR,
+            [](ColorSetting *cacheEntry) {
+                ImGui::Text("HDR");
+                ImGui::SameLine();
+                bool updated = false;
+                updated |= ImGui::RadioButton("Enable", &cacheEntry->Value, 0);
+                ImGui::SameLine();
+                updated |= ImGui::RadioButton("Disable", &cacheEntry->Value, 1);
                 return updated ? ColorControlAction::SetManual : ColorControlAction::None;
          });
 
