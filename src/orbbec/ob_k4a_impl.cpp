@@ -2563,7 +2563,7 @@ k4a_result_t k4a_device_get_color_control(k4a_device_t device_handle,
     ob_device *obDevice = device_ctx->device;
     ob_error *ob_err = NULL;
 
-    if (command < K4A_COLOR_CONTROL_EXPOSURE_TIME_ABSOLUTE || command > K4A_COLOR_CONTROL_POWERLINE_FREQUENCY)
+    if (command < K4A_COLOR_CONTROL_EXPOSURE_TIME_ABSOLUTE || command > K4A_COLOR_CONTROL_HDR)
     {
         LOG_WARNING("command out of range ", 0);
 
@@ -2704,7 +2704,7 @@ k4a_result_t k4a_device_set_color_control(k4a_device_t device_handle,
 
     ob_error *ob_err = NULL;
 
-    if (command < K4A_COLOR_CONTROL_EXPOSURE_TIME_ABSOLUTE || command > K4A_COLOR_CONTROL_POWERLINE_FREQUENCY)
+    if (command < K4A_COLOR_CONTROL_EXPOSURE_TIME_ABSOLUTE || command > K4A_COLOR_CONTROL_HDR)
     {
         LOG_WARNING("command out of range ", 0);
         return K4A_RESULT_FAILED;

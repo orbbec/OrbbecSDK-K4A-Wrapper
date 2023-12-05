@@ -246,7 +246,7 @@ void K4ADeviceDockControl::LoadColorSettingsCache()
 {
     // If more color controls are added, they need to be initialized here
     //
-    static_assert(sizeof(m_colorSettingsCache) == sizeof(ColorSetting) * 9,
+    static_assert(sizeof(m_colorSettingsCache) == sizeof(ColorSetting) * 10,
                   "Missing color setting in LoadColorSettingsCache()");
 
     ReadColorSetting(K4A_COLOR_CONTROL_EXPOSURE_TIME_ABSOLUTE, &m_colorSettingsCache.ExposureTimeUs);
@@ -617,9 +617,9 @@ K4ADockControlStatus K4ADeviceDockControl::Show()
                 ImGui::Text("HDR");
                 ImGui::SameLine();
                 bool updated = false;
-                updated |= ImGui::RadioButton("Enable", &cacheEntry->Value, 0);
+                updated |= ImGui::RadioButton("Disable", &cacheEntry->Value, 0);
                 ImGui::SameLine();
-                updated |= ImGui::RadioButton("Disable", &cacheEntry->Value, 1);
+                updated |= ImGui::RadioButton("Enable", &cacheEntry->Value, 1);
                 return updated ? ColorControlAction::SetManual : ColorControlAction::None;
          });
 
