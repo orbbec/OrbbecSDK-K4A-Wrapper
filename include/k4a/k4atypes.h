@@ -605,7 +605,17 @@ typedef enum
      * \details
      * Value of 1 sets the powerline compensation to 50 Hz. Value of 2 sets the powerline compensation to 60 Hz.
      */
-    K4A_COLOR_CONTROL_POWERLINE_FREQUENCY
+    K4A_COLOR_CONTROL_POWERLINE_FREQUENCY,
+
+    /** HDR setting.
+     *
+     * \details
+     * May only be set to ::K4A_COLOR_CONTROL_MODE_MANUAL.
+     *
+     * \details
+     * Value of 0 means HDR is disabled. Value of 1 means HDR is enabled.
+     */
+    K4A_COLOR_CONTROL_HDR,
 } k4a_color_control_command_t;
 
 /** Color sensor control mode

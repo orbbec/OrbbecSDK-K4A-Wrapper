@@ -54,6 +54,7 @@ private:
         ColorSetting BacklightCompensation;
         ColorSetting Gain;
         ColorSetting PowerlineFrequency;
+        ColorSetting HDR;
     } m_colorSettingsCache;
 
     // What type of change to the color control, if any, should be taken based on user input to a widget
