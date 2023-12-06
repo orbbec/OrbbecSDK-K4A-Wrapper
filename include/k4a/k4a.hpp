@@ -1319,6 +1319,21 @@ public:
         return serialnum;
     }
 
+    void get_color_control_capabilities(k4a_color_control_command_t command,
+                                        bool *supports_auto,
+                                        int32_t *min_value,
+                                        int32_t *max_value,
+                                        int32_t *step_value,
+                                        int32_t *default_value,
+                                        k4a_color_control_mode_t *default_mode) {
+
+        k4a_result_t result = k4a_device_get_color_control_capabilities(m_handle, command, supports_auto, min_value, max_value, step_value, default_value, default_mode);
+        if (K4A_RESULT_SUCCEEDED!= result)
+        {
+            throw error("Failed to read color control capabilities!");
+        }
+    }
+
     /** Get the K4A color sensor control value
      * Throws error on failure.
      *
