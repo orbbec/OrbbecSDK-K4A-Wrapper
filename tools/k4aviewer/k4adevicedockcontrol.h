@@ -39,8 +39,13 @@ public:
 private:
     struct ColorSetting
     {
+        bool Supported;
         k4a_color_control_mode_t Mode;
         int32_t Value;
+        int32_t MinValue;
+        int32_t MaxValue;
+        int32_t StepValue;
+        int32_t defaultValue;
     };
 
     struct
@@ -76,6 +81,8 @@ private:
     void ApplyDefaultColorSettings();
 
     void ReadColorSetting(k4a_color_control_command_t command, ColorSetting *cacheEntry);
+    void loadColorSetting(k4a_color_control_command_t command, ColorSetting *cacheEntry);
+
     void LoadColorSettingsCache();
 
     void Start();

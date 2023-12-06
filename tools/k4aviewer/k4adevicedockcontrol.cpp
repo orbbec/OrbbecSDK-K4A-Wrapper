@@ -138,6 +138,9 @@ void K4ADeviceDockControl::ShowColorControl(k4a_color_control_command_t command,
                                             ColorSetting *cacheEntry,
                                             const std::function<ColorControlAction(ColorSetting *)> &showControl)
 {
+    if(!cacheEntry->Supported){
+        return;
+    }
     const ColorControlAction action = showControl(cacheEntry);
     if (action == ColorControlAction::None)
     {
@@ -191,45 +194,76 @@ void K4ADeviceDockControl::ApplyColorSetting(k4a_color_control_command_t command
         ReadColorSetting(command, cacheEntry);
     }
     catch (const k4a::error &e)
-    {
-        K4AViewerErrorManager::Instance().SetErrorStatus(e.what());
+    {   
+        std::string msg = e.what();
+        if (command == K4A_COLOR_CONTROL_HDR)
+        {
+            msg = msg + "\nMust stop color camera before setting HDR!";
+        }
+        K4AViewerErrorManager::Instance().SetErrorStatus(msg);
     }
 }
 
 void K4ADeviceDockControl::ApplyDefaultColorSettings()
 {
-    m_colorSettingsCache.ExposureTimeUs = { K4A_COLOR_CONTROL_MODE_AUTO, 20000 };
-    ApplyColorSetting(K4A_COLOR_CONTROL_EXPOSURE_TIME_ABSOLUTE, &m_colorSettingsCache.ExposureTimeUs);
+    if(m_colorSettingsCache.ExposureTimeUs.Supported){
+        m_colorSettingsCache.ExposureTimeUs.Value = m_colorSettingsCache.ExposureTimeUs.defaultValue;
+        ApplyColorSetting(K4A_COLOR_CONTROL_EXPOSURE_TIME_ABSOLUTE, &m_colorSettingsCache.ExposureTimeUs);
+    }
 
-    m_colorSettingsCache.WhiteBalance = { K4A_COLOR_CONTROL_MODE_AUTO, 4800 };
-    ApplyColorSetting(K4A_COLOR_CONTROL_WHITEBALANCE, &m_colorSettingsCache.WhiteBalance);
+    if(m_colorSettingsCache.WhiteBalance.Supported){
+        m_colorSettingsCache.WhiteBalance.Value = m_colorSettingsCache.WhiteBalance.defaultValue;
+        ApplyColorSetting(K4A_COLOR_CONTROL_WHITEBALANCE, &m_colorSettingsCache.WhiteBalance);
+    }
 
-    m_colorSettingsCache.Brightness = { K4A_COLOR_CONTROL_MODE_MANUAL, 29 };
-    ApplyColorSetting(K4A_COLOR_CONTROL_BRIGHTNESS, &m_colorSettingsCache.Brightness);
+    if(m_colorSettingsCache.Brightness.Supported){
+        m_colorSettingsCache.Brightness.Value = m_colorSettingsCache.Brightness.defaultValue;
+        ApplyColorSetting(K4A_COLOR_CONTROL_BRIGHTNESS, &m_colorSettingsCache.Brightness);
+    }
+    if(m_colorSettingsCache.Contrast.Supported){
+        m_colorSettingsCache.Contrast.Value = m_colorSettingsCache.Contrast.defaultValue;
+        ApplyColorSetting(K4A_COLOR_CONTROL_CONTRAST, &m_colorSettingsCache.Contrast);
+    }
 
-    m_colorSettingsCache.Contrast = { K4A_COLOR_CONTROL_MODE_MANUAL, 48 };
-    ApplyColorSetting(K4A_COLOR_CONTROL_CONTRAST, &m_colorSettingsCache.Contrast);
+    if(m_colorSettingsCache.Saturation.Supported){
+        m_colorSettingsCache.Saturation.Value = m_colorSettingsCache.Saturation.defaultValue;
+        ApplyColorSetting(K4A_COLOR_CONTROL_SATURATION, &m_colorSettingsCache.Saturation);
+    }
+    if(m_colorSettingsCache.Sharpness.Supported){
+        m_colorSettingsCache.Sharpness.Value = m_colorSettingsCache.Sharpness.defaultValue;
+        ApplyColorSetting(K4A_COLOR_CONTROL_SHARPNESS, &m_colorSettingsCache.Sharpness);
+    }
 
-    m_colorSettingsCache.Saturation = { K4A_COLOR_CONTROL_MODE_MANUAL, 54 };
-    ApplyColorSetting(K4A_COLOR_CONTROL_SATURATION, &m_colorSettingsCache.Saturation);
+    if(m_colorSettingsCache.BacklightCompensation.Supported){
+        m_colorSettingsCache.BacklightCompensation.Value = m_colorSettingsCache.BacklightCompensation.defaultValue;
+        ApplyColorSetting(K4A_COLOR_CONTROL_BACKLIGHT_COMPENSATION, &m_colorSettingsCache.BacklightCompensation);
+    }
 
-    m_colorSettingsCache.Sharpness = { K4A_COLOR_CONTROL_MODE_MANUAL, 6 };
-    ApplyColorSetting(K4A_COLOR_CONTROL_SHARPNESS, &m_colorSettingsCache.Sharpness);
+    if(m_colorSettingsCache.Gain.Supported){
+        m_colorSettingsCache.Gain.Value = m_colorSettingsCache.Gain.defaultValue;
+        ApplyColorSetting(K4A_COLOR_CONTROL_GAIN, &m_colorSettingsCache.Gain);
+    }
 
-    // m_colorSettingsCache.BacklightCompensation = { K4A_COLOR_CONTROL_MODE_MANUAL, 0 };
-    // ApplyColorSetting(K4A_COLOR_CONTROL_BACKLIGHT_COMPENSATION, &m_colorSettingsCache.BacklightCompensation);
+    if(m_colorSettingsCache.PowerlineFrequency.Supported){
+        m_colorSettingsCache.PowerlineFrequency.Value = m_colorSettingsCache.PowerlineFrequency.defaultValue;
+        ApplyColorSetting(K4A_COLOR_CONTROL_POWERLINE_FREQUENCY, &m_colorSettingsCache.PowerlineFrequency);
+    }
 
-    m_colorSettingsCache.Gain = { K4A_COLOR_CONTROL_MODE_MANUAL, 50 };
-    ApplyColorSetting(K4A_COLOR_CONTROL_GAIN, &m_colorSettingsCache.Gain);
-
-    m_colorSettingsCache.PowerlineFrequency = { K4A_COLOR_CONTROL_MODE_MANUAL, 2 };
-    ApplyColorSetting(K4A_COLOR_CONTROL_POWERLINE_FREQUENCY, &m_colorSettingsCache.PowerlineFrequency);
-
-    m_colorSettingsCache.HDR = { K4A_COLOR_CONTROL_MODE_MANUAL, 0};
-    ApplyColorSetting(K4A_COLOR_CONTROL_HDR, &m_colorSettingsCache.HDR);
+    if(m_colorSettingsCache.HDR.Supported){
+        m_colorSettingsCache.HDR.Value = m_colorSettingsCache.HDR.defaultValue;
+        auto cacheEntry = &m_colorSettingsCache.HDR;
+        try
+        {
+            m_device.set_color_control(K4A_COLOR_CONTROL_HDR, cacheEntry->Mode, cacheEntry->Value);
+            ReadColorSetting(K4A_COLOR_CONTROL_HDR, cacheEntry);
+        }
+        catch (...)
+        {
+            // Must stop color camera before setting HDR!
+        }
+    }
 }
 
-// 获取RGB参数
 void K4ADeviceDockControl::ReadColorSetting(k4a_color_control_command_t command, ColorSetting *cacheEntry)
 {
     try
@@ -242,6 +276,18 @@ void K4ADeviceDockControl::ReadColorSetting(k4a_color_control_command_t command,
     }
 }
 
+
+void K4ADeviceDockControl::loadColorSetting(k4a_color_control_command_t command, ColorSetting *cacheEntry){
+    cacheEntry->Supported = true;
+    try{
+        bool support_auto;
+        m_device.get_color_control_capabilities(command, &support_auto, &cacheEntry->MinValue, &cacheEntry->MaxValue, &cacheEntry->StepValue, &cacheEntry->defaultValue, &cacheEntry->Mode);
+        ReadColorSetting(command, cacheEntry);
+    }catch (...){
+        cacheEntry->Supported = false;
+    }
+}
+
 void K4ADeviceDockControl::LoadColorSettingsCache()
 {
     // If more color controls are added, they need to be initialized here
@@ -249,16 +295,16 @@ void K4ADeviceDockControl::LoadColorSettingsCache()
     static_assert(sizeof(m_colorSettingsCache) == sizeof(ColorSetting) * 10,
                   "Missing color setting in LoadColorSettingsCache()");
 
-    ReadColorSetting(K4A_COLOR_CONTROL_EXPOSURE_TIME_ABSOLUTE, &m_colorSettingsCache.ExposureTimeUs);
-    ReadColorSetting(K4A_COLOR_CONTROL_WHITEBALANCE, &m_colorSettingsCache.WhiteBalance);
-    ReadColorSetting(K4A_COLOR_CONTROL_BRIGHTNESS, &m_colorSettingsCache.Brightness);
-    ReadColorSetting(K4A_COLOR_CONTROL_CONTRAST, &m_colorSettingsCache.Contrast);
-    ReadColorSetting(K4A_COLOR_CONTROL_SATURATION, &m_colorSettingsCache.Saturation);
-    ReadColorSetting(K4A_COLOR_CONTROL_SHARPNESS, &m_colorSettingsCache.Sharpness);
-    ReadColorSetting(K4A_COLOR_CONTROL_BACKLIGHT_COMPENSATION, &m_colorSettingsCache.BacklightCompensation);
-    ReadColorSetting(K4A_COLOR_CONTROL_GAIN, &m_colorSettingsCache.Gain);
-    ReadColorSetting(K4A_COLOR_CONTROL_POWERLINE_FREQUENCY, &m_colorSettingsCache.PowerlineFrequency);
-    ReadColorSetting(K4A_COLOR_CONTROL_HDR, &m_colorSettingsCache.HDR);
+    loadColorSetting(K4A_COLOR_CONTROL_EXPOSURE_TIME_ABSOLUTE, &m_colorSettingsCache.ExposureTimeUs);
+    loadColorSetting(K4A_COLOR_CONTROL_WHITEBALANCE, &m_colorSettingsCache.WhiteBalance);
+    loadColorSetting(K4A_COLOR_CONTROL_BRIGHTNESS, &m_colorSettingsCache.Brightness);
+    loadColorSetting(K4A_COLOR_CONTROL_CONTRAST, &m_colorSettingsCache.Contrast);
+    loadColorSetting(K4A_COLOR_CONTROL_SATURATION, &m_colorSettingsCache.Saturation);
+    loadColorSetting(K4A_COLOR_CONTROL_SHARPNESS, &m_colorSettingsCache.Sharpness);
+    loadColorSetting(K4A_COLOR_CONTROL_BACKLIGHT_COMPENSATION, &m_colorSettingsCache.BacklightCompensation);
+    loadColorSetting(K4A_COLOR_CONTROL_GAIN, &m_colorSettingsCache.Gain);
+    loadColorSetting(K4A_COLOR_CONTROL_POWERLINE_FREQUENCY, &m_colorSettingsCache.PowerlineFrequency);
+    loadColorSetting(K4A_COLOR_CONTROL_HDR, &m_colorSettingsCache.HDR);
 }
 
 void K4ADeviceDockControl::RefreshSyncCableStatus()
@@ -515,10 +561,10 @@ K4ADockControlStatus K4ADeviceDockControl::Show()
                 ImGui::PushItemWidth(ImGui::CalcItemWidth() * SliderScaleFactor);
                 if (ImGuiExtensions::K4ASliderFloat("Exposure Time",
                                                     &valueFloat,
-                                                    100.f,
-                                                    200000.f,
+                                                    (float)cacheEntry->MinValue,
+                                                    (float)cacheEntry->MaxValue,
                                                     "%.0f us",
-                                                    8.0f,
+                                                    1.0f,
                                                     cacheEntry->Mode == K4A_COLOR_CONTROL_MODE_MANUAL))
                 {
                     result = ColorControlAction::SetManual;
@@ -537,8 +583,8 @@ K4ADockControlStatus K4ADeviceDockControl::Show()
                 ImGui::PushItemWidth(ImGui::CalcItemWidth() * SliderScaleFactor);
                 if (ImGuiExtensions::K4ASliderInt("White Balance",
                                                   &cacheEntry->Value,
-                                                  2000,
-                                                  9000,
+                                                  cacheEntry->MinValue,
+                                                  cacheEntry->MaxValue,
                                                   "%d K",
                                                   cacheEntry->Mode == K4A_COLOR_CONTROL_MODE_MANUAL))
                 {
@@ -559,35 +605,35 @@ K4ADockControlStatus K4ADeviceDockControl::Show()
 
         ShowColorControl(K4A_COLOR_CONTROL_BRIGHTNESS, &m_colorSettingsCache.Brightness,
             [](ColorSetting *cacheEntry) {
-                return ImGui::SliderInt("Brightness", &cacheEntry->Value, 1, 127) ?
+                return ImGui::SliderInt("Brightness", &cacheEntry->Value, cacheEntry->MinValue, cacheEntry->MaxValue) ?
                     ColorControlAction::SetManual :
                     ColorControlAction::None;
         });
 
         ShowColorControl(K4A_COLOR_CONTROL_CONTRAST, &m_colorSettingsCache.Contrast,
             [](ColorSetting *cacheEntry) {
-                return ImGui::SliderInt("Contrast", &cacheEntry->Value, 1, 60) ?
+                return ImGui::SliderInt("Contrast", &cacheEntry->Value, cacheEntry->MinValue, cacheEntry->MaxValue) ?
                     ColorControlAction::SetManual :
                     ColorControlAction::None;
         });
 
         ShowColorControl(K4A_COLOR_CONTROL_SATURATION, &m_colorSettingsCache.Saturation,
             [](ColorSetting *cacheEntry) {
-                return ImGui::SliderInt("Saturation", &cacheEntry->Value, 1, 80) ?
+                return ImGui::SliderInt("Saturation", &cacheEntry->Value, cacheEntry->MinValue, cacheEntry->MaxValue) ?
                     ColorControlAction::SetManual :
                     ColorControlAction::None;
         });
 
         ShowColorControl(K4A_COLOR_CONTROL_SHARPNESS, &m_colorSettingsCache.Sharpness,
             [](ColorSetting *cacheEntry) {
-                return ImGui::SliderInt("Sharpness", &cacheEntry->Value, 1, 15) ?
+                return ImGui::SliderInt("Sharpness", &cacheEntry->Value, cacheEntry->MinValue, cacheEntry->MaxValue) ?
                     ColorControlAction::SetManual :
                     ColorControlAction::None;
         });
 
         ShowColorControl(K4A_COLOR_CONTROL_GAIN, &m_colorSettingsCache.Gain,
             [](ColorSetting *cacheEntry) {
-                return ImGui::SliderInt("Gain", &cacheEntry->Value, 1, 240) ?
+                return ImGui::SliderInt("Gain", &cacheEntry->Value, cacheEntry->MinValue, cacheEntry->MaxValue) ?
                     ColorControlAction::SetManual :
                     ColorControlAction::None;
         });
