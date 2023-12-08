@@ -2,7 +2,7 @@
 
 Welcome to the Orbbec SDK K4A Wrapper!
 
-*This repo is forked from [Azure Kinect Sensor SDK](https://github.com/microsoft/Azure-Kinect-Sensor-SDK)*
+*This [repo](https://github.com/orbbec/OrbbecSDK-K4A-Wrapper) is forked from [Azure Kinect Sensor SDK](https://github.com/microsoft/Azure-Kinect-Sensor-SDK)*
 
 *This branch is base on release/1.4.x, and use new impl code base on [Orbbec SDK](https://github.com/orbbec/OrbbecSDK) to replace the k4a implementation.*
 
@@ -38,7 +38,7 @@ The Wrapper enables you to get the most out of your orbbec camera. Features incl
 
 The following document describes how to seamlessly replace the Azure Kinect camera with the Femto camera in a user's application without any modifications. Please carefully read the following document before using the Femto Bolt camera.
 
-https://orbbec.github.io/OrbbecSDK-K4A-Wrapper/src/orbbec/docs/Access_AKDK_Application_Software_with_Femto_Bolt.pdf
+[https://orbbec.github.io/OrbbecSDK-K4A-Wrapper/src/orbbec/docs/Access_AKDK_Application_Software_with_Femto_Bolt.pdf](https://orbbec.github.io/OrbbecSDK-K4A-Wrapper/src/orbbec/docs/Access_AKDK_Application_Software_with_Femto_Bolt.pdf)
 
 ### Option1：Install from Release SDK package
 If you prefer not to compile the K4A Wrapper yourself, we recommend using our released SDK package. These released SDK packages have been tested and we highly recommend using them.
@@ -146,7 +146,9 @@ git submodule update --init --recursive
 
 ## Documentation
 
-API documentation is available [here](https://orbbec.github.io/docs/OrbbecSDK_K4A_Wrapper).
+* API documentation: [https://orbbec.github.io/docs/OrbbecSDK_K4A_Wrapper](https://orbbec.github.io/docs/OrbbecSDK_K4A_Wrapper).
+* Github pages: [https://orbbec.github.io/OrbbecSDK-K4A-Wrapper/](https://orbbec.github.io/OrbbecSDK-K4A-Wrapper/).
+* How to seamlessly replace the Azure Kinect camera with the Femto camera: [https://orbbec.github.io/OrbbecSDK-K4A-Wrapper/src/orbbec/docs/Access_AKDK_Application_Software_with_Femto_Bolt.pdf](https://orbbec.github.io/OrbbecSDK-K4A-Wrapper/src/orbbec/docs/Access_AKDK_Application_Software_with_Femto_Bolt.pdf)
 
 ## Versioning
 
