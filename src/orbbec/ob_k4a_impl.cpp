@@ -89,7 +89,9 @@ char K4A_ENV_VAR_LOG_TO_A_FILE[] = K4A_ENABLE_LOG_TO_A_FILE;
 #define MAX_FIREWARE_VERSION_LEN 64
 #define UNREFERENCED_VALUE(P) ((void)P)
 
-#define MAX_JSON_SIZE 1024 * 10
+#define MAX_JSON_FILE_SIZE 1024 * 10
+#define ORBBEC_MEGA_PID 0x0669
+#define ORBBEC_BOLT_PID 0x066B
 #define MAX_DELAY_TIME 33333
 #define MIN_DELAY_TIME -33333
 
@@ -132,7 +134,6 @@ typedef struct _k4a_device_context_t
     ob_sensor *gyro_sensor;
 
     calibration_json_t *json;
-    calibration_t calibration;
 
     k4a_transformation_t transformation;
 
@@ -216,16 +217,14 @@ void ob_get_json_callback(ob_data_tran_state state, ob_data_chunk *data_chunk, v
         return;
     }
 
-    k4a_device_t device_handle = (k4a_device_t)user_data;
-    RETURN_VALUE_IF_HANDLE_INVALID(VOID_VALUE, k4a_device_t, device_handle);
-    k4a_device_context_t *device_ctx = k4a_device_t_get_context(device_handle);
+    k4a_device_context_t* device_ctx = (k4a_device_context_t*)user_data;
     if (device_ctx->json == NULL || device_ctx->json->calibration_json == NULL)
     {
         LOG_ERROR("json memory is null", 0);
         return;
     }
 
-    if (device_ctx->json != NULL && device_ctx->json->status == JSON_FILE_VALID)
+    if (device_ctx->json->status == JSON_FILE_VALID)
     {
         return;
     }
@@ -287,7 +286,6 @@ k4a_result_t k4a_device_open(uint32_t index, k4a_device_t *device_handle)
     device_ctx->frameset_queue = NULL;
     device_ctx->json = NULL;
     device_ctx->accel_sensor = NULL;
-    device_ctx->calibration = NULL;
     device_ctx->gyro_sensor = NULL;
     device_ctx->imusync = NULL;
 
@@ -326,16 +324,56 @@ k4a_result_t k4a_device_open(uint32_t index, k4a_device_t *device_handle)
     return result;
 }
 
+k4a_result_t fetch_raw_calibration_data(k4a_device_context_t *device_ctx)
+{
+    k4a_result_t cali_create_rst = K4A_RESULT_FAILED;
+    ob_device_info *device_info = NULL;
+    ob_error *ob_err = NULL;
+
+    do{
+        device_info = ob_device_get_device_info(device_ctx->device, &ob_err);
+        CHECK_OB_ERROR_BREAK(ob_err);
+
+        int pid = ob_device_info_pid(device_info, &ob_err);
+        CHECK_OB_ERROR_BREAK(ob_err);
+
+        if (pid == ORBBEC_MEGA_PID || pid == ORBBEC_BOLT_PID){
+            if (device_ctx->json == NULL)
+            {
+                device_ctx->json = (calibration_json_t *)malloc(sizeof(calibration_json_t));
+                device_ctx->json->json_max_size = MAX_JSON_FILE_SIZE;
+                device_ctx->json->json_actual_size = 0;
+                device_ctx->json->calibration_json = (char *)malloc(device_ctx->json->json_max_size);
+                device_ctx->json->status = JSON_FILE_INVALID;
+            }
+
+            ob_device_get_raw_data(device_ctx->device,
+                                OB_RAW_DATA_CAMERA_CALIB_JSON_FILE,
+                                ob_get_json_callback,
+                                false,
+                                device_ctx,
+                                &ob_err);
+            CHECK_OB_ERROR_BREAK(ob_err);
+            cali_create_rst = K4A_RESULT_SUCCEEDED;
+        }
+    } while(0);
+
+    if (device_info != NULL)
+    {
+        ob_delete_device_info(device_info, &ob_err);
+        CHECK_OB_ERROR(ob_err);
+    }
+    return cali_create_rst;
+}
+
 k4a_result_t init_device_context(k4a_device_t device_handle)
 {
-
     RETURN_VALUE_IF_HANDLE_INVALID(K4A_RESULT_FAILED, k4a_device_t, device_handle);
     k4a_device_context_t *device_ctx = k4a_device_t_get_context(device_handle);
 
     auto ob_context_handler = get_ob_context_handler_instance();
     ob_context *ob_ctx = ob_context_handler->context;
     ob_device_list *dev_list = NULL;
-    ob_device_info *device_info = NULL;
     ob_error *ob_err = NULL;
 
     k4a_result_t result = K4A_RESULT_FAILED;
@@ -353,47 +391,8 @@ k4a_result_t init_device_context(k4a_device_t device_handle)
             break;
         }
 
-        device_info = ob_device_get_device_info(device_ctx->device, &ob_err);
-        CHECK_OB_ERROR_BREAK(&ob_err);
-
-        int pid = ob_device_info_pid(device_info, &ob_err);
-        CHECK_OB_ERROR_BREAK(&ob_err);
-        if (pid == ORBBEC_MEGA_PID || pid == ORBBEC_BOLT_PID)
-        {
-
-            if (device_ctx->json == NULL)
-            {
-                device_ctx->json = (calibration_json_t *)malloc(sizeof(calibration_json_t));
-                device_ctx->json->json_max_size = MAX_JSON_SIZE;
-                device_ctx->json->json_actual_size = 0;
-                device_ctx->json->calibration_json = (char *)malloc(device_ctx->json->json_max_size);
-                device_ctx->json->status = JSON_FILE_INVALID;
-            }
-
-            ob_device_get_raw_data(device_ctx->device,
-                                   OB_RAW_DATA_CAMERA_CALIB_JSON_FILE,
-                                   ob_get_json_callback,
-                                   false,
-                                   device_handle,
-                                   &ob_err);
-            CHECK_OB_ERROR_BREAK(&ob_err);
-
-            size_t json_data_size = 1024 * 10;
-            uint8_t *json_data = (uint8_t *)malloc(json_data_size);
-            k4a_buffer_result_t calibration_result = k4a_device_get_raw_calibration(device_handle,
-                                                                                    json_data,
-                                                                                    &json_data_size);
-            k4a_result_t cali_create_rst = K4A_RESULT_FAILED;
-            if (K4A_BUFFER_RESULT_SUCCEEDED == calibration_result)
-            {
-                cali_create_rst = calibration_create((char *)json_data, json_data_size, &device_ctx->calibration);
-            }
-            free(json_data);
-
-            if (K4A_FAILED(cali_create_rst))
-            {
-                break;
-            }
+        if (K4A_FAILED(fetch_raw_calibration_data(device_ctx))){
+            break;
         }
 
         if (K4A_FAILED(TRACE_CALL(imusync_create(&device_ctx->imusync))))
@@ -525,14 +524,14 @@ k4a_wait_result_t k4a_device_get_capture(k4a_device_t device_handle,
 {
     RETURN_VALUE_IF_HANDLE_INVALID(K4A_WAIT_RESULT_FAILED, k4a_device_t, device_handle);
     CHECK_AND_TRY_INIT_DEVICE_CONTEXT(K4A_WAIT_RESULT_FAILED, device_handle);
-    k4a_device_context_t *device_ctx = k4a_device_t_get_context(device_handle);
-
-    k4a_wait_result_t result = K4A_WAIT_RESULT_SUCCEEDED;
-    if (device_handle == NULL || capture_handle == NULL || device_ctx == NULL || device_ctx->pipe == NULL)
+    if (capture_handle == NULL)
     {
         LOG_WARNING("param invalid", 0);
         return K4A_WAIT_RESULT_FAILED;
     }
+
+    k4a_device_context_t *device_ctx = k4a_device_t_get_context(device_handle);
+    k4a_wait_result_t result = K4A_WAIT_RESULT_SUCCEEDED;
 
     result = frame_queue_pop(device_ctx->frameset_queue, timeout_in_ms, (k4a_capture_t *)capture_handle);
 
@@ -1739,7 +1738,7 @@ k4a_result_t k4a_device_start_cameras(k4a_device_t device_handle, const k4a_devi
     device_ctx->transformation = k4a_transformation_create(&calibration);
 
     k4a_result_t result = K4A_RESULT_SUCCEEDED;
-    if (device_handle == NULL || config == NULL || device_ctx == NULL || device_ctx->device == NULL)
+    if (config == NULL)
     {
         LOG_ERROR("param invalid,[%s]", __func__);
         return K4A_RESULT_FAILED;
@@ -2199,13 +2198,9 @@ k4a_buffer_result_t k4a_device_get_serialnum(k4a_device_t device_handle,
                                              size_t *serial_number_size)
 {
     RETURN_VALUE_IF_HANDLE_INVALID(K4A_BUFFER_RESULT_FAILED, k4a_device_t, device_handle);
+    // dose not need to check and init device context since serial number is got when enumerating devices
+    // CHECK_AND_TRY_INIT_DEVICE_CONTEXT(K4A_BUFFER_RESULT_FAILED, device_handle);
     k4a_device_context_t *device_ctx = k4a_device_t_get_context(device_handle);
-
-    if (device_ctx == NULL)
-    {
-        LOG_WARNING("param invalid ", 0);
-        return K4A_BUFFER_RESULT_FAILED;
-    }
 
     if (serial_number_size == NULL)
     {
@@ -2374,11 +2369,6 @@ k4a_result_t k4a_device_get_color_control_capabilities(k4a_device_t device_handl
     RETURN_VALUE_IF_HANDLE_INVALID(K4A_RESULT_FAILED, k4a_device_t, device_handle);
     CHECK_AND_TRY_INIT_DEVICE_CONTEXT(K4A_RESULT_FAILED, device_handle);
     k4a_device_context_t *device_ctx = k4a_device_t_get_context(device_handle);
-    if (device_ctx == NULL || device_ctx->device == NULL)
-    {
-        LOG_WARNING("param invalid ", 0);
-        return K4A_RESULT_FAILED;
-    }
 
     ob_device *obDevice = device_ctx->device;
     k4a_result_t result = K4A_RESULT_FAILED;
@@ -2741,11 +2731,6 @@ k4a_result_t k4a_device_set_color_control(k4a_device_t device_handle,
     RETURN_VALUE_IF_HANDLE_INVALID(K4A_RESULT_FAILED, k4a_device_t, device_handle);
     CHECK_AND_TRY_INIT_DEVICE_CONTEXT(K4A_RESULT_FAILED, device_handle);
     k4a_device_context_t *device_ctx = k4a_device_t_get_context(device_handle);
-    if (device_ctx == NULL || device_ctx->device == NULL)
-    {
-        LOG_WARNING("param invalid ", 0);
-        return K4A_RESULT_FAILED;
-    }
 
     k4a_result_t result = K4A_RESULT_SUCCEEDED;
     ob_device *obDevice = device_ctx->device;
@@ -3198,25 +3183,18 @@ k4a_result_t k4a_device_get_calibration_from_json(k4a_device_t device_handle,
 {
     RETURN_VALUE_IF_HANDLE_INVALID(K4A_RESULT_FAILED, k4a_device_t, device_handle);
     CHECK_AND_TRY_INIT_DEVICE_CONTEXT(K4A_RESULT_FAILED, device_handle);
-    k4a_device_context_t *device_ctx = k4a_device_t_get_context(device_handle);
-    if (device_ctx == NULL || device_ctx->device == NULL)
-    {
-        LOG_WARNING("param invalid ", 0);
-        return K4A_RESULT_FAILED;
-    }
 
+    k4a_device_context_t *device_ctx = k4a_device_t_get_context(device_handle);
     if (device_ctx->json && device_ctx->json->calibration_json && device_ctx->json->status == JSON_FILE_VALID)
     {
         char *json = device_ctx->json->calibration_json;
         size_t json_len = device_ctx->json->json_actual_size;
         return k4a_calibration_get_from_raw(json, json_len, depth_mode, color_resolution, calibration);
     }
-    else
-    {
 
-        LOG_WARNING("json file parse failed ", 0);
-        return K4A_RESULT_FAILED;
-    }
+    LOG_WARNING("json file parse failed ", 0);
+    return K4A_RESULT_FAILED;
+
 }
 
 k4a_result_t k4a_device_get_calibration_from_orbbec_sdk(k4a_device_t device_handle,
@@ -3227,11 +3205,6 @@ k4a_result_t k4a_device_get_calibration_from_orbbec_sdk(k4a_device_t device_hand
     RETURN_VALUE_IF_HANDLE_INVALID(K4A_RESULT_FAILED, k4a_device_t, device_handle);
     CHECK_AND_TRY_INIT_DEVICE_CONTEXT(K4A_RESULT_FAILED, device_handle);
     k4a_device_context_t *device_ctx = k4a_device_t_get_context(device_handle);
-    if (device_ctx == NULL || device_ctx->device == NULL)
-    {
-        LOG_WARNING("param invalid ", 0);
-        return K4A_RESULT_FAILED;
-    }
 
     int k4a_depth_width = 0;
     int k4a_depth_height = 0;
@@ -3480,11 +3453,6 @@ k4a_result_t k4a_device_get_calibration(k4a_device_t device_handle,
     RETURN_VALUE_IF_HANDLE_INVALID(K4A_RESULT_FAILED, k4a_device_t, device_handle);
     CHECK_AND_TRY_INIT_DEVICE_CONTEXT(K4A_RESULT_FAILED, device_handle);
     k4a_device_context_t *device_ctx = k4a_device_t_get_context(device_handle);
-    if (device_ctx == NULL || device_ctx->device == NULL)
-    {
-        LOG_WARNING("param invalid ", 0);
-        return K4A_RESULT_FAILED;
-    }
 
     ob_error *ob_err = NULL;
     ob_device_info *dev_info = ob_device_get_device_info(device_ctx->device, &ob_err);
