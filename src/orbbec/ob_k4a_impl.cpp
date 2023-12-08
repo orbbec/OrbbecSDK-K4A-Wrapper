@@ -554,6 +554,11 @@ void ob_accel_frame(ob_frame *frame, void *user_data)
     }
 
     ob_accel_value accel_value = ob_accel_frame_value(frame, &ob_err);
+
+    accel_value.x = -accel_value.x;
+    accel_value.y = -accel_value.y;
+    accel_value.z = -accel_value.z;
+
     CHECK_OB_ERROR_RETURN(ob_err);
     uint64_t timestamp = ob_frame_time_stamp_us(frame, &ob_err);
     CHECK_OB_ERROR_RETURN(ob_err);
@@ -590,6 +595,9 @@ void ob_gyro_frame(ob_frame *frame, void *user_data)
     }
 
     ob_gyro_value gyro_value = ob_gyro_frame_value(frame, &ob_err);
+    gyro_value.x = -gyro_value.x;
+    gyro_value.y = -gyro_value.y;
+    gyro_value.z = -gyro_value.z;
     CHECK_OB_ERROR_RETURN(ob_err);
     uint64_t timestamp = ob_frame_time_stamp_us(frame, &ob_err);
     CHECK_OB_ERROR_RETURN(ob_err);
