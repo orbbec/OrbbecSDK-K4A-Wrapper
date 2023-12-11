@@ -16,7 +16,6 @@
 
 // Dependent libraries
 #include <k4ainternal/handle.h>
-
 #include <k4ainternal/common.h>
 #include <k4ainternal/calibration.h>
 #include <k4ainternal/transformation.h>
@@ -28,6 +27,7 @@
 
 #include "obmetadata.h"
 #include "ob_type_helper.hpp"
+
 
 // System dependencies
 #include <stdlib.h>
@@ -134,8 +134,9 @@ typedef struct _k4a_device_context_t
     ob_sensor *gyro_sensor;
 
     calibration_json_t *json;
-
     k4a_transformation_t transformation;
+
+    bool is_streaming;
 
 #ifndef CACHE_OB_CONTEXT
     std::shared_ptr<ob_context_handler> ob_context_handler;
@@ -247,6 +248,7 @@ void ob_get_json_callback(ob_data_tran_state state, ob_data_chunk *data_chunk, v
             device_ctx->json->calibration_json[device_ctx->json->json_actual_size - 1] = 0x7d;
         }
         device_ctx->json->status = JSON_FILE_VALID;
+        device_ctx->json->calibration_json[device_ctx->json->json_actual_size] = '\0';
     }
     else
     {
@@ -288,6 +290,7 @@ k4a_result_t k4a_device_open(uint32_t index, k4a_device_t *device_handle)
     device_ctx->accel_sensor = NULL;
     device_ctx->gyro_sensor = NULL;
     device_ctx->imusync = NULL;
+    device_ctx->is_streaming = false;
 
 #ifndef CACHE_OB_CONTEXT
     device_ctx->ob_context_handler = ob_context_handler;
@@ -324,6 +327,105 @@ k4a_result_t k4a_device_open(uint32_t index, k4a_device_t *device_handle)
     return result;
 }
 
+k4a_result_t update_imu_raw_calibration_data_from_orbbec_sdk(k4a_device_context_t *device_ctx){
+    k4a_result_t result = K4A_RESULT_FAILED;
+    if(device_ctx->json == NULL|| device_ctx->json->status == JSON_FILE_INVALID){
+        return result;
+    }
+
+    // ob_error *ob_err = NULL;
+    // ob_stream_profile_list *depth_stream_profiles = ob_pipeline_get_stream_profile_list(device_ctx->pipe,
+    //                                                                                     OB_SENSOR_DEPTH,
+    //                                                                                     &ob_err);
+    // CHECK_OB_ERROR_RETURN_K4A_RESULT(ob_err);
+    // ob_stream_profile *depth_stream_profile = ob_stream_profile_list_get_video_stream_profile(depth_stream_profiles,
+    //                                                                                           1024,
+    //                                                                                           1024,
+    //                                                                                           OB_FORMAT_ANY,
+    //                                                                                           OB_FPS_ANY,
+    //                                                                                           &ob_err);
+    // CHECK_OB_ERROR_RETURN_K4A_RESULT(ob_err);
+
+
+    // ob_stream_profile_list *color_stream_profiles = ob_pipeline_get_stream_profile_list(device_ctx->pipe,
+    //                                                                                     OB_SENSOR_COLOR,
+    //                                                                                     &ob_err);
+    // CHECK_OB_ERROR_RETURN_K4A_RESULT(ob_err);
+    // ob_stream_profile *color_stream_profile = ob_stream_profile_list_get_video_stream_profile(color_stream_profiles,
+    //                                                                                           1920,
+    //                                                                                           1080,
+    //                                                                                           OB_FORMAT_ANY,
+    //                                                                                           OB_FPS_ANY,
+    //                                                                                           &ob_err);
+    // CHECK_OB_ERROR_RETURN_K4A_RESULT(ob_err);
+
+    // ob_config *ob_cfg = ob_pipeline_get_config(device_ctx->pipe, &ob_err);
+    // CHECK_OB_ERROR_RETURN_K4A_RESULT(ob_err);
+
+    // ob_config_enable_stream(ob_cfg, depth_stream_profile, &ob_err);
+
+    ob_calibration_param calibration_param = ob_pipeline_get_calibration_param(device_ctx->pipe, nullptr, &ob_err);
+    CHECK_OB_ERROR_RETURN_K4A_RESULT(ob_err);
+
+    std::string calibration_json_str = device_ctx->json->calibration_json;
+    // gyro
+    size_t offset = calibration_json_str.find("CALIBRATION_InertialSensorId_LSM6DSM", 0);
+    size_t begin = calibration_json_str.find("\"Rt\": {\"Rotation\": [", offset);
+    size_t end = calibration_json_str.find("]},", begin) +3;
+
+    k4a_calibration_extrinsics_t *gyro_to_depth_extrinsics  = (k4a_calibration_extrinsics_t*)&calibration_param.extrinsics[OB_SENSOR_GYRO][OB_SENSOR_DEPTH];
+
+    std::stringstream ss;
+    ss << "\"Rt\": {\"Rotation\": [" << gyro_to_depth_extrinsics->rotation[0] << ","
+        << gyro_to_depth_extrinsics->rotation[1] << "," << gyro_to_depth_extrinsics->rotation[2] << ","
+        << gyro_to_depth_extrinsics->rotation[3] << "," << gyro_to_depth_extrinsics->rotation[4] << ","
+        << gyro_to_depth_extrinsics->rotation[5] << "," << gyro_to_depth_extrinsics->rotation[6] << ","
+        << gyro_to_depth_extrinsics->rotation[7] << "," << gyro_to_depth_extrinsics->rotation[8] << "], \"Translation\": ["
+        << gyro_to_depth_extrinsics->translation[0] << "," << gyro_to_depth_extrinsics->translation[1] << ","
+        << gyro_to_depth_extrinsics->translation[2] << "]},";
+    calibration_json_str.replace(begin, end - begin, ss.str());
+
+    // accel
+    offset = calibration_json_str.find("CALIBRATION_InertialSensorId_LSM6DSM", begin);
+    begin = calibration_json_str.find("\"Rt\": {\"Rotation\": [", offset);
+    end = calibration_json_str.find("]},", begin) +3;
+
+   k4a_calibration_extrinsics_t *accel_to_depth_extrinsics  = (k4a_calibration_extrinsics_t*)&calibration_param.extrinsics[OB_SENSOR_ACCEL][OB_SENSOR_DEPTH];
+    std::stringstream ss2;
+    ss2 << "\"Rt\": {\"Rotation\": [" << accel_to_depth_extrinsics->rotation[0] << ","
+        << accel_to_depth_extrinsics->rotation[1] << ","<< accel_to_depth_extrinsics->rotation[2] << ","
+        << accel_to_depth_extrinsics->rotation[3] << "," << accel_to_depth_extrinsics->rotation[4] << ","
+        << accel_to_depth_extrinsics->rotation[5] << "," << accel_to_depth_extrinsics->rotation[6] << ","
+        << accel_to_depth_extrinsics->rotation[7] << "," << accel_to_depth_extrinsics->rotation[8] << "], \"Translation\": ["
+        << accel_to_depth_extrinsics->translation[0] << "," << accel_to_depth_extrinsics->translation[1] << ","
+        << accel_to_depth_extrinsics->translation[2] << "]},";
+    calibration_json_str.replace(begin, end - begin, ss2.str());
+
+//#pragma warning(suppress : 4996)
+//    FILE *fp = fopen("./old.json", "wb");
+//    if (fp != NULL)
+//    {
+//        fwrite(device_ctx->json->calibration_json, 1, device_ctx->json->json_actual_size, fp);
+//        fclose(fp);
+//    }
+
+    memcpy(device_ctx->json->calibration_json, calibration_json_str.c_str(), calibration_json_str.size());
+    device_ctx->json->calibration_json[calibration_json_str.size()] = '\0';
+    device_ctx->json->json_actual_size = (uint32_t)calibration_json_str.size();
+
+//#pragma warning(suppress : 4996)
+//    fp = fopen("./new.json", "wb");
+//    if (fp!= NULL)
+//    {
+//        fwrite(device_ctx->json->calibration_json, 1, device_ctx->json->json_actual_size, fp);
+//        fclose(fp);
+//    }
+
+    result = K4A_RESULT_SUCCEEDED;
+    return result;
+}
+
+
 k4a_result_t fetch_raw_calibration_data(k4a_device_context_t *device_ctx)
 {
     k4a_result_t cali_create_rst = K4A_RESULT_FAILED;
@@ -354,7 +456,12 @@ k4a_result_t fetch_raw_calibration_data(k4a_device_context_t *device_ctx)
                                 device_ctx,
                                 &ob_err);
             CHECK_OB_ERROR_BREAK(ob_err);
-            cali_create_rst = K4A_RESULT_SUCCEEDED;
+
+            if(pid == ORBBEC_BOLT_PID){
+                cali_create_rst = update_imu_raw_calibration_data_from_orbbec_sdk(device_ctx);
+            }else{
+                cali_create_rst = K4A_RESULT_SUCCEEDED;
+            }
         }
     } while(0);
 
@@ -385,11 +492,8 @@ k4a_result_t init_device_context(k4a_device_t device_handle)
         device_ctx->device = ob_device_list_get_device_by_serial_number(dev_list, device_ctx->serial_number, &ob_err);
         CHECK_OB_ERROR_BREAK(&ob_err);
 
-        if (device_ctx->device == NULL)
-        {
-            LOG_ERROR("get device failed", 0);
-            break;
-        }
+        device_ctx->pipe = ob_create_pipeline_with_device((ob_device *)device_ctx->device, &ob_err);
+        CHECK_OB_ERROR_BREAK(ob_err);
 
         if (K4A_FAILED(fetch_raw_calibration_data(device_ctx))){
             break;
@@ -435,6 +539,13 @@ k4a_result_t init_device_context(k4a_device_t device_handle)
             ob_delete_device((ob_device *)device_ctx->device, &ob_err);
             CHECK_OB_ERROR(&ob_err);
             device_ctx->device = NULL;
+        }
+
+        if(device_ctx->pipe)
+        {
+            ob_delete_pipeline(device_ctx->pipe, &ob_err);
+            CHECK_OB_ERROR(ob_err);
+            device_ctx->pipe = NULL;
         }
 
         if (device_ctx->frameset_queue)
@@ -484,14 +595,24 @@ void k4a_device_close(k4a_device_t device_handle)
 {
     RETURN_VALUE_IF_HANDLE_INVALID(VOID_VALUE, k4a_device_t, device_handle);
     k4a_device_context_t *device_ctx = k4a_device_t_get_context(device_handle);
+    ob_error *ob_err = NULL;
+
+    if( device_ctx->is_streaming ){
+        k4a_device_stop_cameras(device_handle);
+    }
+
     if (device_ctx->device)
     {
-        k4a_device_stop_cameras(device_handle);
-
-        ob_error *ob_err = NULL;
         ob_delete_device((ob_device *)device_ctx->device, &ob_err);
         CHECK_OB_ERROR(&ob_err);
         device_ctx->device = NULL;
+    }
+
+    if (device_ctx->pipe)
+    {
+        ob_delete_pipeline(device_ctx->pipe, &ob_err);
+        CHECK_OB_ERROR(ob_err);
+        device_ctx->pipe = NULL;
     }
 
     if (device_ctx->frameset_queue)
@@ -2191,6 +2312,7 @@ void k4a_device_stop_cameras(k4a_device_t device_handle)
 
         frame_queue_disable(device_ctx->frameset_queue);
     }
+    device_ctx->is_streaming = false;
 }
 
 k4a_buffer_result_t k4a_device_get_serialnum(k4a_device_t device_handle,
