@@ -142,13 +142,13 @@ K4AViewer::K4AViewer(const K4AViewerArgs &args)
         SetHighDpi();
     }
 
-    const int audioInitStatus = K4AAudioManager::Instance().Initialize();
-    if (audioInitStatus != SoundIoErrorNone)
-    {
-        std::stringstream errorBuilder;
-        errorBuilder << "Failed to initialize audio backend: " << soundio_strerror(audioInitStatus) << "!";
-        K4AViewerErrorManager::Instance().SetErrorStatus(errorBuilder.str().c_str());
-    }
+    // const int audioInitStatus = K4AAudioManager::Instance().Initialize();
+    // if (audioInitStatus != SoundIoErrorNone)
+    // {
+    //     std::stringstream errorBuilder;
+    //     errorBuilder << "Failed to initialize audio backend: " << soundio_strerror(audioInitStatus) << "!";
+    //     K4AViewerErrorManager::Instance().SetErrorStatus(errorBuilder.str().c_str());
+    // }
 
     K4AWindowManager::Instance().PushLeftDockControl(std14::make_unique<K4ASourceSelectionDockControl>());
     K4AWindowManager::Instance().PushBottomDockControl(std14::make_unique<K4ALogDockControl>());
