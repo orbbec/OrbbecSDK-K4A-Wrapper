@@ -445,7 +445,7 @@ K4ADockControlStatus K4ADeviceDockControl::Show()
                                                                   pColorResolution,
                                                                   K4A_COLOR_RESOLUTION_1080P,
                                                                   colorSettingsEditable &&
-                                                                      imageFormatSupportsHighResolution);
+                                                                      imageFormatSupportsHighResolution&&!(m_config.ColorFormat == K4A_IMAGE_FORMAT_COLOR_YUY2));
         ImGuiExtensions::K4AShowTooltip(imageFormatHelpMessage, !imageFormatSupportsHighResolution);
 
         // New line
@@ -453,14 +453,14 @@ K4ADockControlStatus K4ADeviceDockControl::Show()
                                                                   pColorResolution,
                                                                   K4A_COLOR_RESOLUTION_1440P,
                                                                   colorSettingsEditable &&
-                                                                      imageFormatSupportsHighResolution);
+                                                                      imageFormatSupportsHighResolution&&!(m_config.ColorFormat == K4A_IMAGE_FORMAT_COLOR_YUY2));
         ImGuiExtensions::K4AShowTooltip(imageFormatHelpMessage, !imageFormatSupportsHighResolution);
         ImGui::SameLine();
         colorResolutionUpdated |= ImGuiExtensions::K4ARadioButton("2160p",
                                                                   pColorResolution,
                                                                   K4A_COLOR_RESOLUTION_2160P,
                                                                   colorSettingsEditable &&
-                                                                      imageFormatSupportsHighResolution);
+                                                                      imageFormatSupportsHighResolution&&!(m_config.ColorFormat == K4A_IMAGE_FORMAT_COLOR_YUY2));
         ImGuiExtensions::K4AShowTooltip(imageFormatHelpMessage, !imageFormatSupportsHighResolution);
         ImGui::Unindent();
         ImGui::Text("4:3");
