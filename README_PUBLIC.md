@@ -2,8 +2,7 @@
 ## Change List
 1. Fix memory leakage issue;
 2. Fix the issue of failed reopening after abnormal shutdown;
-3. Support NV12;
-4. Other bug fixes.
+3. Other bug fixes.
 ## Product support
 | **products list** | **firmware version** |**platform**|
 | --- | --- | --- |
