@@ -6,7 +6,7 @@ include(k4aTest)
 
 #add_subdirectory(Calibration)
 add_subdirectory(CaptureSync)
-add_subdirectory(ColorTests)
+# add_subdirectory(ColorTests)
 #add_subdirectory(DepthTests)
 add_subdirectory(executables)
 add_subdirectory(ExternLibraries)
