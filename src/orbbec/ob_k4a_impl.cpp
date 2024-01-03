@@ -136,7 +136,8 @@ uint32_t k4a_device_get_installed_count(void)
         pid = ob_device_list_get_device_pid(ob_dev_list, index, &ob_err);
         if(!(pid == ORBBEC_MEGA_PID || pid == ORBBEC_BOLT_PID)){
             const char * name = ob_device_list_get_device_name(ob_dev_list, index, &ob_err);
-            LOG_ERROR("Current device not supported, pid = %d, name = %s", pid, name);
+            const char *sn = ob_device_list_get_device_serial_number(ob_dev_list, index, &ob_err);
+            LOG_ERROR("Current device not supported, name = %s, sn = %s, pid = %d", name, sn, pid);
         }
     }
     CHECK_OB_ERROR_RETURN_VALUE(ob_err, 0);
