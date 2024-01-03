@@ -273,6 +273,12 @@ k4a_result_t k4a_device_open(uint32_t index, k4a_device_t *device_handle)
     do
     {
         dev_list = ob_query_device_list(ob_ctx, &ob_err);
+        uint32_t device_count = ob_device_list_device_count(dev_list, &ob_err);
+        if(device_count == 0)
+        {
+            LOG_ERROR("No K4A devices found");
+            return K4A_RESULT_FAILED;
+        }
         CHECK_OB_ERROR_BREAK(ob_err);
 
         const char *sn = ob_device_list_get_device_serial_number(dev_list, index, &ob_err);
