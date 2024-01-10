@@ -37,6 +37,35 @@
 
 // cpp
 #include <memory>
+#include <vector>
+
+#define ORBBEC_MEGA_PID 0x0669
+#define ORBBEC_BOLT_PID 0x066B
+
+std::vector<int> get_effective_device(ob_context* &context){
+    ob_error *ob_err = NULL;
+    uint32_t device_count = 0;
+    ob_device_list *ob_dev_list = ob_query_device_list(context, &ob_err);
+
+    device_count = ob_device_list_device_count(ob_dev_list, &ob_err);
+
+    std::vector<int> effective_devices;
+    int pid;
+    for(uint32_t index=0; index < device_count; index++){
+        pid = ob_device_list_get_device_pid(ob_dev_list, index, &ob_err);
+        if(!(pid == ORBBEC_MEGA_PID || pid == ORBBEC_BOLT_PID)){
+            const char * name = ob_device_list_get_device_name(ob_dev_list, index, &ob_err);
+            const char *sn = ob_device_list_get_device_serial_number(ob_dev_list, index, &ob_err);
+            LOG_INFO("Current device not supported, name = %s, sn = %s, pid = %d", name, sn, pid);
+        }else{
+            effective_devices.push_back(index);
+        }
+    }
+
+    ob_delete_device_list(ob_dev_list, &ob_err);
+
+    return effective_devices;
+}
 
 #ifdef __cplusplus
 extern "C" {
@@ -48,8 +77,6 @@ char K4A_ENV_VAR_LOG_TO_A_FILE[] = K4A_ENABLE_LOG_TO_A_FILE;
 #define UNREFERENCED_VALUE(P) ((void)P)
 
 #define MAX_JSON_SIZE 1024 * 10
-#define ORBBEC_MEGA_PID 0x0669
-#define ORBBEC_BOLT_PID 0x066B
 #define MAX_DELAY_TIME 33333
 #define MIN_DELAY_TIME -33333
 
@@ -119,13 +146,15 @@ K4A_DECLARE_CONTEXT(k4a_device_t, k4a_device_context_t);
     case fps:                                                                                                          \
         return #fps
 
+
 uint32_t k4a_device_get_installed_count(void)
 {
-    ob_error *ob_err = NULL;
-    uint32_t device_count = 0;
+
     auto ob_context_handler = get_ob_context_handler_instance();
     ob_context *context = ob_context_handler->context;
+    std::vector<int> effective_devices = get_effective_device(context);
 
+<<<<<<< HEAD
     ob_device_list *ob_dev_list = ob_query_device_list(context, &ob_err);
     CHECK_OB_ERROR_RETURN_VALUE(&ob_err, 0);
 
@@ -146,6 +175,9 @@ uint32_t k4a_device_get_installed_count(void)
     CHECK_OB_ERROR_RETURN_VALUE(&ob_err, 0);
 
     return device_count;
+=======
+    return (uint32_t)effective_devices.size();
+>>>>>>> 006e7c3 ([fix]: Filtering not support devices)
 }
 
 k4a_result_t k4a_set_debug_message_handler(k4a_logging_message_cb_t *message_cb,
@@ -262,6 +294,15 @@ k4a_result_t k4a_device_open(uint32_t index, k4a_device_t *device_handle)
 
     auto ob_context_handler = get_ob_context_handler_instance();
     ob_context *ob_ctx = ob_context_handler->context;
+    std::vector<int> effective_device = get_effective_device(ob_ctx);
+    if(index < effective_device.size()){
+        index = effective_device[index];
+    }else{
+        LOG_INFO("index is out of range", 0);
+        return K4A_RESULT_FAILED;
+    }
+
+
 #ifndef CACHE_OB_CONTEXT
     device_ctx->ob_context_handler = ob_context_handler;
 #endif
@@ -272,6 +313,7 @@ k4a_result_t k4a_device_open(uint32_t index, k4a_device_t *device_handle)
     do
     {
         dev_list = ob_query_device_list(ob_ctx, &ob_err);
+<<<<<<< HEAD
         uint32_t device_count = ob_device_list_device_count(dev_list, &ob_err);
         if(device_count == 0)
         {
@@ -279,6 +321,15 @@ k4a_result_t k4a_device_open(uint32_t index, k4a_device_t *device_handle)
             return K4A_RESULT_FAILED;
         }
         CHECK_OB_ERROR_BREAK(&ob_err);
+=======
+        // uint32_t device_count = ob_device_list_device_count(dev_list, &ob_err);
+        // if(device_count == 0)
+        // {
+        //     LOG_ERROR("No K4A devices found");
+        //     return K4A_RESULT_FAILED;
+        // }
+        CHECK_OB_ERROR_BREAK(ob_err);
+>>>>>>> 006e7c3 ([fix]: Filtering not support devices)
 
         const char *sn = ob_device_list_get_device_serial_number(dev_list, index, &ob_err);
         CHECK_OB_ERROR_BREAK(&ob_err);
