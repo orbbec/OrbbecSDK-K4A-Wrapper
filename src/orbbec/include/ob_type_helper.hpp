@@ -45,6 +45,12 @@ k4a_result_t check_ob_error(ob_error *error);
         return value;                                                                                                  \
     }
 
+#define CHECK_OB_ERROR_RETURN_VECTOR_VALUE(value, ob_err)                                                                     \
+    if (K4A_RESULT_FAILED == check_ob_error(ob_err))                                                                   \
+    {                                                                                                                  \
+        return std::vector<int>();                                                                                                  \
+    }
+
 ob_context *get_ob_context_instance();
 
 void on_device_changed_callback(ob_device_list *removed, ob_device_list *added, void *user_data);
