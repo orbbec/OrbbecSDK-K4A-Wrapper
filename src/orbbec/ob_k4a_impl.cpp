@@ -127,7 +127,7 @@ uint32_t k4a_device_get_installed_count(void)
     ob_context *context = ob_context_handler->context;
 
     ob_device_list *ob_dev_list = ob_query_device_list(context, &ob_err);
-    CHECK_OB_ERROR_RETURN_VALUE(ob_err, 0);
+    CHECK_OB_ERROR_RETURN_VALUE(&ob_err, 0);
 
     device_count = ob_device_list_device_count(ob_dev_list, &ob_err);
 
@@ -140,10 +140,10 @@ uint32_t k4a_device_get_installed_count(void)
             LOG_ERROR("Current device not supported, name = %s, sn = %s, pid = %d", name, sn, pid);
         }
     }
-    CHECK_OB_ERROR_RETURN_VALUE(ob_err, 0);
+    CHECK_OB_ERROR_RETURN_VALUE(&ob_err, 0);
 
     ob_delete_device_list(ob_dev_list, &ob_err);
-    CHECK_OB_ERROR_RETURN_VALUE(ob_err, 0);
+    CHECK_OB_ERROR_RETURN_VALUE(&ob_err, 0);
 
     return device_count;
 }
@@ -178,7 +178,7 @@ void ob_frame_set_ready(ob_frame *frame_set, void *user_data)
     if (device_ctx == NULL)
     {
         ob_delete_frame(frame_set, &ob_err);
-        CHECK_OB_ERROR_RETURN(ob_err);
+        CHECK_OB_ERROR_RETURN(&ob_err);
         LOG_ERROR("device_ctx is null ", 0);
         return;
     }
@@ -278,10 +278,10 @@ k4a_result_t k4a_device_open(uint32_t index, k4a_device_t *device_handle)
             LOG_ERROR("No K4A devices found");
             return K4A_RESULT_FAILED;
         }
-        CHECK_OB_ERROR_BREAK(ob_err);
+        CHECK_OB_ERROR_BREAK(&ob_err);
 
         const char *sn = ob_device_list_get_device_serial_number(dev_list, index, &ob_err);
-        CHECK_OB_ERROR_BREAK(ob_err);
+        CHECK_OB_ERROR_BREAK(&ob_err);
         if (strlen(sn) > 16)
         {
             LOG_ERROR("length of device serial number error: %s", sn);
@@ -296,7 +296,7 @@ k4a_result_t k4a_device_open(uint32_t index, k4a_device_t *device_handle)
     if (dev_list != NULL)
     {
         ob_delete_device_list(dev_list, &ob_err);
-        CHECK_OB_ERROR(ob_err);
+        CHECK_OB_ERROR(&ob_err);
     }
 
     return result;
@@ -318,10 +318,10 @@ k4a_result_t init_device_context(k4a_device_t device_handle)
     do
     {
         dev_list = ob_query_device_list(ob_ctx, &ob_err);
-        CHECK_OB_ERROR_BREAK(ob_err);
+        CHECK_OB_ERROR_BREAK(&ob_err);
 
         device_ctx->device = ob_device_list_get_device_by_serial_number(dev_list, device_ctx->serial_number, &ob_err);
-        CHECK_OB_ERROR_BREAK(ob_err);
+        CHECK_OB_ERROR_BREAK(&ob_err);
 
         if (device_ctx->device == NULL)
         {
@@ -330,10 +330,10 @@ k4a_result_t init_device_context(k4a_device_t device_handle)
         }
 
         device_info = ob_device_get_device_info(device_ctx->device, &ob_err);
-        CHECK_OB_ERROR_BREAK(ob_err);
+        CHECK_OB_ERROR_BREAK(&ob_err);
 
         int pid = ob_device_info_pid(device_info, &ob_err);
-        CHECK_OB_ERROR_BREAK(ob_err);
+        CHECK_OB_ERROR_BREAK(&ob_err);
         if (pid == ORBBEC_MEGA_PID || pid == ORBBEC_BOLT_PID)
         {
 
@@ -352,7 +352,7 @@ k4a_result_t init_device_context(k4a_device_t device_handle)
                                    false,
                                    device_handle,
                                    &ob_err);
-            CHECK_OB_ERROR_BREAK(ob_err);
+            CHECK_OB_ERROR_BREAK(&ob_err);
 
             size_t json_data_size = 1024 * 10;
             uint8_t *json_data = (uint8_t *)malloc(json_data_size);
@@ -387,7 +387,7 @@ k4a_result_t init_device_context(k4a_device_t device_handle)
 
         // sync devices timer with host
         ob_enable_device_clock_sync(ob_ctx, 60000, &ob_err);
-        CHECK_OB_ERROR_BREAK(ob_err);
+        CHECK_OB_ERROR_BREAK(&ob_err);
 
         result = K4A_RESULT_SUCCEEDED;
     } while (0);
@@ -396,13 +396,13 @@ k4a_result_t init_device_context(k4a_device_t device_handle)
     if (dev_list != NULL)
     {
         ob_delete_device_list(dev_list, &ob_err);
-        CHECK_OB_ERROR(ob_err);
+        CHECK_OB_ERROR(&ob_err);
     }
 
     if (device_info != NULL)
     {
         ob_delete_device_info(device_info, &ob_err);
-        CHECK_OB_ERROR(ob_err);
+        CHECK_OB_ERROR(&ob_err);
     }
 
     if (result == K4A_RESULT_FAILED)
@@ -410,7 +410,7 @@ k4a_result_t init_device_context(k4a_device_t device_handle)
         if (device_ctx->device)
         {
             ob_delete_device((ob_device *)device_ctx->device, &ob_err);
-            CHECK_OB_ERROR(ob_err);
+            CHECK_OB_ERROR(&ob_err);
             device_ctx->device = NULL;
         }
 
@@ -467,7 +467,7 @@ void k4a_device_close(k4a_device_t device_handle)
 
         ob_error *ob_err = NULL;
         ob_delete_device((ob_device *)device_ctx->device, &ob_err);
-        CHECK_OB_ERROR(ob_err);
+        CHECK_OB_ERROR(&ob_err);
         device_ctx->device = NULL;
     }
 
@@ -565,7 +565,7 @@ void ob_accel_frame(ob_frame *frame, void *user_data)
     if (device_ctx->imusync == NULL)
     {
         ob_delete_frame(frame, &ob_err);
-        CHECK_OB_ERROR_RETURN(ob_err);
+        CHECK_OB_ERROR_RETURN(&ob_err);
         return;
     }
 
@@ -575,11 +575,11 @@ void ob_accel_frame(ob_frame *frame, void *user_data)
     accel_value.y = -accel_value.y;
     accel_value.z = -accel_value.z;
 
-    CHECK_OB_ERROR_RETURN(ob_err);
+    CHECK_OB_ERROR_RETURN(&ob_err);
     uint64_t timestamp = ob_frame_time_stamp_us(frame, &ob_err);
-    CHECK_OB_ERROR_RETURN(ob_err);
+    CHECK_OB_ERROR_RETURN(&ob_err);
     float temperature = ob_accel_frame_temperature(frame, &ob_err);
-    CHECK_OB_ERROR_RETURN(ob_err);
+    CHECK_OB_ERROR_RETURN(&ob_err);
 
     imu_frame_data imu_data;
     imu_data.timestamp = timestamp;
@@ -589,7 +589,7 @@ void ob_accel_frame(ob_frame *frame, void *user_data)
     imusync_push_frame(device_ctx->imusync, imu_data, ACCEL_FRAME_TYPE);
     // LOG_ERROR("timestamp =%lld", timestamp);
     ob_delete_frame(frame, &ob_err);
-    CHECK_OB_ERROR_RETURN(ob_err);
+    CHECK_OB_ERROR_RETURN(&ob_err);
 }
 
 void ob_gyro_frame(ob_frame *frame, void *user_data)
@@ -606,7 +606,7 @@ void ob_gyro_frame(ob_frame *frame, void *user_data)
     if (device_ctx->imusync == NULL)
     {
         ob_delete_frame(frame, &ob_err);
-        CHECK_OB_ERROR_RETURN(ob_err);
+        CHECK_OB_ERROR_RETURN(&ob_err);
         return;
     }
 
@@ -614,11 +614,11 @@ void ob_gyro_frame(ob_frame *frame, void *user_data)
     gyro_value.x = -gyro_value.x;
     gyro_value.y = -gyro_value.y;
     gyro_value.z = -gyro_value.z;
-    CHECK_OB_ERROR_RETURN(ob_err);
+    CHECK_OB_ERROR_RETURN(&ob_err);
     uint64_t timestamp = ob_frame_time_stamp_us(frame, &ob_err);
-    CHECK_OB_ERROR_RETURN(ob_err);
+    CHECK_OB_ERROR_RETURN(&ob_err);
     float temperature = ob_gyro_frame_temperature(frame, &ob_err);
-    CHECK_OB_ERROR_RETURN(ob_err);
+    CHECK_OB_ERROR_RETURN(&ob_err);
 
     imu_frame_data imu_data;
     imu_data.timestamp = timestamp;
@@ -628,7 +628,7 @@ void ob_gyro_frame(ob_frame *frame, void *user_data)
     // LOG_ERROR("gyro.x =%f,gyro.y =%f,gyro.z=f", gyro_value.x,gyro_value.y,gyro_value.z);
 
     ob_delete_frame(frame, &ob_err);
-    CHECK_OB_ERROR_RETURN(ob_err);
+    CHECK_OB_ERROR_RETURN(&ob_err);
 }
 
 k4a_wait_result_t k4a_device_get_imu_sample(k4a_device_t device_handle,
@@ -665,36 +665,36 @@ k4a_result_t k4a_device_start_imu(k4a_device_t device_handle)
 
     ob_error *ob_err = NULL;
     ob_sensor_list *sensor_list = ob_device_get_sensor_list(device_ctx->device, &ob_err);
-    CHECK_OB_ERROR_RETURN_K4A_RESULT(ob_err);
+    CHECK_OB_ERROR_RETURN_K4A_RESULT(&ob_err);
 
     ob_sensor *accel_sensor = ob_sensor_list_get_sensor_by_type(sensor_list, OB_SENSOR_ACCEL, &ob_err);
     if (ob_err != NULL)
     {
-        CHECK_OB_ERROR(ob_err);
+        CHECK_OB_ERROR(&ob_err);
         ob_delete_sensor_list(sensor_list, &ob_err);
-        CHECK_OB_ERROR(ob_err);
+        CHECK_OB_ERROR(&ob_err);
         return K4A_RESULT_FAILED;
     }
 
     ob_stream_profile_list *accel_profile_list = ob_sensor_get_stream_profile_list(accel_sensor, &ob_err);
     if (ob_err != NULL)
     {
-        CHECK_OB_ERROR(ob_err);
+        CHECK_OB_ERROR(&ob_err);
         ob_delete_sensor_list(sensor_list, &ob_err);
-        CHECK_OB_ERROR(ob_err);
+        CHECK_OB_ERROR(&ob_err);
         ob_delete_stream_profile_list(accel_profile_list, &ob_err);
-        CHECK_OB_ERROR(ob_err);
+        CHECK_OB_ERROR(&ob_err);
         return K4A_RESULT_FAILED;
     }
 
     uint32_t count = ob_stream_profile_list_count(accel_profile_list, &ob_err);
     if (ob_err != NULL)
     {
-        CHECK_OB_ERROR(ob_err);
+        CHECK_OB_ERROR(&ob_err);
         ob_delete_sensor_list(sensor_list, &ob_err);
-        CHECK_OB_ERROR(ob_err);
+        CHECK_OB_ERROR(&ob_err);
         ob_delete_stream_profile_list(accel_profile_list, &ob_err);
-        CHECK_OB_ERROR(ob_err);
+        CHECK_OB_ERROR(&ob_err);
         return K4A_RESULT_FAILED;
     }
 
@@ -704,13 +704,13 @@ k4a_result_t k4a_device_start_imu(k4a_device_t device_handle)
         for (uint32_t i = 0; i < count; i++)
         {
             profile = ob_stream_profile_list_get_profile(accel_profile_list, i, &ob_err);
-            CHECK_OB_ERROR_CONTINUE(ob_err);
+            CHECK_OB_ERROR_CONTINUE(&ob_err);
 
             ob_accel_sample_rate accel_rate = ob_accel_stream_profile_sample_rate(profile, &ob_err);
-            CHECK_OB_ERROR_CONTINUE(ob_err);
+            CHECK_OB_ERROR_CONTINUE(&ob_err);
 
             ob_accel_full_scale_range accel_range = ob_accel_stream_profile_full_scale_range(profile, &ob_err);
-            CHECK_OB_ERROR_CONTINUE(ob_err);
+            CHECK_OB_ERROR_CONTINUE(&ob_err);
 
             if (accel_rate == OB_SAMPLE_RATE_500_HZ && accel_range == OB_ACCEL_FS_4g)
             {
@@ -718,19 +718,19 @@ k4a_result_t k4a_device_start_imu(k4a_device_t device_handle)
             }
 
             ob_delete_stream_profile(profile, &ob_err);
-            CHECK_OB_ERROR_CONTINUE(ob_err);
+            CHECK_OB_ERROR_CONTINUE(&ob_err);
         }
 
         ob_sensor_start(accel_sensor, profile, ob_accel_frame, device_handle, &ob_err);
-        CHECK_OB_ERROR(ob_err);
+        CHECK_OB_ERROR(&ob_err);
         ob_delete_stream_profile(profile, &ob_err);
         if (ob_err != NULL)
         {
-            CHECK_OB_ERROR(ob_err);
+            CHECK_OB_ERROR(&ob_err);
             ob_delete_sensor_list(sensor_list, &ob_err);
-            CHECK_OB_ERROR(ob_err);
+            CHECK_OB_ERROR(&ob_err);
             ob_delete_stream_profile_list(accel_profile_list, &ob_err);
-            CHECK_OB_ERROR(ob_err);
+            CHECK_OB_ERROR(&ob_err);
             return K4A_RESULT_FAILED;
         }
     }
@@ -738,41 +738,41 @@ k4a_result_t k4a_device_start_imu(k4a_device_t device_handle)
     ob_sensor *gyro_sensor = ob_sensor_list_get_sensor_by_type(sensor_list, OB_SENSOR_GYRO, &ob_err);
     if (ob_err != NULL)
     {
-        CHECK_OB_ERROR(ob_err);
+        CHECK_OB_ERROR(&ob_err);
         ob_delete_sensor_list(sensor_list, &ob_err);
-        CHECK_OB_ERROR(ob_err);
+        CHECK_OB_ERROR(&ob_err);
         ob_delete_stream_profile_list(accel_profile_list, &ob_err);
-        CHECK_OB_ERROR(ob_err);
+        CHECK_OB_ERROR(&ob_err);
         return K4A_RESULT_FAILED;
     }
 
     ob_stream_profile_list *gyro_profile_list = ob_sensor_get_stream_profile_list(gyro_sensor, &ob_err);
     if (ob_err != NULL)
     {
-        CHECK_OB_ERROR(ob_err);
+        CHECK_OB_ERROR(&ob_err);
         ob_delete_sensor(gyro_sensor,  &ob_err);
-        CHECK_OB_ERROR(ob_err);
+        CHECK_OB_ERROR(&ob_err);
         ob_delete_sensor_list(sensor_list, &ob_err);
-        CHECK_OB_ERROR(ob_err);
+        CHECK_OB_ERROR(&ob_err);
         ob_delete_stream_profile_list(accel_profile_list, &ob_err);
-        CHECK_OB_ERROR(ob_err);
+        CHECK_OB_ERROR(&ob_err);
         ob_delete_stream_profile_list(gyro_profile_list, &ob_err);
-        CHECK_OB_ERROR(ob_err);
+        CHECK_OB_ERROR(&ob_err);
         return K4A_RESULT_FAILED;
     }
 
     count = ob_stream_profile_list_count(gyro_profile_list, &ob_err);
     if (ob_err != NULL)
     {
-        CHECK_OB_ERROR(ob_err);
+        CHECK_OB_ERROR(&ob_err);
         ob_delete_sensor(gyro_sensor,  &ob_err);
-        CHECK_OB_ERROR(ob_err);
+        CHECK_OB_ERROR(&ob_err);
         ob_delete_sensor_list(sensor_list, &ob_err);
-        CHECK_OB_ERROR(ob_err);
+        CHECK_OB_ERROR(&ob_err);
         ob_delete_stream_profile_list(accel_profile_list, &ob_err);
-        CHECK_OB_ERROR(ob_err);
+        CHECK_OB_ERROR(&ob_err);
         ob_delete_stream_profile_list(gyro_profile_list, &ob_err);
-        CHECK_OB_ERROR(ob_err);
+        CHECK_OB_ERROR(&ob_err);
         return K4A_RESULT_FAILED;
     }
 
@@ -782,13 +782,13 @@ k4a_result_t k4a_device_start_imu(k4a_device_t device_handle)
         for (uint32_t i = 0; i < count; i++)
         {
             profile = ob_stream_profile_list_get_profile(gyro_profile_list, i, &ob_err);
-            CHECK_OB_ERROR_CONTINUE(ob_err);
+            CHECK_OB_ERROR_CONTINUE(&ob_err);
 
             ob_gyro_sample_rate gyro_rate = ob_gyro_stream_profile_sample_rate(profile, &ob_err);
-            CHECK_OB_ERROR_CONTINUE(ob_err);
+            CHECK_OB_ERROR_CONTINUE(&ob_err);
 
             ob_gyro_full_scale_range gyro_range = ob_gyro_stream_profile_full_scale_range(profile, &ob_err);
-            CHECK_OB_ERROR_CONTINUE(ob_err);
+            CHECK_OB_ERROR_CONTINUE(&ob_err);
 
             if (gyro_rate == OB_SAMPLE_RATE_500_HZ && gyro_range == OB_GYRO_FS_500dps)
             {
@@ -796,32 +796,32 @@ k4a_result_t k4a_device_start_imu(k4a_device_t device_handle)
             }
 
             ob_delete_stream_profile(profile, &ob_err);
-            CHECK_OB_ERROR_CONTINUE(ob_err);
+            CHECK_OB_ERROR_CONTINUE(&ob_err);
         }
 
         ob_sensor_start(gyro_sensor, profile, ob_gyro_frame, device_handle, &ob_err);
-        CHECK_OB_ERROR(ob_err);
+        CHECK_OB_ERROR(&ob_err);
         ob_delete_stream_profile(profile, &ob_err);
         if (ob_err != NULL)
         {
-            CHECK_OB_ERROR(ob_err);
+            CHECK_OB_ERROR(&ob_err);
             ob_delete_sensor_list(sensor_list, &ob_err);
-            CHECK_OB_ERROR(ob_err);
+            CHECK_OB_ERROR(&ob_err);
             ob_delete_stream_profile_list(accel_profile_list, &ob_err);
-            CHECK_OB_ERROR(ob_err);
+            CHECK_OB_ERROR(&ob_err);
             ob_delete_stream_profile_list(gyro_profile_list, &ob_err);
-            CHECK_OB_ERROR(ob_err);
+            CHECK_OB_ERROR(&ob_err);
             LOG_ERROR("ob_sensor_start failed", 0);
             return K4A_RESULT_FAILED;
         }
     }
 
     ob_delete_sensor_list(sensor_list, &ob_err);
-    CHECK_OB_ERROR(ob_err);
+    CHECK_OB_ERROR(&ob_err);
     ob_delete_stream_profile_list(accel_profile_list, &ob_err);
-    CHECK_OB_ERROR(ob_err);
+    CHECK_OB_ERROR(&ob_err);
     ob_delete_stream_profile_list(gyro_profile_list, &ob_err);
-    CHECK_OB_ERROR(ob_err);
+    CHECK_OB_ERROR(&ob_err);
 
     device_ctx->accel_sensor = accel_sensor;
     device_ctx->gyro_sensor = gyro_sensor;
@@ -843,18 +843,18 @@ void k4a_device_stop_imu(k4a_device_t device_handle)
     if (device_ctx->accel_sensor != NULL)
     {
         ob_sensor_stop(device_ctx->accel_sensor, &ob_err);
-        CHECK_OB_ERROR(ob_err);
+        CHECK_OB_ERROR(&ob_err);
         ob_delete_sensor(device_ctx->accel_sensor, &ob_err);
-        CHECK_OB_ERROR(ob_err);
+        CHECK_OB_ERROR(&ob_err);
         device_ctx->accel_sensor = NULL;
     }
 
     if (device_ctx->gyro_sensor != NULL)
     {
         ob_sensor_stop(device_ctx->gyro_sensor, &ob_err);
-        CHECK_OB_ERROR(ob_err);
+        CHECK_OB_ERROR(&ob_err);
         ob_delete_sensor(device_ctx->gyro_sensor, &ob_err);
-        CHECK_OB_ERROR(ob_err);
+        CHECK_OB_ERROR(&ob_err);
         device_ctx->gyro_sensor = NULL;
     }
 
@@ -869,7 +869,7 @@ k4a_result_t k4a_capture_create(k4a_capture_t *capture_handle)
     k4a_result_t result = K4A_RESULT_FAILED;
     ob_error *ob_err = NULL;
     ob_frame *frame = ob_create_frameset(&ob_err);
-    CHECK_OB_ERROR_RETURN_K4A_RESULT(ob_err);
+    CHECK_OB_ERROR_RETURN_K4A_RESULT(&ob_err);
     if (frame != NULL)
     {
         *capture_handle = (k4a_capture_t)frame;
@@ -885,7 +885,7 @@ void k4a_capture_release(k4a_capture_t capture_handle)
         ob_error *ob_err = NULL;
         ob_frame *frame = (ob_frame *)capture_handle;
         ob_delete_frame(frame, &ob_err);
-        CHECK_OB_ERROR_RETURN(ob_err);
+        CHECK_OB_ERROR_RETURN(&ob_err);
     }
 }
 
@@ -896,7 +896,7 @@ void k4a_capture_reference(k4a_capture_t capture_handle)
         ob_error *ob_err = NULL;
         ob_frame *frame = (ob_frame *)capture_handle;
         ob_frame_add_ref(frame, &ob_err);
-        CHECK_OB_ERROR_RETURN(ob_err);
+        CHECK_OB_ERROR_RETURN(&ob_err);
     }
 }
 
@@ -919,7 +919,7 @@ k4a_image_t k4a_capture_get_color_image(k4a_capture_t capture_handle)
     ob_error *ob_err = NULL;
     ob_frame *frame_set = (ob_frame *)capture_handle;
     ob_frame *color_frame = ob_frameset_color_frame(frame_set, &ob_err);
-    CHECK_OB_ERROR_RETURN_VALUE(ob_err, NULL);
+    CHECK_OB_ERROR_RETURN_VALUE(&ob_err, NULL);
 
     if (color_frame == NULL)
     {
@@ -940,7 +940,7 @@ k4a_image_t k4a_capture_get_depth_image(k4a_capture_t capture_handle)
     ob_error *ob_err = NULL;
     ob_frame *frame_set = (ob_frame *)capture_handle;
     ob_frame *depth_frame = ob_frameset_depth_frame(frame_set, &ob_err);
-    CHECK_OB_ERROR_RETURN_VALUE(ob_err, NULL);
+    CHECK_OB_ERROR_RETURN_VALUE(&ob_err, NULL);
     if (depth_frame == NULL)
     {
         LOG_INFO("depth_frame is null ", 0);
@@ -961,7 +961,7 @@ k4a_image_t k4a_capture_get_ir_image(k4a_capture_t capture_handle)
     ob_error *ob_err = NULL;
     ob_frame *frame_set = (ob_frame *)capture_handle;
     ob_frame *ir_frame = ob_frameset_ir_frame(frame_set, &ob_err);
-    CHECK_OB_ERROR_RETURN_VALUE(ob_err, NULL);
+    CHECK_OB_ERROR_RETURN_VALUE(&ob_err, NULL);
 
     if (ir_frame == NULL)
     {
@@ -984,7 +984,7 @@ void k4a_capture_set_color_image(k4a_capture_t capture_handle, k4a_image_t image
     ob_frame *frame_set = (ob_frame *)capture_handle;
     ob_frame *color_frame = (ob_frame *)image_handle;
     ob_frameset_push_frame(frame_set, OB_FRAME_COLOR, color_frame, &ob_err);
-    CHECK_OB_ERROR_RETURN(ob_err);
+    CHECK_OB_ERROR_RETURN(&ob_err);
 }
 
 void k4a_capture_set_depth_image(k4a_capture_t capture_handle, k4a_image_t image_handle)
@@ -999,7 +999,7 @@ void k4a_capture_set_depth_image(k4a_capture_t capture_handle, k4a_image_t image
     ob_frame *frame_set = (ob_frame *)capture_handle;
     ob_frame *depth_frame = (ob_frame *)image_handle;
     ob_frameset_push_frame(frame_set, OB_FRAME_DEPTH, depth_frame, &ob_err);
-    CHECK_OB_ERROR_RETURN(ob_err);
+    CHECK_OB_ERROR_RETURN(&ob_err);
 }
 
 void k4a_capture_set_ir_image(k4a_capture_t capture_handle, k4a_image_t image_handle)
@@ -1014,7 +1014,7 @@ void k4a_capture_set_ir_image(k4a_capture_t capture_handle, k4a_image_t image_ha
     ob_frame *frame_set = (ob_frame *)capture_handle;
     ob_frame *ir_frame = (ob_frame *)image_handle;
     ob_frameset_push_frame(frame_set, OB_FRAME_IR, ir_frame, &ob_err);
-    CHECK_OB_ERROR_RETURN(ob_err);
+    CHECK_OB_ERROR_RETURN(&ob_err);
 }
 
 void k4a_capture_set_temperature_c(k4a_capture_t capture_handle, float temperature_c)
@@ -1069,7 +1069,7 @@ k4a_result_t k4a_image_create(k4a_image_format_t format,
         obFrame = ob_create_frame(OB_FORMAT_BGRA, width_pixels, height_pixels, stride_bytes, OB_FRAME_COLOR, &ob_err);
         break;
     }
-    CHECK_OB_ERROR_RETURN_K4A_RESULT(ob_err);
+    CHECK_OB_ERROR_RETURN_K4A_RESULT(&ob_err);
 
     *image_handle = (k4a_image_t)obFrame;
     return result;
@@ -1138,7 +1138,7 @@ k4a_result_t k4a_image_create_from_buffer(k4a_image_format_t format,
                                           buffer_release_cb,
                                           buffer_release_cb_context,
                                           &ob_err);
-    CHECK_OB_ERROR_RETURN_K4A_RESULT(ob_err);
+    CHECK_OB_ERROR_RETURN_K4A_RESULT(&ob_err);
     if (obFrame != NULL)
     {
         *image_handle = (k4a_image_t)obFrame;
@@ -1159,7 +1159,7 @@ uint8_t *k4a_image_get_buffer(k4a_image_t image_handle)
     ob_error *ob_err = NULL;
     ob_frame *frame = (ob_frame *)image_handle;
     uint8_t *data = (uint8_t *)ob_frame_data(frame, &ob_err);
-    CHECK_OB_ERROR_RETURN_VALUE(ob_err, NULL);
+    CHECK_OB_ERROR_RETURN_VALUE(&ob_err, NULL);
     return data;
 }
 
@@ -1174,7 +1174,7 @@ size_t k4a_image_get_size(k4a_image_t image_handle)
     ob_error *ob_err = NULL;
     ob_frame *frame = (ob_frame *)image_handle;
     uint32_t data_size = ob_frame_data_size(frame, &ob_err);
-    CHECK_OB_ERROR_RETURN_VALUE(ob_err, 0);
+    CHECK_OB_ERROR_RETURN_VALUE(&ob_err, 0);
     return (size_t)data_size;
 }
 
@@ -1189,10 +1189,10 @@ k4a_image_format_t k4a_image_get_format(k4a_image_t image_handle)
     ob_error *ob_err = NULL;
     ob_frame *frame = (ob_frame *)image_handle;
     ob_format frame_format = ob_frame_format(frame, &ob_err);
-    CHECK_OB_ERROR_RETURN_VALUE(ob_err, K4A_IMAGE_FORMAT_CUSTOM);
+    CHECK_OB_ERROR_RETURN_VALUE(&ob_err, K4A_IMAGE_FORMAT_CUSTOM);
     k4a_image_format_t k4a_image_format = K4A_IMAGE_FORMAT_CUSTOM;
     ob_frame_type frame_type = ob_frame_get_type(frame, &ob_err);
-    CHECK_OB_ERROR_RETURN_VALUE(ob_err, K4A_IMAGE_FORMAT_CUSTOM);
+    CHECK_OB_ERROR_RETURN_VALUE(&ob_err, K4A_IMAGE_FORMAT_CUSTOM);
 
     switch (frame_format)
     {
@@ -1256,7 +1256,7 @@ int k4a_image_get_width_pixels(k4a_image_t image_handle)
     ob_error *ob_err = NULL;
     ob_frame *frame = (ob_frame *)image_handle;
     int width_pixels = ob_video_frame_width(frame, &ob_err);
-    CHECK_OB_ERROR_RETURN_VALUE(ob_err, 0);
+    CHECK_OB_ERROR_RETURN_VALUE(&ob_err, 0);
     return width_pixels;
 }
 
@@ -1270,7 +1270,7 @@ int k4a_image_get_height_pixels(k4a_image_t image_handle)
     ob_error *ob_err = NULL;
     ob_frame *frame = (ob_frame *)image_handle;
     int height_pixels = ob_video_frame_height(frame, &ob_err);
-    CHECK_OB_ERROR_RETURN_VALUE(ob_err, 0);
+    CHECK_OB_ERROR_RETURN_VALUE(&ob_err, 0);
     return height_pixels;
 }
 
@@ -1286,9 +1286,9 @@ int k4a_image_get_stride_bytes(k4a_image_t image_handle)
     ob_error *ob_err = NULL;
     ob_frame *frame = (ob_frame *)image_handle;
     ob_format frame_format = ob_frame_format(frame, &ob_err);
-    CHECK_OB_ERROR_RETURN_VALUE(ob_err, 0);
+    CHECK_OB_ERROR_RETURN_VALUE(&ob_err, 0);
     int width_pixels = ob_video_frame_width(frame, &ob_err);
-    CHECK_OB_ERROR_RETURN_VALUE(ob_err, 0);
+    CHECK_OB_ERROR_RETURN_VALUE(&ob_err, 0);
     int stride_bytes = 0;
 
     switch (frame_format)
@@ -1334,7 +1334,7 @@ uint64_t k4a_image_get_device_timestamp_usec(k4a_image_t image_handle)
     ob_frame *frame = (ob_frame *)image_handle;
 
     uint64_t time_stamp = ob_frame_time_stamp_us(frame, &ob_err);
-    CHECK_OB_ERROR_RETURN_VALUE(ob_err, 0);
+    CHECK_OB_ERROR_RETURN_VALUE(&ob_err, 0);
 
     return time_stamp;
 }
@@ -1352,7 +1352,7 @@ uint64_t k4a_image_get_system_timestamp_nsec(k4a_image_t image_handle)
     ob_frame *frame = (ob_frame *)image_handle;
 
     uint64_t time_stamp = ob_frame_system_time_stamp(frame, &ob_err);
-    CHECK_OB_ERROR_RETURN_VALUE(ob_err, 0);
+    CHECK_OB_ERROR_RETURN_VALUE(&ob_err, 0);
 
     time_stamp = time_stamp * 1000000;
 
@@ -1365,7 +1365,7 @@ uint64_t k4a_image_get_exposure_usec(k4a_image_t image_handle)
     ob_frame *frame = (ob_frame *)image_handle;
 
     void *metadata = ob_video_frame_metadata(frame, &ob_err);
-    CHECK_OB_ERROR_RETURN_VALUE(ob_err, 0);
+    CHECK_OB_ERROR_RETURN_VALUE(&ob_err, 0);
     if (metadata == NULL)
     {
         LOG_WARNING("get exposure failed", 0);
@@ -1384,7 +1384,7 @@ uint32_t k4a_image_get_white_balance(k4a_image_t image_handle)
     ob_frame *frame = (ob_frame *)image_handle;
 
     void *metadata = ob_video_frame_metadata(frame, &ob_err);
-    CHECK_OB_ERROR_RETURN_VALUE(ob_err, 0);
+    CHECK_OB_ERROR_RETURN_VALUE(&ob_err, 0);
     if (metadata == NULL)
     {
         LOG_WARNING("get white balance failed", 0);
@@ -1403,7 +1403,7 @@ uint32_t k4a_image_get_iso_speed(k4a_image_t image_handle)
     ob_frame *frame = (ob_frame *)image_handle;
 
     void *metadata = ob_video_frame_metadata(frame, &ob_err);
-    CHECK_OB_ERROR_RETURN_VALUE(ob_err, 0);
+    CHECK_OB_ERROR_RETURN_VALUE(&ob_err, 0);
     if (metadata == NULL)
     {
         LOG_WARNING("get image iso_speed failed", 0);
@@ -1428,7 +1428,7 @@ void k4a_image_set_device_timestamp_usec(k4a_image_t image_handle, uint64_t time
     ob_error *ob_err = NULL;
 
     ob_frame_set_device_time_stamp_us(frame, timestamp_usec, &ob_err);
-    CHECK_OB_ERROR_RETURN(ob_err);
+    CHECK_OB_ERROR_RETURN(&ob_err);
 
     if (ob_err != NULL)
     {
@@ -1455,7 +1455,7 @@ void k4a_image_set_system_timestamp_nsec(k4a_image_t image_handle, uint64_t time
     uint64_t timestamp_usec = timestamp_nsec / 1000;
 
     ob_frame_set_device_time_stamp_us(frame, timestamp_usec, &ob_err);
-    CHECK_OB_ERROR_RETURN(ob_err);
+    CHECK_OB_ERROR_RETURN(&ob_err);
 
     if (ob_err != NULL)
     {
@@ -1499,7 +1499,7 @@ void k4a_image_reference(k4a_image_t image_handle)
         ob_error *ob_err = NULL;
         ob_frame *frame = (ob_frame *)image_handle;
         ob_frame_add_ref(frame, &ob_err);
-        CHECK_OB_ERROR_RETURN(ob_err);
+        CHECK_OB_ERROR_RETURN(&ob_err);
     }
 }
 
@@ -1510,7 +1510,7 @@ void k4a_image_release(k4a_image_t image_handle)
         ob_error *ob_err = NULL;
         ob_frame *frame = (ob_frame *)image_handle;
         ob_delete_frame(frame, &ob_err);
-        CHECK_OB_ERROR_RETURN(ob_err);
+        CHECK_OB_ERROR_RETURN(&ob_err);
     }
 }
 /*
@@ -1756,9 +1756,9 @@ k4a_result_t k4a_device_start_cameras(k4a_device_t device_handle, const k4a_devi
     ob_error *ob_err = NULL;
     ob_device_info *dev_info = ob_device_get_device_info(device_ctx->device, &ob_err);
     int pid = ob_device_info_pid(dev_info, &ob_err);
-    CHECK_OB_ERROR_RETURN_K4A_RESULT(ob_err);
+    CHECK_OB_ERROR_RETURN_K4A_RESULT(&ob_err);
     ob_delete_device_info(dev_info, &ob_err);
-    CHECK_OB_ERROR_RETURN_K4A_RESULT(ob_err);
+    CHECK_OB_ERROR_RETURN_K4A_RESULT(&ob_err);
 
     if (pid == ORBBEC_MEGA_PID || pid == ORBBEC_BOLT_PID)
     {
@@ -1772,7 +1772,7 @@ k4a_result_t k4a_device_start_cameras(k4a_device_t device_handle, const k4a_devi
                                       &ob_config,
                                       &len,
                                       &ob_err);
-        CHECK_OB_ERROR_RETURN_K4A_RESULT(ob_err);
+        CHECK_OB_ERROR_RETURN_K4A_RESULT(&ob_err);
 
         uint32_t base_delay = 0;
         if (config->wired_sync_mode == K4A_WIRED_SYNC_MODE_MASTER)
@@ -1808,7 +1808,7 @@ k4a_result_t k4a_device_start_cameras(k4a_device_t device_handle, const k4a_devi
                                       sizeof(ob_config),
                                       &ob_err);
 
-        CHECK_OB_ERROR_RETURN_K4A_RESULT(ob_err);
+        CHECK_OB_ERROR_RETURN_K4A_RESULT(&ob_err);
     }
 
     if (pid != ORBBEC_MEGA_PID && pid != ORBBEC_BOLT_PID && config->depth_mode == K4A_DEPTH_MODE_PASSIVE_IR)
@@ -1905,10 +1905,10 @@ k4a_result_t k4a_device_start_cameras(k4a_device_t device_handle, const k4a_devi
     }
 
     device_ctx->pipe = ob_create_pipeline_with_device((ob_device *)device_ctx->device, &ob_err);
-    CHECK_OB_ERROR_RETURN_K4A_RESULT(ob_err);
+    CHECK_OB_ERROR_RETURN_K4A_RESULT(&ob_err);
 
     ob_config *obConfig = ob_create_config(&ob_err);
-    CHECK_OB_ERROR_RETURN_K4A_RESULT(ob_err);
+    CHECK_OB_ERROR_RETURN_K4A_RESULT(&ob_err);
 
     ob_stream_profile *depth_profile = NULL;
     ob_stream_profile_list *depth_profiles = NULL;
@@ -1928,10 +1928,10 @@ k4a_result_t k4a_device_start_cameras(k4a_device_t device_handle, const k4a_devi
             if (pid == ORBBEC_MEGA_PID || pid == ORBBEC_BOLT_PID)
             {
                 ob_device_set_int_property(device_ctx->device, OB_PROP_SWITCH_IR_MODE_INT, ACTIVE_IR, &ob_err);
-                CHECK_OB_ERROR_RETURN_K4A_RESULT(ob_err);
+                CHECK_OB_ERROR_RETURN_K4A_RESULT(&ob_err);
             }
             depth_profiles = ob_pipeline_get_stream_profile_list(device_ctx->pipe, OB_SENSOR_DEPTH, &ob_err);
-            CHECK_OB_ERROR_RETURN_K4A_RESULT(ob_err);
+            CHECK_OB_ERROR_RETURN_K4A_RESULT(&ob_err);
             depth_profile = ob_stream_profile_list_get_video_stream_profile(depth_profiles,
                                                                             k4a_depth_width,
                                                                             k4a_depth_height,
@@ -1939,27 +1939,27 @@ k4a_result_t k4a_device_start_cameras(k4a_device_t device_handle, const k4a_devi
                                                                                            // OB_FORMAT_Y16
                                                                             k4a_fps,
                                                                             &ob_err);
-            CHECK_OB_ERROR(ob_err);
+            CHECK_OB_ERROR(&ob_err);
 
             if (!depth_profile)
             {
 
                 ob_delete_pipeline(device_ctx->pipe, &ob_err);
                 device_ctx->pipe = NULL;
-                CHECK_OB_ERROR(ob_err);
+                CHECK_OB_ERROR(&ob_err);
 
                 ob_delete_config(obConfig, &ob_err);
                 obConfig = NULL;
-                CHECK_OB_ERROR(ob_err);
+                CHECK_OB_ERROR(&ob_err);
 
                 ob_delete_stream_profile_list(depth_profiles, &ob_err);
                 depth_profiles = NULL;
-                CHECK_OB_ERROR(ob_err);
+                CHECK_OB_ERROR(&ob_err);
                 return K4A_RESULT_FAILED;
             }
 
             ob_config_enable_stream(obConfig, depth_profile, &ob_err);
-            CHECK_OB_ERROR_RETURN_K4A_RESULT(ob_err);
+            CHECK_OB_ERROR_RETURN_K4A_RESULT(&ob_err);
         }
         else
         {
@@ -1967,12 +1967,12 @@ k4a_result_t k4a_device_start_cameras(k4a_device_t device_handle, const k4a_devi
             if (pid == ORBBEC_MEGA_PID || pid == ORBBEC_BOLT_PID)
             {
                 ob_device_set_int_property(device_ctx->device, OB_PROP_SWITCH_IR_MODE_INT, PASSIVE_IR, &ob_err);
-                CHECK_OB_ERROR_RETURN_K4A_RESULT(ob_err);
+                CHECK_OB_ERROR_RETURN_K4A_RESULT(&ob_err);
             }
         }
 
         ir_profiles = ob_pipeline_get_stream_profile_list(device_ctx->pipe, OB_SENSOR_IR, &ob_err);
-        CHECK_OB_ERROR_RETURN_K4A_RESULT(ob_err);
+        CHECK_OB_ERROR_RETURN_K4A_RESULT(&ob_err);
 
         ir_profile = ob_stream_profile_list_get_video_stream_profile(ir_profiles,
                                                                      k4a_depth_width,
@@ -1980,38 +1980,38 @@ k4a_result_t k4a_device_start_cameras(k4a_device_t device_handle, const k4a_devi
                                                                      OB_FORMAT_Y16,
                                                                      k4a_fps,
                                                                      &ob_err);
-        CHECK_OB_ERROR(ob_err);
+        CHECK_OB_ERROR(&ob_err);
 
         if (!ir_profile)
         {
 
             ob_delete_pipeline(device_ctx->pipe, &ob_err);
-            CHECK_OB_ERROR(ob_err);
+            CHECK_OB_ERROR(&ob_err);
             device_ctx->pipe = NULL;
             ob_delete_config(obConfig, &ob_err);
-            CHECK_OB_ERROR(ob_err);
+            CHECK_OB_ERROR(&ob_err);
             if (config->depth_mode != K4A_DEPTH_MODE_PASSIVE_IR)
             {
                 ob_delete_stream_profile_list(depth_profiles, &ob_err);
                 depth_profiles = NULL;
-                CHECK_OB_ERROR(ob_err);
+                CHECK_OB_ERROR(&ob_err);
             }
 
             ob_delete_stream_profile_list(ir_profiles, &ob_err);
             ir_profiles = NULL;
-            CHECK_OB_ERROR(ob_err);
+            CHECK_OB_ERROR(&ob_err);
 
             return K4A_RESULT_FAILED;
         }
         ob_config_enable_stream(obConfig, ir_profile, &ob_err);
-        CHECK_OB_ERROR_RETURN_K4A_RESULT(ob_err);
+        CHECK_OB_ERROR_RETURN_K4A_RESULT(&ob_err);
     }
 
     if (config->color_resolution != K4A_COLOR_RESOLUTION_OFF)
     {
 
         color_profiles = ob_pipeline_get_stream_profile_list(device_ctx->pipe, OB_SENSOR_COLOR, &ob_err);
-        CHECK_OB_ERROR_RETURN_K4A_RESULT(ob_err);
+        CHECK_OB_ERROR_RETURN_K4A_RESULT(&ob_err);
 
         ob_format color_format = OB_FORMAT_UNKNOWN;
         switch (config->color_format)
@@ -2044,22 +2044,22 @@ k4a_result_t k4a_device_start_cameras(k4a_device_t device_handle, const k4a_devi
                                                                         color_format, // OB_FORMAT_MJPG
                                                                         k4a_fps,
                                                                         &ob_err);
-        CHECK_OB_ERROR(ob_err);
+        CHECK_OB_ERROR(&ob_err);
 
         if (!color_profile)
         {
 
             ob_delete_pipeline(device_ctx->pipe, &ob_err);
             device_ctx->pipe= NULL;
-            CHECK_OB_ERROR(ob_err);
+            CHECK_OB_ERROR(&ob_err);
 
             ob_delete_config(obConfig, &ob_err);
             obConfig = NULL;
-            CHECK_OB_ERROR(ob_err);
+            CHECK_OB_ERROR(&ob_err);
 
             ob_delete_stream_profile_list(color_profiles, &ob_err);
             color_profiles = NULL;
-            CHECK_OB_ERROR(ob_err);
+            CHECK_OB_ERROR(&ob_err);
 
             if (config->depth_mode != K4A_DEPTH_MODE_OFF)
             {
@@ -2067,52 +2067,52 @@ k4a_result_t k4a_device_start_cameras(k4a_device_t device_handle, const k4a_devi
                 {
                     ob_delete_stream_profile_list(depth_profiles, &ob_err);
                     depth_profiles = NULL;
-                    CHECK_OB_ERROR(ob_err);
+                    CHECK_OB_ERROR(&ob_err);
                 }
 
                 ob_delete_stream_profile_list(ir_profiles, &ob_err);
                 ir_profiles = NULL;
-                CHECK_OB_ERROR(ob_err);
+                CHECK_OB_ERROR(&ob_err);
             }
 
             return K4A_RESULT_FAILED;
         }
 
         ob_config_enable_stream(obConfig, color_profile, &ob_err);
-        CHECK_OB_ERROR_RETURN_K4A_RESULT(ob_err);
+        CHECK_OB_ERROR_RETURN_K4A_RESULT(&ob_err);
     }
 
     ob_pipeline_enable_frame_sync(device_ctx->pipe, &ob_err);
-    CHECK_OB_ERROR_RETURN_K4A_RESULT(ob_err);
+    CHECK_OB_ERROR_RETURN_K4A_RESULT(&ob_err);
 
     if (config->synchronized_images_only && config->depth_mode != K4A_DEPTH_MODE_PASSIVE_IR)
     {
         ob_config_set_frame_aggregate_output_mode(obConfig, OB_FRAME_AGGREGATE_OUTPUT_FULL_FRAME_REQUIRE, &ob_err);
-        CHECK_OB_ERROR_RETURN_K4A_RESULT(ob_err);
+        CHECK_OB_ERROR_RETURN_K4A_RESULT(&ob_err);
     }
 
     frame_queue_enable(device_ctx->frameset_queue);
 
     ob_pipeline_start_with_callback(device_ctx->pipe, obConfig, ob_frame_set_ready, device_handle, &ob_err);
-    CHECK_OB_ERROR_RETURN_K4A_RESULT(ob_err);
+    CHECK_OB_ERROR_RETURN_K4A_RESULT(&ob_err);
 
-    CHECK_OB_ERROR_RETURN_K4A_RESULT(ob_err);
+    CHECK_OB_ERROR_RETURN_K4A_RESULT(&ob_err);
     ob_delete_config(obConfig, &ob_err);
     if (config->depth_mode != K4A_DEPTH_MODE_OFF)
     {
         ob_delete_stream_profile_list(depth_profiles, &ob_err);
-        CHECK_OB_ERROR_RETURN_K4A_RESULT(ob_err);
+        CHECK_OB_ERROR_RETURN_K4A_RESULT(&ob_err);
         depth_profiles = NULL;
 
         ob_delete_stream_profile_list(ir_profiles, &ob_err);
-        CHECK_OB_ERROR_RETURN_K4A_RESULT(ob_err);
+        CHECK_OB_ERROR_RETURN_K4A_RESULT(&ob_err);
         ir_profiles = NULL;
     }
 
     if (config->color_resolution != K4A_COLOR_RESOLUTION_OFF)
     {
         ob_delete_stream_profile_list(color_profiles, &ob_err);
-        CHECK_OB_ERROR_RETURN_K4A_RESULT(ob_err);
+        CHECK_OB_ERROR_RETURN_K4A_RESULT(&ob_err);
         color_profiles = NULL;
     }
     if (color_profiles != NULL)
@@ -2159,10 +2159,10 @@ void k4a_device_stop_cameras(k4a_device_t device_handle)
         if (device_ctx->pipe != NULL)
         {
             ob_pipeline_stop(device_ctx->pipe, &ob_err);
-            CHECK_OB_ERROR(ob_err);
+            CHECK_OB_ERROR(&ob_err);
 
             ob_delete_pipeline(device_ctx->pipe, &ob_err);
-            CHECK_OB_ERROR(ob_err);
+            CHECK_OB_ERROR(&ob_err);
             device_ctx->pipe = NULL;
         }
 
@@ -2292,10 +2292,10 @@ k4a_result_t k4a_device_get_version(k4a_device_t device_handle, k4a_hardware_ver
 
     ob_error *ob_err = NULL;
     ob_device_info *dev_info = ob_device_get_device_info(device_ctx->device, &ob_err);
-    CHECK_OB_ERROR_RETURN_K4A_RESULT(ob_err);
+    CHECK_OB_ERROR_RETURN_K4A_RESULT(&ob_err);
 
     const char *firmware_version = ob_device_info_firmware_version(dev_info, &ob_err);
-    CHECK_OB_ERROR_RETURN_K4A_RESULT(ob_err);
+    CHECK_OB_ERROR_RETURN_K4A_RESULT(&ob_err);
 
     k4a_version_t k4a_version = { 0 };
 
@@ -2315,7 +2315,7 @@ k4a_result_t k4a_device_get_version(k4a_device_t device_handle, k4a_hardware_ver
     version->firmware_signature = K4A_FIRMWARE_SIGNATURE_UNSIGNED;
 
     ob_delete_device_info(dev_info, &ob_err);
-    CHECK_OB_ERROR_RETURN_K4A_RESULT(ob_err);
+    CHECK_OB_ERROR_RETURN_K4A_RESULT(&ob_err);
 
     return K4A_RESULT_SUCCEEDED;
 }
@@ -2366,7 +2366,7 @@ k4a_result_t k4a_device_get_color_control_capabilities(k4a_device_t device_handl
         ob_int_property_range colorParamRange = ob_device_get_int_property_range(obDevice,
                                                                                  OB_PROP_COLOR_EXPOSURE_INT,
                                                                                  &ob_err);
-        CHECK_OB_ERROR_RETURN_K4A_RESULT(ob_err);
+        CHECK_OB_ERROR_RETURN_K4A_RESULT(&ob_err);
         if (ob_err == NULL)
         {
             *supports_auto = true;
@@ -2394,7 +2394,7 @@ k4a_result_t k4a_device_get_color_control_capabilities(k4a_device_t device_handl
         ob_int_property_range colorParamRange = ob_device_get_int_property_range(obDevice,
                                                                                  OB_PROP_COLOR_BRIGHTNESS_INT,
                                                                                  &ob_err);
-        CHECK_OB_ERROR_RETURN_K4A_RESULT(ob_err);
+        CHECK_OB_ERROR_RETURN_K4A_RESULT(&ob_err);
 
         if (ob_err == NULL)
         {
@@ -2417,7 +2417,7 @@ k4a_result_t k4a_device_get_color_control_capabilities(k4a_device_t device_handl
         ob_int_property_range colorParamRange = ob_device_get_int_property_range(obDevice,
                                                                                  OB_PROP_COLOR_CONTRAST_INT,
                                                                                  &ob_err);
-        CHECK_OB_ERROR_RETURN_K4A_RESULT(ob_err);
+        CHECK_OB_ERROR_RETURN_K4A_RESULT(&ob_err);
         if (ob_err == NULL)
         {
             *supports_auto = false;
@@ -2439,7 +2439,7 @@ k4a_result_t k4a_device_get_color_control_capabilities(k4a_device_t device_handl
         ob_int_property_range colorParamRange = ob_device_get_int_property_range(obDevice,
                                                                                  OB_PROP_COLOR_SATURATION_INT,
                                                                                  &ob_err);
-        CHECK_OB_ERROR_RETURN_K4A_RESULT(ob_err);
+        CHECK_OB_ERROR_RETURN_K4A_RESULT(&ob_err);
         if (ob_err == NULL)
         {
             *supports_auto = false;
@@ -2461,7 +2461,7 @@ k4a_result_t k4a_device_get_color_control_capabilities(k4a_device_t device_handl
         ob_int_property_range colorParamRange = ob_device_get_int_property_range(obDevice,
                                                                                  OB_PROP_COLOR_SHARPNESS_INT,
                                                                                  &ob_err);
-        CHECK_OB_ERROR_RETURN_K4A_RESULT(ob_err);
+        CHECK_OB_ERROR_RETURN_K4A_RESULT(&ob_err);
         if (ob_err == NULL)
         {
             *supports_auto = false;
@@ -2483,7 +2483,7 @@ k4a_result_t k4a_device_get_color_control_capabilities(k4a_device_t device_handl
         ob_int_property_range colorParamRange = ob_device_get_int_property_range(obDevice,
                                                                                  OB_PROP_COLOR_WHITE_BALANCE_INT,
                                                                                  &ob_err);
-        CHECK_OB_ERROR_RETURN_K4A_RESULT(ob_err);
+        CHECK_OB_ERROR_RETURN_K4A_RESULT(&ob_err);
         if (ob_err == NULL)
         {
             *supports_auto = true;
@@ -2510,7 +2510,7 @@ k4a_result_t k4a_device_get_color_control_capabilities(k4a_device_t device_handl
         ob_int_property_range colorParamRange = ob_device_get_int_property_range(obDevice,
                                                                                  OB_PROP_COLOR_GAIN_INT,
                                                                                  &ob_err);
-        CHECK_OB_ERROR_RETURN_K4A_RESULT(ob_err);
+        CHECK_OB_ERROR_RETURN_K4A_RESULT(&ob_err);
         if (ob_err == NULL)
         {
             *supports_auto = false;
@@ -2532,7 +2532,7 @@ k4a_result_t k4a_device_get_color_control_capabilities(k4a_device_t device_handl
         ob_int_property_range colorParamRange = ob_device_get_int_property_range(obDevice,
                                                                                  OB_PROP_COLOR_POWER_LINE_FREQUENCY_INT,
                                                                                  &ob_err);
-        CHECK_OB_ERROR_RETURN_K4A_RESULT(ob_err);
+        CHECK_OB_ERROR_RETURN_K4A_RESULT(&ob_err);
         if (ob_err == NULL)
         {
             *supports_auto = false;
@@ -2554,7 +2554,7 @@ k4a_result_t k4a_device_get_color_control_capabilities(k4a_device_t device_handl
         ob_bool_property_range colorParamRange = ob_device_get_bool_property_range(obDevice,
                                                                                  OB_PROP_COLOR_HDR_BOOL,
                                                                                  &ob_err);
-        CHECK_OB_ERROR_RETURN_K4A_RESULT(ob_err);
+        CHECK_OB_ERROR_RETURN_K4A_RESULT(&ob_err);
 
         *supports_auto = false;
         *min_value = colorParamRange.min;
@@ -2599,11 +2599,11 @@ k4a_result_t k4a_device_get_color_control(k4a_device_t device_handle,
     case K4A_COLOR_CONTROL_EXPOSURE_TIME_ABSOLUTE: {
         // Convert micro-second unit to KSProperty exposure time value
         int32_t obValue = ob_device_get_int_property(obDevice, OB_PROP_COLOR_EXPOSURE_INT, &ob_err);
-        CHECK_OB_ERROR_RETURN_K4A_RESULT(ob_err);
+        CHECK_OB_ERROR_RETURN_K4A_RESULT(&ob_err);
         *value = obValue * 100;
         bool enableAuto = false;
         enableAuto = ob_device_get_int_property(obDevice, OB_PROP_COLOR_AUTO_EXPOSURE_BOOL, &ob_err);
-        CHECK_OB_ERROR_RETURN_K4A_RESULT(ob_err);
+        CHECK_OB_ERROR_RETURN_K4A_RESULT(&ob_err);
         if (enableAuto)
         {
             *mode = K4A_COLOR_CONTROL_MODE_AUTO;
@@ -2616,35 +2616,35 @@ k4a_result_t k4a_device_get_color_control(k4a_device_t device_handle,
     break;
     case K4A_COLOR_CONTROL_BRIGHTNESS: {
         int32_t obValue = ob_device_get_int_property(obDevice, OB_PROP_COLOR_BRIGHTNESS_INT, &ob_err);
-        CHECK_OB_ERROR_RETURN_K4A_RESULT(ob_err);
+        CHECK_OB_ERROR_RETURN_K4A_RESULT(&ob_err);
         *value = obValue;
     }
     break;
     case K4A_COLOR_CONTROL_CONTRAST: {
         int32_t obValue = ob_device_get_int_property(obDevice, OB_PROP_COLOR_CONTRAST_INT, &ob_err);
-        CHECK_OB_ERROR_RETURN_K4A_RESULT(ob_err);
+        CHECK_OB_ERROR_RETURN_K4A_RESULT(&ob_err);
         *value = obValue;
     }
     break;
     case K4A_COLOR_CONTROL_SATURATION: {
         int32_t obValue = ob_device_get_int_property(obDevice, OB_PROP_COLOR_SATURATION_INT, &ob_err);
-        CHECK_OB_ERROR_RETURN_K4A_RESULT(ob_err);
+        CHECK_OB_ERROR_RETURN_K4A_RESULT(&ob_err);
         *value = obValue;
     }
     break;
     case K4A_COLOR_CONTROL_SHARPNESS: {
         int32_t obValue = ob_device_get_int_property(obDevice, OB_PROP_COLOR_SHARPNESS_INT, &ob_err);
-        CHECK_OB_ERROR_RETURN_K4A_RESULT(ob_err);
+        CHECK_OB_ERROR_RETURN_K4A_RESULT(&ob_err);
         *value = obValue;
     }
     break;
     case K4A_COLOR_CONTROL_WHITEBALANCE: {
         int32_t obValue = ob_device_get_int_property(obDevice, OB_PROP_COLOR_WHITE_BALANCE_INT, &ob_err);
-        CHECK_OB_ERROR_RETURN_K4A_RESULT(ob_err);
+        CHECK_OB_ERROR_RETURN_K4A_RESULT(&ob_err);
         *value = obValue;
         bool enableAuto = false;
         enableAuto = ob_device_get_int_property(obDevice, OB_PROP_COLOR_AUTO_WHITE_BALANCE_BOOL, &ob_err);
-        CHECK_OB_ERROR_RETURN_K4A_RESULT(ob_err);
+        CHECK_OB_ERROR_RETURN_K4A_RESULT(&ob_err);
         if (enableAuto)
         {
             *mode = K4A_COLOR_CONTROL_MODE_AUTO;
@@ -2660,31 +2660,31 @@ k4a_result_t k4a_device_get_color_control(k4a_device_t device_handle,
                                                          OB_PROP_COLOR_BACKLIGHT_COMPENSATION_INT,
                                                          OB_PERMISSION_READ,
                                                          &ob_err);
-        CHECK_OB_ERROR_RETURN_K4A_RESULT(ob_err);
+        CHECK_OB_ERROR_RETURN_K4A_RESULT(&ob_err);
         if (supported)
         {
             int32_t obValue = ob_device_get_int_property(obDevice, OB_PROP_COLOR_BACKLIGHT_COMPENSATION_INT, &ob_err);
-            CHECK_OB_ERROR_RETURN_K4A_RESULT(ob_err);
+            CHECK_OB_ERROR_RETURN_K4A_RESULT(&ob_err);
             *value = obValue;
         }
     }
     break;
     case K4A_COLOR_CONTROL_GAIN: {
         int32_t obValue = ob_device_get_int_property(obDevice, OB_PROP_COLOR_GAIN_INT, &ob_err);
-        CHECK_OB_ERROR_RETURN_K4A_RESULT(ob_err);
+        CHECK_OB_ERROR_RETURN_K4A_RESULT(&ob_err);
         *value = obValue;
     }
     break;
     case K4A_COLOR_CONTROL_POWERLINE_FREQUENCY: {
         int32_t obValue = ob_device_get_int_property(obDevice, OB_PROP_COLOR_POWER_LINE_FREQUENCY_INT, &ob_err);
-        CHECK_OB_ERROR_RETURN_K4A_RESULT(ob_err);
+        CHECK_OB_ERROR_RETURN_K4A_RESULT(&ob_err);
         *value = obValue;
     }
     break;
     case K4A_COLOR_CONTROL_AUTO_EXPOSURE_PRIORITY: {
         // LOG_WARNING("K4A_COLOR_CONTROL_AUTO_EXPOSURE_PRIORITY is deprecated and does nothing.");
         int32_t obValue = ob_device_get_int_property(obDevice, OB_PROP_COLOR_AUTO_EXPOSURE_PRIORITY_INT, &ob_err);
-        CHECK_OB_ERROR_RETURN_K4A_RESULT(ob_err);
+        CHECK_OB_ERROR_RETURN_K4A_RESULT(&ob_err);
         *value = obValue;
     }
     break;
@@ -2693,10 +2693,10 @@ k4a_result_t k4a_device_get_color_control(k4a_device_t device_handle,
                                                          OB_PROP_COLOR_HDR_BOOL,
                                                          OB_PERMISSION_READ,
                                                          &ob_err);
-        CHECK_OB_ERROR_RETURN_K4A_RESULT(ob_err);
+        CHECK_OB_ERROR_RETURN_K4A_RESULT(&ob_err);
         if(supported){
             bool obValue = ob_device_get_bool_property(obDevice, OB_PROP_COLOR_HDR_BOOL, &ob_err);
-            CHECK_OB_ERROR_RETURN_K4A_RESULT(ob_err);
+            CHECK_OB_ERROR_RETURN_K4A_RESULT(&ob_err);
             *value = obValue;
         }
     }
@@ -2746,7 +2746,7 @@ k4a_result_t k4a_device_set_color_control(k4a_device_t device_handle,
         // Convert micro-second unit to KSProperty exposure time value
         bool enableAutoExp = false;
         enableAutoExp = ob_device_get_int_property(obDevice, OB_PROP_COLOR_AUTO_EXPOSURE_BOOL, &ob_err);
-        CHECK_OB_ERROR_RETURN_K4A_RESULT(ob_err);
+        CHECK_OB_ERROR_RETURN_K4A_RESULT(&ob_err);
 
         if (mode == K4A_COLOR_CONTROL_MODE_AUTO)
         {
@@ -2754,7 +2754,7 @@ k4a_result_t k4a_device_set_color_control(k4a_device_t device_handle,
             {
                 enableAutoExp = true;
                 ob_device_set_int_property(obDevice, OB_PROP_COLOR_AUTO_EXPOSURE_BOOL, enableAutoExp, &ob_err);
-                CHECK_OB_ERROR_RETURN_K4A_RESULT(ob_err);
+                CHECK_OB_ERROR_RETURN_K4A_RESULT(&ob_err);
             }
             result = K4A_RESULT_SUCCEEDED;
         }
@@ -2765,20 +2765,20 @@ k4a_result_t k4a_device_set_color_control(k4a_device_t device_handle,
             {
                 enableAutoExp = false;
                 ob_device_set_int_property(obDevice, OB_PROP_COLOR_AUTO_EXPOSURE_BOOL, enableAutoExp, &ob_err);
-                CHECK_OB_ERROR_RETURN_K4A_RESULT(ob_err);
+                CHECK_OB_ERROR_RETURN_K4A_RESULT(&ob_err);
             }
 
             ob_int_property_range colorParamRange = ob_device_get_int_property_range(obDevice,
                                                                                      OB_PROP_COLOR_EXPOSURE_INT,
                                                                                      &ob_err);
-            CHECK_OB_ERROR_RETURN_K4A_RESULT(ob_err);
+            CHECK_OB_ERROR_RETURN_K4A_RESULT(&ob_err);
             int exposureValue = value / 100;
             int min = colorParamRange.min;
             int max = colorParamRange.max;
             if (min <= exposureValue && exposureValue <= max)
             {
                 ob_device_set_int_property(obDevice, OB_PROP_COLOR_EXPOSURE_INT, exposureValue, &ob_err);
-                CHECK_OB_ERROR_RETURN_K4A_RESULT(ob_err);
+                CHECK_OB_ERROR_RETURN_K4A_RESULT(&ob_err);
             }
             else
             {
@@ -2796,7 +2796,7 @@ k4a_result_t k4a_device_set_color_control(k4a_device_t device_handle,
         ob_int_property_range colorParamRange = ob_device_get_int_property_range(obDevice,
                                                                                  OB_PROP_COLOR_GAIN_INT,
                                                                                  &ob_err);
-        CHECK_OB_ERROR_RETURN_K4A_RESULT(ob_err);
+        CHECK_OB_ERROR_RETURN_K4A_RESULT(&ob_err);
         int min = colorParamRange.min;
         int max = colorParamRange.max;
         if (min <= value && value <= max)
@@ -2808,7 +2808,7 @@ k4a_result_t k4a_device_set_color_control(k4a_device_t device_handle,
             }
 
             ob_device_set_int_property(obDevice, OB_PROP_COLOR_GAIN_INT, value, &ob_err);
-            CHECK_OB_ERROR_RETURN_K4A_RESULT(ob_err);
+            CHECK_OB_ERROR_RETURN_K4A_RESULT(&ob_err);
         }
         else
         {
@@ -2824,7 +2824,7 @@ k4a_result_t k4a_device_set_color_control(k4a_device_t device_handle,
     case K4A_COLOR_CONTROL_WHITEBALANCE: {
         bool enableWhiteBalance = false;
         enableWhiteBalance = ob_device_get_int_property(obDevice, OB_PROP_COLOR_AUTO_WHITE_BALANCE_BOOL, &ob_err);
-        CHECK_OB_ERROR_RETURN_K4A_RESULT(ob_err);
+        CHECK_OB_ERROR_RETURN_K4A_RESULT(&ob_err);
         if (mode == K4A_COLOR_CONTROL_MODE_AUTO)
         {
             if (!enableWhiteBalance)
@@ -2834,7 +2834,7 @@ k4a_result_t k4a_device_set_color_control(k4a_device_t device_handle,
                                            OB_PROP_COLOR_AUTO_WHITE_BALANCE_BOOL,
                                            enableWhiteBalance,
                                            &ob_err);
-                CHECK_OB_ERROR_RETURN_K4A_RESULT(ob_err);
+                CHECK_OB_ERROR_RETURN_K4A_RESULT(&ob_err);
             }
             result = K4A_RESULT_SUCCEEDED;
         }
@@ -2847,13 +2847,13 @@ k4a_result_t k4a_device_set_color_control(k4a_device_t device_handle,
                                            OB_PROP_COLOR_AUTO_WHITE_BALANCE_BOOL,
                                            enableWhiteBalance,
                                            &ob_err);
-                CHECK_OB_ERROR_RETURN_K4A_RESULT(ob_err);
+                CHECK_OB_ERROR_RETURN_K4A_RESULT(&ob_err);
             }
 
             ob_int_property_range colorParamRange = ob_device_get_int_property_range(obDevice,
                                                                                      OB_PROP_COLOR_WHITE_BALANCE_INT,
                                                                                      &ob_err);
-            CHECK_OB_ERROR_RETURN_K4A_RESULT(ob_err);
+            CHECK_OB_ERROR_RETURN_K4A_RESULT(&ob_err);
             int min = colorParamRange.min;
             int max = colorParamRange.max;
             if (min <= value && value <= max)
@@ -2865,7 +2865,7 @@ k4a_result_t k4a_device_set_color_control(k4a_device_t device_handle,
                 }
 
                 ob_device_set_int_property(obDevice, OB_PROP_COLOR_WHITE_BALANCE_INT, value, &ob_err);
-                CHECK_OB_ERROR_RETURN_K4A_RESULT(ob_err);
+                CHECK_OB_ERROR_RETURN_K4A_RESULT(&ob_err);
             }
             else
             {
@@ -2884,13 +2884,13 @@ k4a_result_t k4a_device_set_color_control(k4a_device_t device_handle,
         ob_int_property_range colorParamRange = ob_device_get_int_property_range(obDevice,
                                                                                  OB_PROP_COLOR_BRIGHTNESS_INT,
                                                                                  &ob_err);
-        CHECK_OB_ERROR_RETURN_K4A_RESULT(ob_err);
+        CHECK_OB_ERROR_RETURN_K4A_RESULT(&ob_err);
         int min = colorParamRange.min;
         int max = colorParamRange.max;
         if (min <= value && value <= max)
         {
             ob_device_set_int_property(obDevice, OB_PROP_COLOR_BRIGHTNESS_INT, value, &ob_err);
-            CHECK_OB_ERROR_RETURN_K4A_RESULT(ob_err);
+            CHECK_OB_ERROR_RETURN_K4A_RESULT(&ob_err);
         }
         else
         {
@@ -2906,13 +2906,13 @@ k4a_result_t k4a_device_set_color_control(k4a_device_t device_handle,
         ob_int_property_range colorParamRange = ob_device_get_int_property_range(obDevice,
                                                                                  OB_PROP_COLOR_CONTRAST_INT,
                                                                                  &ob_err);
-        CHECK_OB_ERROR_RETURN_K4A_RESULT(ob_err);
+        CHECK_OB_ERROR_RETURN_K4A_RESULT(&ob_err);
         int min = colorParamRange.min;
         int max = colorParamRange.max;
         if (min <= value && value <= max)
         {
             ob_device_set_int_property(obDevice, OB_PROP_COLOR_CONTRAST_INT, value, &ob_err);
-            CHECK_OB_ERROR_RETURN_K4A_RESULT(ob_err);
+            CHECK_OB_ERROR_RETURN_K4A_RESULT(&ob_err);
         }
         else
         {
@@ -2928,13 +2928,13 @@ k4a_result_t k4a_device_set_color_control(k4a_device_t device_handle,
         ob_int_property_range colorParamRange = ob_device_get_int_property_range(obDevice,
                                                                                  OB_PROP_COLOR_SATURATION_INT,
                                                                                  &ob_err);
-        CHECK_OB_ERROR_RETURN_K4A_RESULT(ob_err);
+        CHECK_OB_ERROR_RETURN_K4A_RESULT(&ob_err);
         int min = colorParamRange.min;
         int max = colorParamRange.max;
         if (min <= value && value <= max)
         {
             ob_device_set_int_property(obDevice, OB_PROP_COLOR_SATURATION_INT, value, &ob_err);
-            CHECK_OB_ERROR_RETURN_K4A_RESULT(ob_err);
+            CHECK_OB_ERROR_RETURN_K4A_RESULT(&ob_err);
         }
         else
         {
@@ -2950,14 +2950,14 @@ k4a_result_t k4a_device_set_color_control(k4a_device_t device_handle,
         ob_int_property_range colorParamRange = ob_device_get_int_property_range(obDevice,
                                                                                  OB_PROP_COLOR_SHARPNESS_INT,
                                                                                  &ob_err);
-        CHECK_OB_ERROR_RETURN_K4A_RESULT(ob_err);
+        CHECK_OB_ERROR_RETURN_K4A_RESULT(&ob_err);
         int min = colorParamRange.min;
         int max = colorParamRange.max;
         if (min <= value && value <= max)
         {
             ob_device_set_int_property(obDevice, OB_PROP_COLOR_SHARPNESS_INT, value, &ob_err);
 
-            CHECK_OB_ERROR_RETURN_K4A_RESULT(ob_err);
+            CHECK_OB_ERROR_RETURN_K4A_RESULT(&ob_err);
         }
         else
         {
@@ -2974,7 +2974,7 @@ k4a_result_t k4a_device_set_color_control(k4a_device_t device_handle,
         ob_int_property_range colorParamRange = ob_device_get_int_property_range(obDevice,
                                                                                  OB_PROP_COLOR_POWER_LINE_FREQUENCY_INT,
                                                                                  &ob_err);
-        CHECK_OB_ERROR(ob_err);
+        CHECK_OB_ERROR(&ob_err);
         if (ob_err == NULL)
         {
             int min = colorParamRange.min;
@@ -2982,7 +2982,7 @@ k4a_result_t k4a_device_set_color_control(k4a_device_t device_handle,
             if (min <= value && value <= max)
             {
                 ob_device_set_int_property(obDevice, OB_PROP_COLOR_POWER_LINE_FREQUENCY_INT, value, &ob_err);
-                CHECK_OB_ERROR_RETURN_K4A_RESULT(ob_err);
+                CHECK_OB_ERROR_RETURN_K4A_RESULT(&ob_err);
             }
             else
             {
@@ -2997,7 +2997,7 @@ k4a_result_t k4a_device_set_color_control(k4a_device_t device_handle,
         else if (ob_err->exception_type == OB_EXCEPTION_TYPE_UNSUPPORTED_OPERATION)
         {
             ob_device_set_int_property(obDevice, OB_PROP_COLOR_POWER_LINE_FREQUENCY_INT, value, &ob_err);
-            CHECK_OB_ERROR_RETURN_K4A_RESULT(ob_err);
+            CHECK_OB_ERROR_RETURN_K4A_RESULT(&ob_err);
         }
         else
         {
@@ -3011,10 +3011,10 @@ k4a_result_t k4a_device_set_color_control(k4a_device_t device_handle,
                                                          OB_PROP_COLOR_HDR_BOOL,
                                                          OB_PERMISSION_READ,
                                                          &ob_err);
-        CHECK_OB_ERROR_RETURN_K4A_RESULT(ob_err);
+        CHECK_OB_ERROR_RETURN_K4A_RESULT(&ob_err);
         if(supported){
             ob_device_set_bool_property(obDevice, OB_PROP_COLOR_HDR_BOOL, value, &ob_err);
-            CHECK_OB_ERROR_RETURN_K4A_RESULT(ob_err);
+            CHECK_OB_ERROR_RETURN_K4A_RESULT(&ob_err);
         }
     }
     break;
@@ -3274,18 +3274,18 @@ k4a_result_t k4a_device_get_calibration_from_orbbec_sdk(k4a_device_t device_hand
     ob_error *ob_err = NULL;
     bool is_property_support =
         ob_device_is_property_supported(device_ctx->device, OB_PROP_D2C_PREPROCESS_BOOL, OB_PERMISSION_WRITE, &ob_err);
-    CHECK_OB_ERROR_RETURN_K4A_RESULT(ob_err);
+    CHECK_OB_ERROR_RETURN_K4A_RESULT(&ob_err);
     if (is_property_support)
     {
         ob_device_set_bool_property(device_ctx->device, OB_PROP_D2C_PREPROCESS_BOOL, true, &ob_err);
-        CHECK_OB_ERROR_RETURN_K4A_RESULT(ob_err);
+        CHECK_OB_ERROR_RETURN_K4A_RESULT(&ob_err);
     }
 
     ob_camera_param_list *camera_param_list = ob_device_get_calibration_camera_param_list(device_ctx->device, &ob_err);
-    CHECK_OB_ERROR_RETURN_K4A_RESULT(ob_err);
+    CHECK_OB_ERROR_RETURN_K4A_RESULT(&ob_err);
 
     uint32_t camera_list_count = ob_camera_param_list_count(camera_param_list, &ob_err);
-    CHECK_OB_ERROR_RETURN_K4A_RESULT(ob_err);
+    CHECK_OB_ERROR_RETURN_K4A_RESULT(&ob_err);
 
     ob_camera_param camera_param;
     bool find = false;
@@ -3294,7 +3294,7 @@ k4a_result_t k4a_device_get_calibration_from_orbbec_sdk(k4a_device_t device_hand
     {
 
         ob_camera_param param = ob_camera_param_list_get_param(camera_param_list, i, &ob_err);
-        CHECK_OB_ERROR_RETURN_K4A_RESULT(ob_err);
+        CHECK_OB_ERROR_RETURN_K4A_RESULT(&ob_err);
 
         float depth_width = (float)param.depthIntrinsic.width;
         float depth_height = (float)param.depthIntrinsic.height;
@@ -3339,7 +3339,7 @@ k4a_result_t k4a_device_get_calibration_from_orbbec_sdk(k4a_device_t device_hand
 
     if(camera_param_list != NULL){
         ob_delete_camera_param_list(camera_param_list, &ob_err);
-        CHECK_OB_ERROR_RETURN_K4A_RESULT(ob_err);
+        CHECK_OB_ERROR_RETURN_K4A_RESULT(&ob_err);
     }
 
     ob_camera_intrinsic ob_depth_intrinsic = camera_param.depthIntrinsic;
@@ -3464,11 +3464,11 @@ k4a_result_t k4a_device_get_calibration(k4a_device_t device_handle,
 
     ob_error *ob_err = NULL;
     ob_device_info *dev_info = ob_device_get_device_info(device_ctx->device, &ob_err);
-    CHECK_OB_ERROR_RETURN_K4A_RESULT(ob_err);
+    CHECK_OB_ERROR_RETURN_K4A_RESULT(&ob_err);
     int pid = ob_device_info_pid(dev_info, &ob_err);
-    CHECK_OB_ERROR_RETURN_K4A_RESULT(ob_err);
+    CHECK_OB_ERROR_RETURN_K4A_RESULT(&ob_err);
     ob_delete_device_info(dev_info, &ob_err);
-    CHECK_OB_ERROR_RETURN_K4A_RESULT(ob_err);
+    CHECK_OB_ERROR_RETURN_K4A_RESULT(&ob_err);
     if (pid == ORBBEC_MEGA_PID || pid == ORBBEC_BOLT_PID)
     {
         return k4a_device_get_calibration_from_json(device_handle, depth_mode, color_resolution, calibration);
