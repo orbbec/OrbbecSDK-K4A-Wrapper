@@ -45,7 +45,7 @@ k4a_result_t check_ob_error(ob_error *error);
         return value;                                                                                                  \
     }
 
-#define CHECK_OB_ERROR_RETURN_VECTOR_VALUE(value, ob_err)                                                                     \
+#define CHECK_OB_ERROR_RETURN_VECTOR_VALUE(ob_err)                                                                     \
     if (K4A_RESULT_FAILED == check_ob_error(ob_err))                                                                   \
     {                                                                                                                  \
         return std::vector<int>();                                                                                                  \
