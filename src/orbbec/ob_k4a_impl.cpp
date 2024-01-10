@@ -46,7 +46,7 @@ std::vector<int> get_effective_device(ob_context* &context){
     ob_error *ob_err = NULL;
     uint32_t device_count = 0;
     ob_device_list *ob_dev_list = ob_query_device_list(context, &ob_err);
-    CHECK_OB_ERROR_RETURN_VECTOR_VALUE(0, ob_err);
+    CHECK_OB_ERROR_RETURN_VECTOR_VALUE(ob_err);
 
     device_count = ob_device_list_device_count(ob_dev_list, &ob_err);
 
@@ -62,10 +62,10 @@ std::vector<int> get_effective_device(ob_context* &context){
             effective_devices.push_back(index);
         }
     }
-    CHECK_OB_ERROR_RETURN_VECTOR_VALUE(0, ob_err);
+    CHECK_OB_ERROR_RETURN_VECTOR_VALUE(ob_err);
 
     ob_delete_device_list(ob_dev_list, &ob_err);
-    CHECK_OB_ERROR_RETURN_VECTOR_VALUE(0, ob_err);
+    CHECK_OB_ERROR_RETURN_VECTOR_VALUE(ob_err);
 
     return effective_devices;
 }
