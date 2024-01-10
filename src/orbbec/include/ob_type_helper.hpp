@@ -9,7 +9,7 @@
 #include <vector>
 #include <string>
 
-k4a_result_t check_ob_error(ob_error *error);
+k4a_result_t check_ob_error(ob_error **error);
 
 #define CHECK_OB_ERROR(ob_err) check_ob_error(ob_err)
 #define OB_SUCCEEDED(error) (K4A_RESULT_SUCCEEDED == check_ob_error(error))
@@ -54,10 +54,10 @@ struct ob_context_handler
     {
         ob_error *error = nullptr;
         auto device_list = ob_query_device_list(context, &error);
-        CHECK_OB_ERROR_RETURN(error);
+        CHECK_OB_ERROR_RETURN(&error);
 
         auto device_count = ob_device_list_device_count(device_list, &error);
-        CHECK_OB_ERROR_RETURN(error);
+        CHECK_OB_ERROR_RETURN(&error);
 
         for (uint32_t i = 0; i < device_count; i++)
         {
@@ -65,10 +65,10 @@ struct ob_context_handler
             device_uid_list.push_back(uid);
         }
         ob_delete_device_list(device_list, &error);
-        CHECK_OB_ERROR_RETURN(error);
+        CHECK_OB_ERROR_RETURN(&error);
 
         ob_set_device_changed_callback(context, on_device_changed_callback, this, &error);
-        CHECK_OB_ERROR_RETURN(error);
+        CHECK_OB_ERROR_RETURN(&error);
     };
 
     ~ob_context_handler()
@@ -77,7 +77,7 @@ struct ob_context_handler
         {
             ob_error *error = nullptr;
             ob_delete_context(context, &error);
-            check_ob_error(error);
+            check_ob_error(&error);
         }
     }
     ob_context *context;

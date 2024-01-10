@@ -11,15 +11,16 @@
 #endif
 
 
-k4a_result_t check_ob_error(ob_error *error)
+k4a_result_t check_ob_error(ob_error **error)
 {
-    if (error)
+    if (*error)
     {
-        auto msg = ob_error_message(error);
-        auto func = ob_error_function(error);
-        auto exception = ob_error_exception_type(error);
+        auto msg = ob_error_message(*error);
+        auto func = ob_error_function(*error);
+        auto exception = ob_error_exception_type(*error);
         LOG_ERROR("Inner Orbbec SDK error: %s, function: %s, exception: %d", msg, func, exception);
-        ob_delete_error(error);
+        ob_delete_error(*error);
+        *error = nullptr;
         return K4A_RESULT_FAILED;
     }
     return K4A_RESULT_SUCCEEDED;
@@ -82,13 +83,13 @@ std::shared_ptr<ob_context_handler> get_ob_context_handler_instance(){
 #endif
         ob_error *error = nullptr;
         ob_set_logger_callback(OB_LOG_SEVERITY_DEBUG, orbbec_sdk_log, nullptr, &error);
-        if (K4A_RESULT_FAILED == check_ob_error(error))
+        if (K4A_RESULT_FAILED == check_ob_error(&error))
         {
             return nullptr;
         }
 
         ob_context *context = ob_create_context(&error);
-        if (K4A_RESULT_FAILED == check_ob_error(error))
+        if (K4A_RESULT_FAILED == check_ob_error(&error))
         {
             return nullptr;
         }
@@ -109,11 +110,11 @@ void on_device_changed_callback(ob_device_list *removed, ob_device_list *added, 
     auto ctx_handler = (ob_context_handler *)user_data;
 
     auto dev_rm_count = ob_device_list_device_count(removed, &error);
-    CHECK_OB_ERROR_RETURN(error);
+    CHECK_OB_ERROR_RETURN(&error);
     for (uint32_t i = 0; i < dev_rm_count; i++)
     {
         auto uid = ob_device_list_get_device_uid(removed, i, &error);
-        CHECK_OB_ERROR_RETURN(error);
+        CHECK_OB_ERROR_RETURN(&error);
 
         auto it = std::find(ctx_handler->device_uid_list.begin(), ctx_handler->device_uid_list.end(), uid);
         if (it != ctx_handler->device_uid_list.end())
@@ -122,19 +123,19 @@ void on_device_changed_callback(ob_device_list *removed, ob_device_list *added, 
         }
 
         const char *name = ob_device_list_get_device_name(removed, i, &error);
-        CHECK_OB_ERROR_RETURN(error);
+        CHECK_OB_ERROR_RETURN(&error);
 
         const char *sn = ob_device_list_get_device_serial_number(removed, i, &error);
-        CHECK_OB_ERROR_RETURN(error);
+        CHECK_OB_ERROR_RETURN(&error);
         LOG_INFO("device removed: %s, sn=%s", name, sn);
     }
 
     auto dev_add_count = ob_device_list_device_count(added, &error);
-    CHECK_OB_ERROR_RETURN(error);
+    CHECK_OB_ERROR_RETURN(&error);
     for (uint32_t i = 0; i < dev_add_count; i++)
     {
         auto uid = ob_device_list_get_device_uid(added, i, &error);
-        CHECK_OB_ERROR_RETURN(error);
+        CHECK_OB_ERROR_RETURN(&error);
 
         auto it = std::find(ctx_handler->device_uid_list.begin(), ctx_handler->device_uid_list.end(), uid);
         if (it == ctx_handler->device_uid_list.end())
@@ -143,10 +144,10 @@ void on_device_changed_callback(ob_device_list *removed, ob_device_list *added, 
         }
 
         const char *name = ob_device_list_get_device_name(added, i, &error);
-        CHECK_OB_ERROR_RETURN(error);
+        CHECK_OB_ERROR_RETURN(&error);
 
         const char *sn = ob_device_list_get_device_serial_number(added, i, &error);
-        CHECK_OB_ERROR_RETURN(error);
+        CHECK_OB_ERROR_RETURN(&error);
         LOG_INFO("device added: %s, sn=%s", name, sn);
     }
 }
