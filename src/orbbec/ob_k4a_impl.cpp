@@ -293,7 +293,7 @@ k4a_result_t update_imu_raw_calibration_data_from_orbbec_sdk(k4a_device_context_
         return result;
     }
 
-    // ob_error *ob_err = NULL;
+    ob_error *ob_err = NULL;
     // ob_stream_profile_list *depth_stream_profiles = ob_pipeline_get_stream_profile_list(device_ctx->pipe,
     //                                                                                     OB_SENSOR_DEPTH,
     //                                                                                     &ob_err);
@@ -341,8 +341,8 @@ k4a_result_t update_imu_raw_calibration_data_from_orbbec_sdk(k4a_device_context_
         << gyro_to_depth_extrinsics->rotation[3] << "," << gyro_to_depth_extrinsics->rotation[4] << ","
         << gyro_to_depth_extrinsics->rotation[5] << "," << gyro_to_depth_extrinsics->rotation[6] << ","
         << gyro_to_depth_extrinsics->rotation[7] << "," << gyro_to_depth_extrinsics->rotation[8] << "], \"Translation\": ["
-        << gyro_to_depth_extrinsics->translation[0] << "," << gyro_to_depth_extrinsics->translation[1] << ","
-        << gyro_to_depth_extrinsics->translation[2] << "]},";
+        << gyro_to_depth_extrinsics->translation[0] / 1000.f << "," << gyro_to_depth_extrinsics->translation[1] / 1000.f << ","
+        << gyro_to_depth_extrinsics->translation[2] / 1000.f << "]},";
     calibration_json_str.replace(begin, end - begin, ss.str());
 
     // accel
@@ -357,8 +357,8 @@ k4a_result_t update_imu_raw_calibration_data_from_orbbec_sdk(k4a_device_context_
         << accel_to_depth_extrinsics->rotation[3] << "," << accel_to_depth_extrinsics->rotation[4] << ","
         << accel_to_depth_extrinsics->rotation[5] << "," << accel_to_depth_extrinsics->rotation[6] << ","
         << accel_to_depth_extrinsics->rotation[7] << "," << accel_to_depth_extrinsics->rotation[8] << "], \"Translation\": ["
-        << accel_to_depth_extrinsics->translation[0] << "," << accel_to_depth_extrinsics->translation[1] << ","
-        << accel_to_depth_extrinsics->translation[2] << "]},";
+        << accel_to_depth_extrinsics->translation[0] / 1000.f << "," << accel_to_depth_extrinsics->translation[1] / 1000.f << ","
+        << accel_to_depth_extrinsics->translation[2] / 1000.f << "]},";
     calibration_json_str.replace(begin, end - begin, ss2.str());
 
 //#pragma warning(suppress : 4996)
@@ -373,7 +373,7 @@ k4a_result_t update_imu_raw_calibration_data_from_orbbec_sdk(k4a_device_context_
     device_ctx->json->calibration_json[calibration_json_str.size()] = '\0';
     device_ctx->json->json_actual_size = (uint32_t)calibration_json_str.size();
 
-//#pragma warning(suppress : 4996)
+// #pragma warning(suppress : 4996)
 //    fp = fopen("./new.json", "wb");
 //    if (fp!= NULL)
 //    {
