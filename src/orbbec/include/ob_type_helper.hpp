@@ -45,6 +45,7 @@ k4a_result_t check_ob_error(ob_error **error);
         return value;                                                                                                  \
     }
 
+
 ob_context *get_ob_context_instance();
 
 void on_device_changed_callback(ob_device_list *removed, ob_device_list *added, void *user_data);
