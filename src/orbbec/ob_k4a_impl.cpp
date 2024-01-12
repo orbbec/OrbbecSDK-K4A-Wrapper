@@ -333,7 +333,7 @@ k4a_result_t update_imu_raw_calibration_data_from_orbbec_sdk(k4a_device_context_
     size_t begin = calibration_json_str.find("\"Rt\": {\"Rotation\": [", offset);
     size_t end = calibration_json_str.find("]},", begin) +3;
 
-    k4a_calibration_extrinsics_t *gyro_to_depth_extrinsics  = (k4a_calibration_extrinsics_t*)&calibration_param.extrinsics[OB_SENSOR_GYRO][OB_SENSOR_DEPTH];
+    k4a_calibration_extrinsics_t *gyro_to_depth_extrinsics  = (k4a_calibration_extrinsics_t*)&calibration_param.extrinsics[OB_SENSOR_DEPTH][OB_SENSOR_ACCEL];
 
     std::stringstream ss;
     ss << "\"Rt\": {\"Rotation\": [" << gyro_to_depth_extrinsics->rotation[0] << ","
@@ -350,7 +350,7 @@ k4a_result_t update_imu_raw_calibration_data_from_orbbec_sdk(k4a_device_context_
     begin = calibration_json_str.find("\"Rt\": {\"Rotation\": [", offset);
     end = calibration_json_str.find("]},", begin) +3;
 
-   k4a_calibration_extrinsics_t *accel_to_depth_extrinsics  = (k4a_calibration_extrinsics_t*)&calibration_param.extrinsics[OB_SENSOR_ACCEL][OB_SENSOR_DEPTH];
+   k4a_calibration_extrinsics_t *accel_to_depth_extrinsics  = (k4a_calibration_extrinsics_t*)&calibration_param.extrinsics[OB_SENSOR_DEPTH][OB_SENSOR_ACCEL];
     std::stringstream ss2;
     ss2 << "\"Rt\": {\"Rotation\": [" << accel_to_depth_extrinsics->rotation[0] << ","
         << accel_to_depth_extrinsics->rotation[1] << ","<< accel_to_depth_extrinsics->rotation[2] << ","
@@ -361,25 +361,25 @@ k4a_result_t update_imu_raw_calibration_data_from_orbbec_sdk(k4a_device_context_
         << accel_to_depth_extrinsics->translation[2] / 1000.f << "]},";
     calibration_json_str.replace(begin, end - begin, ss2.str());
 
-//#pragma warning(suppress : 4996)
-//    FILE *fp = fopen("./old.json", "wb");
-//    if (fp != NULL)
-//    {
-//        fwrite(device_ctx->json->calibration_json, 1, device_ctx->json->json_actual_size, fp);
-//        fclose(fp);
-//    }
+#pragma warning(suppress : 4996)
+   FILE *fp = fopen("./old.json", "wb");
+   if (fp != NULL)
+   {
+       fwrite(device_ctx->json->calibration_json, 1, device_ctx->json->json_actual_size, fp);
+       fclose(fp);
+   }
 
     memcpy(device_ctx->json->calibration_json, calibration_json_str.c_str(), calibration_json_str.size());
     device_ctx->json->calibration_json[calibration_json_str.size()] = '\0';
     device_ctx->json->json_actual_size = (uint32_t)calibration_json_str.size();
 
-// #pragma warning(suppress : 4996)
-//    fp = fopen("./new.json", "wb");
-//    if (fp!= NULL)
-//    {
-//        fwrite(device_ctx->json->calibration_json, 1, device_ctx->json->json_actual_size, fp);
-//        fclose(fp);
-//    }
+#pragma warning(suppress : 4996)
+   fp = fopen("./new.json", "wb");
+   if (fp!= NULL)
+   {
+       fwrite(device_ctx->json->calibration_json, 1, device_ctx->json->json_actual_size, fp);
+       fclose(fp);
+   }
 
     result = K4A_RESULT_SUCCEEDED;
     return result;
