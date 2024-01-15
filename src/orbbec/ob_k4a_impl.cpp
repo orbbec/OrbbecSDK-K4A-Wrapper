@@ -345,16 +345,16 @@ k4a_result_t update_imu_raw_calibration_data_from_orbbec_sdk(k4a_device_context_
     size_t begin = calibration_json_str.find("\"Rt\": {\"Rotation\": [", offset);
     size_t end = calibration_json_str.find("]},", begin) +3;
 
-    k4a_calibration_extrinsics_t *gyro_to_depth_extrinsics  = (k4a_calibration_extrinsics_t*)&calibration_param.extrinsics[OB_SENSOR_DEPTH][OB_SENSOR_ACCEL];
+    k4a_calibration_extrinsics_t *depth_to_gyro_extrinsics  = (k4a_calibration_extrinsics_t*)&calibration_param.extrinsics[OB_SENSOR_DEPTH][OB_SENSOR_ACCEL];
 
     std::stringstream ss;
-    ss << "\"Rt\": {\"Rotation\": [" << gyro_to_depth_extrinsics->rotation[0] << ","
-        << gyro_to_depth_extrinsics->rotation[1] << "," << gyro_to_depth_extrinsics->rotation[2] << ","
-        << gyro_to_depth_extrinsics->rotation[3] << "," << gyro_to_depth_extrinsics->rotation[4] << ","
-        << gyro_to_depth_extrinsics->rotation[5] << "," << gyro_to_depth_extrinsics->rotation[6] << ","
-        << gyro_to_depth_extrinsics->rotation[7] << "," << gyro_to_depth_extrinsics->rotation[8] << "], \"Translation\": ["
-        << gyro_to_depth_extrinsics->translation[0] / 1000.f << "," << gyro_to_depth_extrinsics->translation[1] / 1000.f << ","
-        << gyro_to_depth_extrinsics->translation[2] / 1000.f << "]},";
+    ss << "\"Rt\": {\"Rotation\": [" << depth_to_gyro_extrinsics->rotation[0] << ","
+        << depth_to_gyro_extrinsics->rotation[1] << "," << depth_to_gyro_extrinsics->rotation[2] << ","
+        << depth_to_gyro_extrinsics->rotation[3] << "," << depth_to_gyro_extrinsics->rotation[4] << ","
+        << depth_to_gyro_extrinsics->rotation[5] << "," << depth_to_gyro_extrinsics->rotation[6] << ","
+        << depth_to_gyro_extrinsics->rotation[7] << "," << depth_to_gyro_extrinsics->rotation[8] << "], \"Translation\": ["
+        << depth_to_gyro_extrinsics->translation[0] / 1000.f << "," << depth_to_gyro_extrinsics->translation[1] / 1000.f << ","
+        << depth_to_gyro_extrinsics->translation[2] / 1000.f << "]},";
     calibration_json_str.replace(begin, end - begin, ss.str());
 
     // accel
@@ -362,15 +362,15 @@ k4a_result_t update_imu_raw_calibration_data_from_orbbec_sdk(k4a_device_context_
     begin = calibration_json_str.find("\"Rt\": {\"Rotation\": [", offset);
     end = calibration_json_str.find("]},", begin) +3;
 
-   k4a_calibration_extrinsics_t *accel_to_depth_extrinsics  = (k4a_calibration_extrinsics_t*)&calibration_param.extrinsics[OB_SENSOR_DEPTH][OB_SENSOR_ACCEL];
+   k4a_calibration_extrinsics_t *depth_to_accel_extrinsics  = (k4a_calibration_extrinsics_t*)&calibration_param.extrinsics[OB_SENSOR_DEPTH][OB_SENSOR_ACCEL];
     std::stringstream ss2;
-    ss2 << "\"Rt\": {\"Rotation\": [" << accel_to_depth_extrinsics->rotation[0] << ","
-        << accel_to_depth_extrinsics->rotation[1] << ","<< accel_to_depth_extrinsics->rotation[2] << ","
-        << accel_to_depth_extrinsics->rotation[3] << "," << accel_to_depth_extrinsics->rotation[4] << ","
-        << accel_to_depth_extrinsics->rotation[5] << "," << accel_to_depth_extrinsics->rotation[6] << ","
-        << accel_to_depth_extrinsics->rotation[7] << "," << accel_to_depth_extrinsics->rotation[8] << "], \"Translation\": ["
-        << accel_to_depth_extrinsics->translation[0] / 1000.f << "," << accel_to_depth_extrinsics->translation[1] / 1000.f << ","
-        << accel_to_depth_extrinsics->translation[2] / 1000.f << "]},";
+    ss2 << "\"Rt\": {\"Rotation\": [" << depth_to_accel_extrinsics->rotation[0] << ","
+        << depth_to_accel_extrinsics->rotation[1] << ","<< depth_to_accel_extrinsics->rotation[2] << ","
+        << depth_to_accel_extrinsics->rotation[3] << "," << depth_to_accel_extrinsics->rotation[4] << ","
+        << depth_to_accel_extrinsics->rotation[5] << "," << depth_to_accel_extrinsics->rotation[6] << ","
+        << depth_to_accel_extrinsics->rotation[7] << "," << depth_to_accel_extrinsics->rotation[8] << "], \"Translation\": ["
+        << depth_to_accel_extrinsics->translation[0] / 1000.f << "," << depth_to_accel_extrinsics->translation[1] / 1000.f << ","
+        << depth_to_accel_extrinsics->translation[2] / 1000.f << "]},";
     calibration_json_str.replace(begin, end - begin, ss2.str());
 
     memcpy(device_ctx->json->calibration_json, calibration_json_str.c_str(), calibration_json_str.size());
