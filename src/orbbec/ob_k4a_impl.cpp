@@ -401,25 +401,25 @@ k4a_result_t update_imu_raw_calibration_data_from_orbbec_sdk(k4a_device_context_
         << accel_to_depth_extrinsics->translation[2] / 1000.f << "]},";
     calibration_json_str.replace(begin, end - begin, ss2.str());
 
-#pragma warning(suppress : 4996)
-   FILE *fp = fopen("./old.json", "wb");
-   if (fp != NULL)
-   {
-       fwrite(device_ctx->json->calibration_json, 1, device_ctx->json->json_actual_size, fp);
-       fclose(fp);
-   }
+// #pragma warning(suppress : 4996)
+//    FILE *fp = fopen("./old.json", "wb");
+//    if (fp != NULL)
+//    {
+//        fwrite(device_ctx->json->calibration_json, 1, device_ctx->json->json_actual_size, fp);
+//        fclose(fp);
+//    }
 
     memcpy(device_ctx->json->calibration_json, calibration_json_str.c_str(), calibration_json_str.size());
     device_ctx->json->calibration_json[calibration_json_str.size()] = '\0';
     device_ctx->json->json_actual_size = (uint32_t)calibration_json_str.size();
 
-#pragma warning(suppress : 4996)
-   fp = fopen("./new.json", "wb");
-   if (fp!= NULL)
-   {
-       fwrite(device_ctx->json->calibration_json, 1, device_ctx->json->json_actual_size, fp);
-       fclose(fp);
-   }
+// #pragma warning(suppress : 4996)
+//    fp = fopen("./new.json", "wb");
+//    if (fp!= NULL)
+//    {
+//        fwrite(device_ctx->json->calibration_json, 1, device_ctx->json->json_actual_size, fp);
+//        fclose(fp);
+//    }
 
     result = K4A_RESULT_SUCCEEDED;
     return result;
@@ -457,11 +457,7 @@ k4a_result_t fetch_raw_calibration_data(k4a_device_context_t *device_ctx)
                                 &ob_err);
             CHECK_OB_ERROR_BREAK(ob_err);
 
-            if(pid == ORBBEC_BOLT_PID){
-                cali_create_rst = update_imu_raw_calibration_data_from_orbbec_sdk(device_ctx);
-            }else{
-                cali_create_rst = K4A_RESULT_SUCCEEDED;
-            }
+            cali_create_rst = update_imu_raw_calibration_data_from_orbbec_sdk(device_ctx);
         }
     } while(0);
 
