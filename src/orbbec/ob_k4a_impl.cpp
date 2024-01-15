@@ -336,38 +336,8 @@ k4a_result_t update_imu_raw_calibration_data_from_orbbec_sdk(k4a_device_context_
     }
 
     ob_error *ob_err = NULL;
-    // ob_stream_profile_list *depth_stream_profiles = ob_pipeline_get_stream_profile_list(device_ctx->pipe,
-    //                                                                                     OB_SENSOR_DEPTH,
-    //                                                                                     &ob_err);
-    // CHECK_OB_ERROR_RETURN_K4A_RESULT(ob_err);
-    // ob_stream_profile *depth_stream_profile = ob_stream_profile_list_get_video_stream_profile(depth_stream_profiles,
-    //                                                                                           1024,
-    //                                                                                           1024,
-    //                                                                                           OB_FORMAT_ANY,
-    //                                                                                           OB_FPS_ANY,
-    //                                                                                           &ob_err);
-    // CHECK_OB_ERROR_RETURN_K4A_RESULT(ob_err);
-
-
-    // ob_stream_profile_list *color_stream_profiles = ob_pipeline_get_stream_profile_list(device_ctx->pipe,
-    //                                                                                     OB_SENSOR_COLOR,
-    //                                                                                     &ob_err);
-    // CHECK_OB_ERROR_RETURN_K4A_RESULT(ob_err);
-    // ob_stream_profile *color_stream_profile = ob_stream_profile_list_get_video_stream_profile(color_stream_profiles,
-    //                                                                                           1920,
-    //                                                                                           1080,
-    //                                                                                           OB_FORMAT_ANY,
-    //                                                                                           OB_FPS_ANY,
-    //                                                                                           &ob_err);
-    // CHECK_OB_ERROR_RETURN_K4A_RESULT(ob_err);
-
-    // ob_config *ob_cfg = ob_pipeline_get_config(device_ctx->pipe, &ob_err);
-    // CHECK_OB_ERROR_RETURN_K4A_RESULT(ob_err);
-
-    // ob_config_enable_stream(ob_cfg, depth_stream_profile, &ob_err);
-
     ob_calibration_param calibration_param = ob_pipeline_get_calibration_param(device_ctx->pipe, nullptr, &ob_err);
-    CHECK_OB_ERROR_RETURN_K4A_RESULT(ob_err);
+    CHECK_OB_ERROR_RETURN_K4A_RESULT(&ob_err);
 
     std::string calibration_json_str = device_ctx->json->calibration_json;
     // gyro
@@ -403,25 +373,9 @@ k4a_result_t update_imu_raw_calibration_data_from_orbbec_sdk(k4a_device_context_
         << accel_to_depth_extrinsics->translation[2] / 1000.f << "]},";
     calibration_json_str.replace(begin, end - begin, ss2.str());
 
-// #pragma warning(suppress : 4996)
-//    FILE *fp = fopen("./old.json", "wb");
-//    if (fp != NULL)
-//    {
-//        fwrite(device_ctx->json->calibration_json, 1, device_ctx->json->json_actual_size, fp);
-//        fclose(fp);
-//    }
-
     memcpy(device_ctx->json->calibration_json, calibration_json_str.c_str(), calibration_json_str.size());
     device_ctx->json->calibration_json[calibration_json_str.size()] = '\0';
     device_ctx->json->json_actual_size = (uint32_t)calibration_json_str.size();
-
-// #pragma warning(suppress : 4996)
-//    fp = fopen("./new.json", "wb");
-//    if (fp!= NULL)
-//    {
-//        fwrite(device_ctx->json->calibration_json, 1, device_ctx->json->json_actual_size, fp);
-//        fclose(fp);
-//    }
 
     result = K4A_RESULT_SUCCEEDED;
     return result;
@@ -436,10 +390,10 @@ k4a_result_t fetch_raw_calibration_data(k4a_device_context_t *device_ctx)
 
     do{
         device_info = ob_device_get_device_info(device_ctx->device, &ob_err);
-        CHECK_OB_ERROR_BREAK(ob_err);
+        CHECK_OB_ERROR_BREAK(&ob_err);
 
         int pid = ob_device_info_pid(device_info, &ob_err);
-        CHECK_OB_ERROR_BREAK(ob_err);
+        CHECK_OB_ERROR_BREAK(&ob_err);
 
         if (pid == ORBBEC_MEGA_PID || pid == ORBBEC_BOLT_PID){
             if (device_ctx->json == NULL)
@@ -457,7 +411,7 @@ k4a_result_t fetch_raw_calibration_data(k4a_device_context_t *device_ctx)
                                 false,
                                 device_ctx,
                                 &ob_err);
-            CHECK_OB_ERROR_BREAK(ob_err);
+            CHECK_OB_ERROR_BREAK(&ob_err);
 
             cali_create_rst = update_imu_raw_calibration_data_from_orbbec_sdk(device_ctx);
         }
@@ -466,7 +420,7 @@ k4a_result_t fetch_raw_calibration_data(k4a_device_context_t *device_ctx)
     if (device_info != NULL)
     {
         ob_delete_device_info(device_info, &ob_err);
-        CHECK_OB_ERROR(ob_err);
+        CHECK_OB_ERROR(&ob_err);
     }
     return cali_create_rst;
 }
@@ -491,7 +445,7 @@ k4a_result_t init_device_context(k4a_device_t device_handle)
         CHECK_OB_ERROR_BREAK(&ob_err);
 
         device_ctx->pipe = ob_create_pipeline_with_device((ob_device *)device_ctx->device, &ob_err);
-        CHECK_OB_ERROR_BREAK(ob_err);
+        CHECK_OB_ERROR_BREAK(&ob_err);
 
         if (K4A_FAILED(fetch_raw_calibration_data(device_ctx))){
             break;
@@ -536,7 +490,7 @@ k4a_result_t init_device_context(k4a_device_t device_handle)
         if(device_ctx->pipe)
         {
             ob_delete_pipeline(device_ctx->pipe, &ob_err);
-            CHECK_OB_ERROR(ob_err);
+            CHECK_OB_ERROR(&ob_err);
             device_ctx->pipe = NULL;
         }
 
@@ -603,7 +557,7 @@ void k4a_device_close(k4a_device_t device_handle)
     if (device_ctx->pipe)
     {
         ob_delete_pipeline(device_ctx->pipe, &ob_err);
-        CHECK_OB_ERROR(ob_err);
+        CHECK_OB_ERROR(&ob_err);
         device_ctx->pipe = NULL;
     }
 
@@ -2230,7 +2184,7 @@ k4a_result_t k4a_device_start_cameras(k4a_device_t device_handle, const k4a_devi
     frame_queue_enable(device_ctx->frameset_queue);
 
     ob_pipeline_start_with_callback(device_ctx->pipe, obConfig, ob_frame_set_ready, device_handle, &ob_err);
-    CHECK_OB_ERROR_RETURN_K4A_RESULT(ob_err);
+    CHECK_OB_ERROR_RETURN_K4A_RESULT(&ob_err);
     device_ctx->is_streaming = true;
 
     CHECK_OB_ERROR_RETURN_K4A_RESULT(&ob_err);
