@@ -113,7 +113,7 @@ std::weak_ptr<ob_context_handler> ob_context_handler_instance;
 
 std::shared_ptr<ob_context_handler> get_ob_context_handler_instance(){
     std::lock_guard<std::mutex> lock(ob_ctx_mtx);
-    
+
     #ifdef CACHE_OB_CONTEXT
     auto handler = ob_context_handler_instance;
     #else

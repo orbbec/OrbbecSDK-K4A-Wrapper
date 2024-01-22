@@ -367,7 +367,7 @@ k4a_result_t update_imu_raw_calibration_data_from_orbbec_sdk(k4a_device_context_
     begin = calibration_json_str.find("\"Rt\": {\"Rotation\": [", offset);
     end = calibration_json_str.find("]},", begin) +3;
 
-   k4a_calibration_extrinsics_t *depth_to_accel_extrinsics  = (k4a_calibration_extrinsics_t*)&calibration_param.extrinsics[OB_SENSOR_DEPTH][OB_SENSOR_ACCEL];
+    k4a_calibration_extrinsics_t *depth_to_accel_extrinsics  = (k4a_calibration_extrinsics_t*)&calibration_param.extrinsics[OB_SENSOR_DEPTH][OB_SENSOR_ACCEL];
     std::stringstream ss2;
     ss2 << "\"Rt\": {\"Rotation\": [" << depth_to_accel_extrinsics->rotation[0] << ","
         << depth_to_accel_extrinsics->rotation[1] << ","<< depth_to_accel_extrinsics->rotation[2] << ","
