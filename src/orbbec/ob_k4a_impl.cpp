@@ -163,14 +163,11 @@ K4A_DECLARE_CONTEXT(k4a_device_t, k4a_device_context_t);
     case fps:                                                                                                          \
         return #fps
 
-<<<<<<< HEAD
-=======
 void k4a_context_pre_initialize(void){
     #ifdef CACHE_OB_CONTEXT
         get_depthengine_context_instance();
     #endif
 }
->>>>>>> 7aa4bcf ([feat] : pre initialize depthengine)
 
 uint32_t k4a_device_get_installed_count(void)
 {
@@ -2259,9 +2256,6 @@ void k4a_device_stop_cameras(k4a_device_t device_handle)
 
         frame_queue_disable(device_ctx->frameset_queue);
     }
-    device_ctx->is_streaming = false;
-    LOG_ERROR("stop2", 0);
-
 }
 
 k4a_buffer_result_t k4a_device_get_serialnum(k4a_device_t device_handle,
