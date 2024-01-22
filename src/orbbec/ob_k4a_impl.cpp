@@ -166,7 +166,9 @@ K4A_DECLARE_CONTEXT(k4a_device_t, k4a_device_context_t);
 <<<<<<< HEAD
 =======
 void k4a_context_pre_initialize(void){
-    get_depthengine_context_instance();
+    #ifdef CACHE_OB_CONTEXT
+        get_depthengine_context_instance();
+    #endif
 }
 >>>>>>> 7aa4bcf ([feat] : pre initialize depthengine)
 
