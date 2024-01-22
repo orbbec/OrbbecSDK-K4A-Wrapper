@@ -120,7 +120,9 @@ K4A_DECLARE_CONTEXT(k4a_device_t, k4a_device_context_t);
         return #fps
 
 void k4a_context_pre_initialize(void){
-    get_depthengine_context_instance();
+    #ifdef CACHE_OB_CONTEXT
+        get_depthengine_context_instance();
+    #endif
 }
 
 uint32_t k4a_device_get_installed_count(void)
