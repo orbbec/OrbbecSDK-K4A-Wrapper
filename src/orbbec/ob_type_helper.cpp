@@ -67,42 +67,6 @@ void get_depthengine_context_instance()
     }
 }
 #endif
-void on_device_changed_callback(ob_device_list *removed, ob_device_list *added, void *user_data);
-struct ob_context_handler
-{
-    ob_context_handler(ob_context *ctx) : context(ctx)
-    {
-        ob_error *error = nullptr;
-        auto device_list = ob_query_device_list(context, &error);
-        CHECK_OB_ERROR_RETURN(error);
-
-        auto device_count = ob_device_list_device_count(device_list, &error);
-        CHECK_OB_ERROR_RETURN(error);
-
-        for (uint32_t i = 0; i < device_count; i++)
-        {
-            auto uid = ob_device_list_get_device_uid(device_list, i, &error);
-            device_uid_list.push_back(uid);
-        }
-        ob_delete_device_list(device_list, &error);
-        CHECK_OB_ERROR_RETURN(error);
-
-        ob_set_device_changed_callback(context, on_device_changed_callback, this, &error);
-        CHECK_OB_ERROR_RETURN(error);
-    };
-
-    ~ob_context_handler()
-    {
-        if (context != nullptr)
-        {
-            ob_error *error = nullptr;
-            ob_delete_context(context, &error);
-            check_ob_error(error);
-        }
-    }
-    ob_context *context;
-    std::vector<std::string> device_uid_list;
-};
 
 std::mutex ob_ctx_mtx;
 #ifdef CACHE_OB_CONTEXT
