@@ -1542,14 +1542,14 @@ void k4a_image_set_system_timestamp_nsec(k4a_image_t image_handle, uint64_t time
 
     ob_frame *frame = (ob_frame *)image_handle;
     ob_error *ob_err = NULL;
-    uint64_t timestamp_usec = timestamp_nsec / 1000;
+    uint64_t timestamp_mill = timestamp_nsec / 1000000;
 
-    ob_frame_set_device_time_stamp_us(frame, timestamp_usec, &ob_err);
+    ob_frame_set_system_time_stamp(frame, timestamp_mill, &ob_err);
     CHECK_OB_ERROR_RETURN(&ob_err);
 
     if (ob_err != NULL)
     {
-        LOG_ERROR("k4a_image_set_device_timestamp_usec ob_err != NULL", 0);
+        LOG_ERROR("ob_frame_set_system_time_stamp ob_err != NULL", 0);
     }
 }
 
