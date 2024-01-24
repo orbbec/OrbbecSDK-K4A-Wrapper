@@ -19,20 +19,6 @@
 
 namespace k4a
 {
-/** \class context k4a.hpp <k4a/k4a.hpp>
- * Avoid deep engine initialization failures when using multiple opengl contexts within user applications and SDKs!
- * 
- * \sa k4a_transformation_t
- * 
- * \remarks This function only needs to be called when on the Linux platform
-*/
-class context{
-public:
-    static void pre_initialize(){
-        k4a_context_pre_initialize();
-    }
-};
-
 /**
  * \defgroup cppsdk C++ Reference
  *
@@ -47,6 +33,37 @@ class error : public std::runtime_error
 {
 public:
     using runtime_error::runtime_error;
+};
+
+/** \class context k4a.hpp <k4a/k4a.hpp>
+ * Avoid deep engine initialization failures when using multiple opengl contexts within user applications and SDKs!
+ *
+ * \sa k4a_transformation_t
+ *
+ * \remarks This function only needs to be called when on the Linux platform
+*/
+class depth_engine_helper{
+public:
+    depth_engine_helper(k4a_depthengine_t* handle){
+        create(handle);
+    }
+    ~depth_engine_helper(){
+        release();
+    }
+
+    static k4a_depthengine_t* create(k4a_depthengine_t* handle){
+        k4a_result_t result = k4a_depth_engine_helper_create(handle);
+
+        if (K4A_RESULT_SUCCEEDED != result)
+        {
+            throw error("Failed to create depthengine handle!");
+        }
+       return handle;
+    }
+
+    static void release(){
+        k4a_depth_engine_helper_release();
+    }
 };
 
 // Helper functions not intended for use by client code

@@ -55,18 +55,21 @@ void orbbec_sdk_log(ob_log_severity severity, const char *message, void *user_da
     }
 }
 
-#ifdef CACHE_OB_CONTEXT
-std::shared_ptr<depthengine_context> depthengine_context_instance = nullptr;
-std::mutex depthengine_context_instance_mutex;
-void get_depthengine_context_instance()
+std::shared_ptr<depthengine_context> depthengine_instance_helper = nullptr;
+std::mutex depthengine_instance_helper_mutex;
+std::shared_ptr<depthengine_context> depthengine_instance_helper_create()
 {
-    std::lock_guard<std::mutex> lock(depthengine_context_instance_mutex);
-    if (depthengine_context_instance == nullptr)
+    std::lock_guard<std::mutex> lock(depthengine_instance_helper_mutex);
+    if (depthengine_instance_helper == nullptr)
     {
-        depthengine_context_instance =  std::make_shared<depthengine_context>();
+        depthengine_instance_helper =  std::make_shared<depthengine_context>();
     }
+    return depthengine_instance_helper;
 }
-#endif
+
+void depthengine_instance_helper_release(){
+    depthengine_instance_helper.reset();
+}
 
 std::mutex ob_ctx_mtx;
 #ifdef CACHE_OB_CONTEXT

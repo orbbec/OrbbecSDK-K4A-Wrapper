@@ -147,6 +147,12 @@ typedef struct _k4a_device_context_t
 
 K4A_DECLARE_CONTEXT(k4a_device_t, k4a_device_context_t);
 
+typedef struct _k4a_depthengine_instance_helper_t
+{
+    std::shared_ptr<depthengine_context> depthengine_instance_helper;
+} k4a_depthengine_instance_helper_t;
+K4A_DECLARE_CONTEXT(k4a_depthengine_t, k4a_depthengine_instance_helper_t);
+
 #define DEPTH_CAPTURE (false)
 #define COLOR_CAPTURE (true)
 #define TRANSFORM_ENABLE_GPU_OPTIMIZATION (true)
@@ -163,10 +169,25 @@ K4A_DECLARE_CONTEXT(k4a_device_t, k4a_device_context_t);
     case fps:                                                                                                          \
         return #fps
 
-void k4a_context_pre_initialize(void){
-    #ifdef CACHE_OB_CONTEXT
-        get_depthengine_context_instance();
-    #endif
+k4a_result_t k4a_depth_engine_helper_create(k4a_depthengine_t* handle){
+    RETURN_VALUE_IF_ARG(K4A_RESULT_FAILED, handle == NULL);
+    auto ob_depth_engine_handler = depthengine_instance_helper_create();
+    k4a_depthengine_t depthengine_handle = NULL;
+    k4a_depthengine_instance_helper_t *depthengine_ctx = k4a_depthengine_t_create(&depthengine_handle);
+    depthengine_ctx->depthengine_instance_helper = ob_depth_engine_handler;
+
+    k4a_result_t result = K4A_RESULT_FROM_BOOL(depthengine_ctx != NULL);
+    if (K4A_FAILED(result))
+    {
+        k4a_depthengine_t_destroy(depthengine_handle);
+        depthengine_handle = NULL;
+        return result;
+    }
+    *handle = depthengine_handle;
+    return result;
+}
+void k4a_depth_engine_helper_release(){
+    depthengine_instance_helper_release();
 }
 
 uint32_t k4a_device_get_installed_count(void)
