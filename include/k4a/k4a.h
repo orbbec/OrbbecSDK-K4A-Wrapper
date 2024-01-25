@@ -33,9 +33,7 @@ extern "C" {
  * @{
  */
 
-/** Pre init depthengine
- *
- * \relates k4a_transformation_t
+/** create depthengine helper
  *
  * \remarks This API is currently mainly used to initialize depthengine, This function only needs to be called when on the Linux platform
  *
@@ -49,9 +47,9 @@ extern "C" {
 */
 K4A_EXPORT k4a_result_t k4a_depth_engine_helper_create(k4a_depthengine_t* handle);
 
-/** reset depthengine
+/** release depthengine helper
  *
- * \remarks This API is currently mainly used to reset depthengine
+ * \remarks This API is currently mainly used to release depthengine
  *
  * \xmlonly
  * <requirements>

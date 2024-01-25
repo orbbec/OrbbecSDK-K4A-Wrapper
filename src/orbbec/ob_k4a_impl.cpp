@@ -2259,7 +2259,6 @@ k4a_result_t k4a_device_start_cameras(k4a_device_t device_handle, const k4a_devi
 
 void k4a_device_stop_cameras(k4a_device_t device_handle)
 {
-    LOG_ERROR("stop1", 0);
     RETURN_VALUE_IF_HANDLE_INVALID(VOID_VALUE, k4a_device_t, device_handle);
     CHECK_AND_TRY_INIT_DEVICE_CONTEXT(VOID_VALUE, device_handle);
     k4a_device_context_t *device_ctx = k4a_device_t_get_context(device_handle);
@@ -2279,8 +2278,6 @@ void k4a_device_stop_cameras(k4a_device_t device_handle)
 
         frame_queue_disable(device_ctx->frameset_queue);
     }
-    LOG_ERROR("stop2", 0);
-
 }
 
 k4a_buffer_result_t k4a_device_get_serialnum(k4a_device_t device_handle,
