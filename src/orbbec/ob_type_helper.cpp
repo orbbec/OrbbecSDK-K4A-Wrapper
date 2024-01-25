@@ -66,11 +66,24 @@ std::mutex depthengine_instance_mutex;
 std::shared_ptr<depthengine_context> depthengine_instance_create()
 {
     std::lock_guard<std::mutex> lock(depthengine_instance_mutex);
-    if (depthengine_instance == nullptr)
+
+    #ifdef CACHE_OB_CONTEXT
+    auto handler = depthengine_instance;
+    #else
+    auto handler = depthengine_instance.lock();
+    #endif
+
+    if (handler == nullptr)
     {
-        depthengine_instance =  std::make_shared<depthengine_context>();
+        handler =  std::make_shared<depthengine_context>();
+        depthengine_instance = handler;
     }
+
+#ifdef CACHE_OB_CONTEXT
     return depthengine_instance;
+#else
+    return depthengine_instance.lock();
+#endif
 }
 
 std::mutex ob_ctx_mtx;
