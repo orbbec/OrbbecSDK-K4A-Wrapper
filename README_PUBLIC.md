@@ -1,8 +1,18 @@
-# release v1.8.3
+# release v1.9.x
 ## Change List
-1. Fix memory leakage issue;
-2. Fix the issue of failed reopening after abnormal shutdown;
-3. Other bug fixes.
+1. Switch OrbbecSDK version to v1.9.4;
+2. Support pre initialization of depthengine;
+3. Support nv12;
+4. Adjust the imu data to be consistent with AKDK;
+5. Support for obaining imu external parameter data;
+6. Add color hdr control command;
+7. Fix system timestamp setting error;
+8. Shut unsupport resolutions by k4aviewer;
+9. Filter out device not supported by k4aviewer;
+10. Filter out null device by k4aviewer;
+11. Turn off prompts that do not support audio by k4aviewer;
+12. Fix log display error by k4aviewer.
+
 ## Product support
 | **products list** | **firmware version** |**platform**|
 | --- | --- | --- |
