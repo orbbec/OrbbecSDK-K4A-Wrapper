@@ -171,7 +171,7 @@ K4A_DECLARE_CONTEXT(k4a_depthengine_t, k4a_depthengine_instance_helper_t);
 
 k4a_result_t k4a_depth_engine_helper_create(k4a_depthengine_t* handle){
     RETURN_VALUE_IF_ARG(K4A_RESULT_FAILED, handle == NULL);
-    auto ob_depth_engine_handler = depthengine_instance_helper_create();
+    auto ob_depth_engine_handler = depthengine_instance_create();
     k4a_depthengine_t depthengine_handle = NULL;
     k4a_depthengine_instance_helper_t *depthengine_ctx = k4a_depthengine_t_create(&depthengine_handle);
     depthengine_ctx->depthengine_instance_helper = ob_depth_engine_handler;

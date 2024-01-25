@@ -105,5 +105,5 @@ struct depthengine_context
 private:
     k4a_transformation_t transformation;
 };
-std::shared_ptr<depthengine_context> depthengine_instance_helper_create();
+std::shared_ptr<depthengine_context> depthengine_instance_create();
 

@@ -24,8 +24,6 @@ extern "C" {
 #define WRAPPER_VERSION_MINOR 8
 #define WRAPPER_VERSION_PATCH 1
 
-
-
 /**
  * \defgroup Functions Functions
  * \ingroup csdk
@@ -38,7 +36,7 @@ extern "C" {
 /** Pre init depthengine
  *
  * \relates k4a_transformation_t
- * 
+ *
  * \remarks This API is currently mainly used to initialize depthengine, This function only needs to be called when on the Linux platform
  *
  * \xmlonly
