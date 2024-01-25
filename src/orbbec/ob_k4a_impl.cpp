@@ -186,8 +186,10 @@ k4a_result_t k4a_depth_engine_helper_create(k4a_depthengine_t* handle){
     *handle = depthengine_handle;
     return result;
 }
-void k4a_depth_engine_helper_release(){
-    depthengine_instance_helper_release();
+void k4a_depth_engine_helper_release(k4a_depthengine_t handle){
+    k4a_depthengine_instance_helper_t *depthengine_ctx = k4a_depthengine_t_get_context(handle);
+    depthengine_ctx->depthengine_instance_helper.reset();
+    k4a_depthengine_t_destroy(handle);
 }
 
 uint32_t k4a_device_get_installed_count(void)

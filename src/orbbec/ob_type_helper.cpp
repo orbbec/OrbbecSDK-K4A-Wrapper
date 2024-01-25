@@ -67,10 +67,6 @@ std::shared_ptr<depthengine_context> depthengine_instance_helper_create()
     return depthengine_instance_helper;
 }
 
-void depthengine_instance_helper_release(){
-    depthengine_instance_helper.reset();
-}
-
 std::mutex ob_ctx_mtx;
 #ifdef CACHE_OB_CONTEXT
 std::shared_ptr<ob_context_handler> ob_context_handler_instance = nullptr;

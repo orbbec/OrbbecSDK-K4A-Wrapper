@@ -63,7 +63,7 @@ K4A_EXPORT k4a_result_t k4a_depth_engine_helper_create(k4a_depthengine_t* handle
  * </requirements>
  * \endxmlonly
 */
-K4A_EXPORT void k4a_depth_engine_helper_release();
+K4A_EXPORT void k4a_depth_engine_helper_release(k4a_depthengine_t handle);
 
 /** Gets the number of connected devices
  *

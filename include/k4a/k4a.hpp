@@ -44,26 +44,33 @@ public:
 */
 class depth_engine_helper{
 public:
-    depth_engine_helper(k4a_depthengine_t* handle){
-        create(handle);
-    }
+
+    depth_engine_helper(k4a_depthengine_t handle) : m_handle(handle) {}
+
     ~depth_engine_helper(){
         release();
     }
 
-    static k4a_depthengine_t* create(k4a_depthengine_t* handle){
-        k4a_result_t result = k4a_depth_engine_helper_create(handle);
+    static depth_engine_helper create(){
+        k4a_depthengine_t handle = nullptr;
+        k4a_result_t result = k4a_depth_engine_helper_create(&handle);
 
         if (K4A_RESULT_SUCCEEDED != result)
         {
             throw error("Failed to create depthengine handle!");
         }
-       return handle;
+       return depth_engine_helper(handle);
     }
 
-    static void release(){
-        k4a_depth_engine_helper_release();
+    void release(){
+        if(m_handle){
+            k4a_depth_engine_helper_release(m_handle);
+            m_handle = nullptr;
+        }
     }
+
+private:
+    k4a_depthengine_t m_handle;
 };
 
 // Helper functions not intended for use by client code
