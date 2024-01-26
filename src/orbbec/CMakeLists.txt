@@ -201,8 +201,8 @@ endif()
 
 install(FILES ${OrbbecSDK_RUNTIME_RESOURCE_FILES} DESTINATION ${CMAKE_INSTALL_BINDIR})
 install(FILES ${OrbbecSDK_SCRIPT_FILES} DESTINATION ${CMAKE_INSTALL_PREFIX}/scripts)
-install(FILES ${CMAKE_SOURCE_DIR}/README_INSTALL.md DESTINATION ${CMAKE_INSTALL_PREFIX} RENAME README.md)
-install(FILES ${CMAKE_SOURCE_DIR}/Access_AKDK_Application_Software_with_Femto_Bolt.pdf DESTINATION ${CMAKE_INSTALL_PREFIX}/doc RENAME Access_AKDK_Application_Software_with_Femto_Bolt.pdf)
+install(FILES ${CMAKE_SOURCE_DIR}/README_PUBLIC.md DESTINATION ${CMAKE_INSTALL_PREFIX} RENAME README.md)
+install(FILES ${CMAKE_SOURCE_DIR}/doc/Access_AKDK_Application_Software_with_Femto_Bolt.pdf DESTINATION ${CMAKE_INSTALL_PREFIX}/doc RENAME Access_AKDK_Application_Software_with_Femto_Bolt.pdf)
 
 if ("${CMAKE_SYSTEM_NAME}" STREQUAL "Windows")
     install(
