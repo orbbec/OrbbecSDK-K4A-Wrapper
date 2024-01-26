@@ -75,15 +75,11 @@ std::shared_ptr<depthengine_context> depthengine_instance_create()
 
     if (handler == nullptr)
     {
-        handler =  std::make_shared<depthengine_context>();
+        handler = std::make_shared<depthengine_context>();
         depthengine_instance = handler;
     }
 
-#ifdef CACHE_OB_CONTEXT
-    return depthengine_instance;
-#else
-    return depthengine_instance.lock();
-#endif
+    return handler;
 }
 
 std::mutex ob_ctx_mtx;

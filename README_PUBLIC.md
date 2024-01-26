@@ -4,7 +4,7 @@
 2. Support pre initialization of depthengine;
 3. Support nv12;
 4. Adjust the imu data to be consistent with AKDK;
-5. Support for obaining imu external parameter data;
+5. Support for obaining imu extrinsic parameter data;
 6. Add color hdr control command;
 7. Fix system timestamp setting error;
 8. Shut unsupport resolutions by k4aviewer;
