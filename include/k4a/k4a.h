@@ -21,7 +21,7 @@ extern "C" {
 #endif
 
 #define WRAPPER_VERSION_MAJOR 1
-#define WRAPPER_VERSION_MINOR 8
+#define WRAPPER_VERSION_MINOR 9
 #define WRAPPER_VERSION_PATCH 1
 
 /**
