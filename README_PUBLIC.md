@@ -7,11 +7,12 @@
 5. Support for obaining imu extrinsic parameter data;
 6. Add color hdr control in color control command;
 7. Fix system timestamp setting error;
-8. Shut unsupport resolutions by k4aviewer;
-9. Filter out device not supported by k4aviewer;
-10. Filter out null device by k4aviewer;
-11. Turn off prompts that do not support audio by k4aviewer;
-12. Fix log display error by k4aviewer.
+8. Adapt indicator light switch;
+9. Shut unsupport resolutions by k4aviewer;
+10. Filter out device not supported by k4aviewer;
+11. Filter out null device by k4aviewer;
+12. Turn off prompts that do not support audio by k4aviewer;
+13. Fix log display error by k4aviewer.
 
 ## Product support
 | **products list** | **firmware version** |**platform**|
