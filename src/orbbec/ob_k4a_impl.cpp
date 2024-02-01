@@ -38,7 +38,6 @@
 // cpp
 #include <memory>
 #include <vector>
-#include <mutex>
 
 #define ORBBEC_MEGA_PID 0x0669
 #define ORBBEC_BOLT_PID 0x066B
