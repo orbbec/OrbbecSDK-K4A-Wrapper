@@ -33,6 +33,34 @@ extern "C" {
  * @{
  */
 
+/** reset device timestamp
+ *
+ * \remarks This API uses synchronous zeroing for timestamp synchronization
+ *
+ * \xmlonly
+ * <requirements>
+ *   <requirement name="Header">k4a.h (include k4a/k4a.h)</requirement>
+ *   <requirement name="Library">k4a.lib</requirement>
+ *   <requirement name="DLL">k4a.dll</requirement>
+ * </requirements>
+ * \endxmlonly
+*/
+K4A_EXPORT void reset_device_timestamp(k4a_device_t device, int timestamp_reset_delay_us);
+
+/** synchronize device timestamp
+ *
+ * \remarks This API uses asynchronous timing for timestamp synchronization
+ *
+ * \xmlonly
+ * <requirements>
+ *   <requirement name="Header">k4a.h (include k4a/k4a.h)</requirement>
+ *   <requirement name="Library">k4a.lib</requirement>
+ *   <requirement name="DLL">k4a.dll</requirement>
+ * </requirements>
+ * \endxmlonly
+*/
+K4A_EXPORT void sync_device_timestamp(uint64_t repeatInterval);
+
 /** create depthengine helper
  *
  * \remarks This API is currently mainly used to initialize depthengine, This function only needs to be called when on the Linux platform

@@ -28,6 +28,7 @@ option(K4A_MTE_VERSION "Skip FW version check" OFF)
 option(K4A_SOURCE_LINK "Enable source linking on MSVC" OFF)
 option(BUILD_OB_K4A_WRAPPER "Build K4A wrapper for Orbbec SDK" ON)
 option(CACHE_OB_CONTEXT "Cache the Orbbec SDK Context on k4a impl" OFF)
+option(RESET_DEVICE_TIMESTAMP_MODE "Cache the Orbbec SDK Context on k4a impl" ON)
 
 include(GitCommands)
 

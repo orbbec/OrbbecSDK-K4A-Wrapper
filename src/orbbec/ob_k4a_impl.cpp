@@ -38,6 +38,7 @@
 // cpp
 #include <memory>
 #include <vector>
+#include <mutex>
 
 #define ORBBEC_MEGA_PID 0x0669
 #define ORBBEC_BOLT_PID 0x066B
@@ -168,6 +169,21 @@ K4A_DECLARE_CONTEXT(k4a_depthengine_t, k4a_depthengine_instance_helper_t);
 #define K4A_FPS_TO_STRING_CASE(fps)                                                                                    \
     case fps:                                                                                                          \
         return #fps
+
+void reset_device_timestamp(k4a_device_t device_handle, int timestamp_reset_delay_us){
+    k4a_device_context_t *device_ctx = k4a_device_t_get_context(device_handle);
+    ob_device_timestamp_reset_config reset_config = {true, timestamp_reset_delay_us, true};
+    const ob_device_timestamp_reset_config* device_timestamp_reset_config = &reset_config;
+    ob_error *ob_err = NULL;
+    ob_device_set_timestamp_reset_config(device_ctx->device, device_timestamp_reset_config, &ob_err);
+    ob_device_timestamp_reset(device_ctx->device, &ob_err);
+}
+
+void sync_device_timestamp(uint64_t repeatInterval){
+    auto ob_context_handler = get_ob_context_handler_instance();
+    ob_error *ob_err = NULL;
+    ob_enable_device_clock_sync(ob_context_handler->context, repeatInterval, &ob_err);
+}
 
 k4a_result_t k4a_depth_engine_helper_create(k4a_depthengine_t* handle){
     RETURN_VALUE_IF_ARG(K4A_RESULT_FAILED, handle == NULL);
@@ -492,8 +508,13 @@ k4a_result_t init_device_context(k4a_device_t device_handle)
 
         frame_queue_disable(device_ctx->frameset_queue);
 
-        // sync devices timer with host
-        ob_enable_device_clock_sync(ob_ctx, 60000, &ob_err);
+        #ifdef RESET_DEVICE_TIMESTAMP_MODE
+            // reset device timestamp
+            reset_device_timestamp(device_handle, 0);
+        #else
+            // sync devices timer with host
+            ob_enable_device_clock_sync(ob_ctx, 60000, &ob_err);
+        #endif
         CHECK_OB_ERROR_BREAK(&ob_err);
 
         result = K4A_RESULT_SUCCEEDED;
