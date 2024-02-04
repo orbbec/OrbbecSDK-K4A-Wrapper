@@ -33,23 +33,19 @@ extern "C" {
  * @{
  */
 
-/** reset device timestamp
+/** switch device clock sync mode
  *
- * \remarks This API uses synchronous zeroing for timestamp synchronization
+ * \param device_handle
+ * Handle to the device.
  *
- * \xmlonly
- * <requirements>
- *   <requirement name="Header">k4a.h (include k4a/k4a.h)</requirement>
- *   <requirement name="Library">k4a.lib</requirement>
- *   <requirement name="DLL">k4a.dll</requirement>
- * </requirements>
- * \endxmlonly
-*/
-K4A_EXPORT void reset_device_timestamp(k4a_device_t device, int timestamp_reset_delay_us);
-
-/** synchronize device timestamp
+ * \param clock_sync_time
+ * K4A_TIMESTAMP_RESET: The delay time of executing the timestamp reset function after receiving the command or signal in milliseconds.
+ * K4A_TIMESTAMP_SYNC:  The interval for auto-repeated synchronization, in milliseconds. If the value is 0, synchronization is performed only once.
  *
- * \remarks This API uses asynchronous timing for timestamp synchronization
+ * \param timestamp_mode
+ * Device clock synchronization mode
+ *
+ * \remarks This API is used for device clock synchronization mode switching.
  *
  * \xmlonly
  * <requirements>
@@ -59,7 +55,7 @@ K4A_EXPORT void reset_device_timestamp(k4a_device_t device, int timestamp_reset_
  * </requirements>
  * \endxmlonly
 */
-K4A_EXPORT void sync_device_timestamp(uint64_t repeatInterval);
+K4A_EXPORT void switch_device_clock_sync_mode(k4a_device_t device_handle, uint32_t clock_sync_time, k4a_device_clock_sync_mode_t timestamp_mode);
 
 /** create depthengine helper
  *

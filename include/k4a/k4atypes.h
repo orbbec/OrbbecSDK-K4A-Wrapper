@@ -234,6 +234,21 @@ K4A_DECLARE_HANDLE(k4a_transformation_t);
  * @{
  */
 
+/** Device clock synchronization mode type.
+ *
+ * \xmlonly
+ * <requirements>
+ *   <requirement name="Header">k4atypes.h (include k4a/k4a.h)</requirement>
+ * </requirements>
+ * \endxmlonly
+ */
+typedef enum
+{
+    K4A_TIEMSTAMP_UNKNOWN = 0, /**< Timestamp is unknown */
+    K4A_TIMESTAMP_RESET,       /**< reset timestamp mode */
+    K4A_TIMESTAMP_SYNC,        /**< sync timestamp modes */
+} k4a_device_clock_sync_mode_t;
+
 /** Result code returned by Azure Kinect APIs.
  *
  * \xmlonly
