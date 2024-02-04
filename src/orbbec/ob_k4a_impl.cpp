@@ -492,16 +492,6 @@ k4a_result_t init_device_context(k4a_device_t device_handle)
         }
 
         frame_queue_disable(device_ctx->frameset_queue);
-
-        #ifdef RESET_DEVICE_TIMESTAMP_MODE
-            // reset device timestamp
-            reset_device_timestamp(device_handle, 0);
-        #else
-            // sync devices timer with host
-            ob_enable_device_clock_sync(ob_ctx, 60000, &ob_err);
-        #endif
-        CHECK_OB_ERROR_BREAK(&ob_err);
-
         result = K4A_RESULT_SUCCEEDED;
     } while (0);
 
