@@ -154,7 +154,7 @@ git submodule update --init --recursive
 
 | **products list** | **firmware version** |**platform**|
 | --- | --- | --- |
-| Orbbec Femto Bolt  | 1.0.6  |Windows10+, Ubuntu18.04+ |
+| Orbbec Femto Bolt  | 1.0.6/1.0.9  |Windows10+, Ubuntu18.04+ |
 | Orbbec Femto Mega  | 1.1.5/1.1.7  |Windows10+, Ubuntu20.04+ |
 
 
@@ -170,9 +170,9 @@ For Orbbec SDK K4A Wrapper feedback or to report a bug, please file a [GitHub Is
 
 As the Orbbec SDK K4A Wrapper directly uses the Azure Kinect Sensor SDK API, user can directly refer to the relevant examples of the Azure Kinect Sensor SDK：
 
-* In this repository: [examples](https://github.com/orbbec/OrbbecSDK-K4A-Wrapper/tree/ob/dev/1.8.x/examples)- each example has a readme page that describes it and the steps to set it up.
+* In this repository: [examples](https://github.com/orbbec/OrbbecSDK-K4A-Wrapper/tree/main/examples)- each example has a readme page that describes it and the steps to set it up.
 
-* [Azure-Kinect-Samples](https://github.com/microsoft/Azure-Kinect-Samples) repository. There are multiple examples of how to use both Sensor and Body tracking SDKs.
+* [Azure-Kinect-Samples](https://github.com/orbbec/Azure-Kinect-Samples) repository. There are multiple examples of how to use both Sensor and Body tracking SDKs.
 
 ## Q&A
 
