@@ -589,11 +589,11 @@ void device_timestamp_sync_with_host(k4a_device_t device_handle, uint32_t interv
     }
 }
 
-void switch_device_clock_sync_mode(k4a_device_t *device_handle, uint32_t param, k4a_device_clock_sync_mode_t timestamp_mode){
-    RETURN_VALUE_IF_HANDLE_INVALID(VOID_VALUE, k4a_device_t, *device_handle);
-    CHECK_AND_TRY_INIT_DEVICE_CONTEXT(VOID_VALUE, *device_handle);
+void switch_device_clock_sync_mode(k4a_device_t device_handle, uint32_t param, k4a_device_clock_sync_mode_t timestamp_mode){
+    RETURN_VALUE_IF_HANDLE_INVALID(VOID_VALUE, k4a_device_t, device_handle);
+    CHECK_AND_TRY_INIT_DEVICE_CONTEXT(VOID_VALUE, device_handle);
     ob_error *ob_err = NULL;
-    k4a_device_context_t *device_ctx = k4a_device_t_get_context(*device_handle);
+    k4a_device_context_t *device_ctx = k4a_device_t_get_context(device_handle);
     do{
         OB_DEVICE_SYNC_CONFIG ob_sync_config;
         memset(&ob_sync_config, 0, sizeof(OB_DEVICE_SYNC_CONFIG));
@@ -633,7 +633,7 @@ void switch_device_clock_sync_mode(k4a_device_t *device_handle, uint32_t param, 
                 const ob_device_timestamp_reset_config* device_timestamp_reset_config = &reset_config;
                 ob_device_set_timestamp_reset_config(device_ctx->device, device_timestamp_reset_config, &ob_err);
                 CHECK_OB_ERROR_BREAK(&ob_err);
-                device_ctx->clock_sync_thread = new std::thread(device_timestamp_sync_with_host, *device_handle, param);
+                device_ctx->clock_sync_thread = new std::thread(device_timestamp_sync_with_host, device_handle, param);
             }
         }
     }while(0);
@@ -861,7 +861,7 @@ k4a_result_t k4a_device_start_imu(k4a_device_t device_handle)
                                             &ob_err);
             CHECK_OB_ERROR_RETURN_K4A_RESULT(&ob_err);
             if((ob_sync_config.syncMode == OB_SYNC_MODE_PRIMARY_MCU_TRIGGER)) {
-                switch_device_clock_sync_mode(&device_handle, 0, K4A_DEVICE_CLOCK_SYNC_MODE_RESET);
+                switch_device_clock_sync_mode(device_handle, 0, K4A_DEVICE_CLOCK_SYNC_MODE_RESET);
             }
         }
     }
@@ -1930,7 +1930,7 @@ k4a_result_t k4a_device_start_cameras(k4a_device_t device_handle, const k4a_devi
     if(device_ctx->current_device_clock_sync_mode == K4A_DEVICE_CLOCK_SYNC_MODE_RESET){
         CHECK_OB_ERROR_RETURN_K4A_RESULT(&ob_err);
         if(ob_sync_config.syncMode == OB_SYNC_MODE_PRIMARY_MCU_TRIGGER) {
-            switch_device_clock_sync_mode(&device_handle, 0, K4A_DEVICE_CLOCK_SYNC_MODE_RESET);
+            switch_device_clock_sync_mode(device_handle, 0, K4A_DEVICE_CLOCK_SYNC_MODE_RESET);
         }
     }
 

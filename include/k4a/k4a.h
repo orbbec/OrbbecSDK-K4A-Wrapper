@@ -55,7 +55,7 @@ extern "C" {
  * </requirements>
  * \endxmlonly
 */
-K4A_EXPORT void switch_device_clock_sync_mode(k4a_device_t *device_handle, uint32_t param, k4a_device_clock_sync_mode_t timestamp_mode);
+K4A_EXPORT void switch_device_clock_sync_mode(k4a_device_t device_handle, uint32_t param, k4a_device_clock_sync_mode_t timestamp_mode);
 
 /** create depthengine helper
  *
