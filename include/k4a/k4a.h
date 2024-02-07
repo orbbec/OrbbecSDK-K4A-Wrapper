@@ -36,11 +36,11 @@ extern "C" {
 /** switch device clock sync mode
  *
  * \param device_handle
- * Handle to the device.
+ * Output parameter which on success will return a handle to the device.
  *
- * \param clock_sync_time
- * K4A_TIMESTAMP_RESET: The delay time of executing the timestamp reset function after receiving the command or signal in milliseconds.
- * K4A_TIMESTAMP_SYNC:  The interval for auto-repeated synchronization, in milliseconds. If the value is 0, synchronization is performed only once.
+ * \param param
+ * K4A_DEVICE_CLOCK_SYNC_MODE_RESET: The delay time of executing the timestamp reset function after receiving the command or signal in microseconds.
+ * K4A_DEVICE_CLOCK_SYNC_MODE_SYNC:  The interval for auto-repeated synchronization, in microseconds. If the value is 0, synchronization is performed only once.
  *
  * \param timestamp_mode
  * Device clock synchronization mode
@@ -55,7 +55,7 @@ extern "C" {
  * </requirements>
  * \endxmlonly
 */
-K4A_EXPORT void switch_device_clock_sync_mode(k4a_device_t device_handle, uint32_t clock_sync_time, k4a_device_clock_sync_mode_t timestamp_mode);
+K4A_EXPORT void switch_device_clock_sync_mode(k4a_device_t *device_handle, uint32_t param, k4a_device_clock_sync_mode_t timestamp_mode);
 
 /** create depthengine helper
  *

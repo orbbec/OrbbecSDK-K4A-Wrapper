@@ -244,9 +244,8 @@ K4A_DECLARE_HANDLE(k4a_transformation_t);
  */
 typedef enum
 {
-    K4A_TIEMSTAMP_UNKNOWN = 0, /**< Timestamp is unknown */
-    K4A_TIMESTAMP_RESET,       /**< reset timestamp mode */
-    K4A_TIMESTAMP_SYNC,        /**< sync timestamp modes */
+    K4A_DEVICE_CLOCK_SYNC_MODE_RESET = 0,  /**< device clock sync mode is reset */
+    K4A_DEVICE_CLOCK_SYNC_MODE_SYNC        /**< device clock sync mode is asynchronous timinng */
 } k4a_device_clock_sync_mode_t;
 
 /** Result code returned by Azure Kinect APIs.
