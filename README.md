@@ -38,12 +38,12 @@ The Wrapper enables you to get the most out of your orbbec camera. Features incl
 
 The following document describes how to seamlessly replace the Azure Kinect camera with the Femto camera in a user's application without any modifications. Please carefully read the following document before using the Femto Bolt camera.
 
-[https://orbbec.github.io/OrbbecSDK-K4A-Wrapper/src/orbbec/docs/Access_AKDK_Application_Software_with_Femto_Bolt.pdf](https://orbbec.github.io/OrbbecSDK-K4A-Wrapper/src/orbbec/docs/Access_AKDK_Application_Software_with_Femto_Bolt.pdf)
+[Access_AKDK_Application_Software_with_Femto_Bolt.pdf](https://orbbec.github.io/OrbbecSDK-K4A-Wrapper/src/orbbec/docs/Access_AKDK_Application_Software_with_Femto_Bolt.pdf)
 
 ### Option1：Install from Release SDK package
 If you prefer not to compile the K4A Wrapper yourself, we recommend using our released SDK package. These released SDK packages have been tested and we highly recommend using them.
 
-https://github.com/orbbec/OrbbecSDK-K4A-Wrapper/releases/
+[Releases](https://github.com/orbbec/OrbbecSDK-K4A-Wrapper/releases/)
 
 
 ### Option2: Install from source code
@@ -148,7 +148,7 @@ git submodule update --init --recursive
 
 * API documentation: [https://orbbec.github.io/docs/OrbbecSDK_K4A_Wrapper](https://orbbec.github.io/docs/OrbbecSDK_K4A_Wrapper).
 * Github pages: [https://orbbec.github.io/OrbbecSDK-K4A-Wrapper/](https://orbbec.github.io/OrbbecSDK-K4A-Wrapper/).
-* How to seamlessly replace the Azure Kinect camera with the Femto camera: [https://orbbec.github.io/OrbbecSDK-K4A-Wrapper/src/orbbec/docs/Access_AKDK_Application_Software_with_Femto_Bolt.pdf](https://orbbec.github.io/OrbbecSDK-K4A-Wrapper/src/orbbec/docs/Access_AKDK_Application_Software_with_Femto_Bolt.pdf)
+* How to seamlessly replace the Azure Kinect camera with the Femto camera: [Access_AKDK_Application_Software_with_Femto_Bolt.pdf](https://orbbec.github.io/OrbbecSDK-K4A-Wrapper/src/orbbec/docs/Access_AKDK_Application_Software_with_Femto_Bolt.pdf)
 
 ## Versioning
 
