@@ -1524,6 +1524,10 @@ public:
         return k4a_device_get_installed_count();
     }
 
+    void set_device_clock_sync_mode(int clock_sync_time, k4a_device_clock_sync_mode_t timestamp_mode){
+        switch_device_clock_sync_mode(m_handle, clock_sync_time, timestamp_mode);
+    }
+
 private:
     k4a_device_t m_handle;
 };
