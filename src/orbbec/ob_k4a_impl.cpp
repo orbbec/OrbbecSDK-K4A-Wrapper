@@ -1981,7 +1981,7 @@ k4a_result_t k4a_device_start_cameras(k4a_device_t device_handle, const k4a_devi
 
     if (pid == ORBBEC_MEGA_PID || pid == ORBBEC_BOLT_PID)
     {
-        ob_device_set_bool_property(device_ctx->device, OB_PROP_INDICATOR_LIGHT_BOOL, config->disable_streaming_indicator, &ob_err);
+        ob_device_set_bool_property(device_ctx->device, OB_PROP_INDICATOR_LIGHT_BOOL, !(config->disable_streaming_indicator), &ob_err);
         CHECK_OB_ERROR_RETURN_K4A_RESULT(&ob_err);
 
         uint32_t base_delay = 0;
