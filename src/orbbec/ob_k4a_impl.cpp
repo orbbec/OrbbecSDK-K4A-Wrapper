@@ -142,7 +142,8 @@ typedef struct _k4a_device_context_t
     calibration_json_t *json;
     k4a_transformation_t transformation;
 
-    bool is_streaming;
+    bool is_camera_streaming;
+    bool is_imu_streaming;
 
 #ifndef CACHE_OB_CONTEXT
     std::shared_ptr<ob_context_handler> ob_context_handler;
@@ -329,7 +330,7 @@ k4a_result_t k4a_device_open(uint32_t index, k4a_device_t *device_handle)
     device_ctx->accel_sensor = NULL;
     device_ctx->gyro_sensor = NULL;
     device_ctx->imusync = NULL;
-    device_ctx->is_streaming = false;
+    device_ctx->is_camera_streaming = false;
 
 #ifndef CACHE_OB_CONTEXT
     device_ctx->ob_context_handler = ob_context_handler;
@@ -501,6 +502,11 @@ k4a_result_t init_device_context(k4a_device_t device_handle)
 
         frame_queue_disable(device_ctx->frameset_queue);
         result = K4A_RESULT_SUCCEEDED;
+
+        const k4a_device_clock_sync_mode_t default_clock_sync_mode = K4A_DEVICE_CLOCK_SYNC_MODE_SYNC;
+        const uint32_t default_interval_us = 60*1000*1000; // 60s
+        k4a_switch_device_clock_sync_mode(device_handle, default_clock_sync_mode, default_interval_us);
+
     } while (0);
 
     // release
@@ -569,18 +575,18 @@ k4a_result_t init_device_context(k4a_device_t device_handle)
         }                                                                                                              \
     } while (0);
 
-void device_timestamp_sync_with_host(k4a_device_t device_handle, uint32_t intervalMicroseconds)
+void device_timestamp_sync_with_host(k4a_device_t device_handle, uint32_t interval_usec)
 {
     k4a_device_context_t *device_ctx = k4a_device_t_get_context(device_handle);
     ob_error *ob_err = NULL;
     ob_device_timer_sync_with_host(device_ctx->device, &ob_err);
     CHECK_OB_ERROR(&ob_err);
-    if(intervalMicroseconds == 0){
+    if(interval_usec == 0){
         return;
     }
 
     std::unique_lock<std::mutex> lck(device_ctx->clock_sync_mtx);
-    while(device_ctx->clock_sync_cv.wait_for(lck,std::chrono::microseconds(intervalMicroseconds)) == std::cv_status::timeout){
+    while(device_ctx->clock_sync_cv.wait_for(lck,std::chrono::microseconds(interval_usec)) == std::cv_status::timeout){
         if(device_ctx->current_device_clock_sync_mode == K4A_DEVICE_CLOCK_SYNC_MODE_SYNC){
             if(device_ctx->device){
                 ob_device_timer_sync_with_host(device_ctx->device, &ob_err);
@@ -589,11 +595,22 @@ void device_timestamp_sync_with_host(k4a_device_t device_handle, uint32_t interv
     }
 }
 
-void switch_device_clock_sync_mode(k4a_device_t device_handle, uint32_t param, k4a_device_clock_sync_mode_t timestamp_mode){
-    RETURN_VALUE_IF_HANDLE_INVALID(VOID_VALUE, k4a_device_t, device_handle);
-    CHECK_AND_TRY_INIT_DEVICE_CONTEXT(VOID_VALUE, device_handle);
+k4a_result_t device_clock_reset(k4a_device_t device_handle){
+    RETURN_VALUE_IF_HANDLE_INVALID(K4A_RESULT_FAILED, k4a_device_t, device_handle);
+    CHECK_AND_TRY_INIT_DEVICE_CONTEXT(K4A_RESULT_FAILED, device_handle);
     ob_error *ob_err = NULL;
     k4a_device_context_t *device_ctx = k4a_device_t_get_context(device_handle);
+    ob_device_timestamp_reset(device_ctx->device, &ob_err);
+    CHECK_OB_ERROR_RETURN_K4A_RESULT(&ob_err);
+    return K4A_RESULT_SUCCEEDED;
+}
+
+k4a_result_t k4a_switch_device_clock_sync_mode(k4a_device_t device_handle, k4a_device_clock_sync_mode_t timestamp_mode, uint32_t param){
+    RETURN_VALUE_IF_HANDLE_INVALID(K4A_RESULT_FAILED, k4a_device_t, device_handle);
+    CHECK_AND_TRY_INIT_DEVICE_CONTEXT(K4A_RESULT_FAILED, device_handle);
+    ob_error *ob_err = NULL;
+    k4a_device_context_t *device_ctx = k4a_device_t_get_context(device_handle);
+    k4a_result_t result = K4A_RESULT_FAILED;
     do{
         OB_DEVICE_SYNC_CONFIG ob_sync_config;
         memset(&ob_sync_config, 0, sizeof(OB_DEVICE_SYNC_CONFIG));
@@ -619,8 +636,10 @@ void switch_device_clock_sync_mode(k4a_device_t device_handle, uint32_t param, k
                 const ob_device_timestamp_reset_config* device_timestamp_reset_config = &reset_config;
                 ob_device_set_timestamp_reset_config(device_ctx->device, device_timestamp_reset_config, &ob_err);
                 CHECK_OB_ERROR_BREAK(&ob_err);
-                ob_device_timestamp_reset(device_ctx->device, &ob_err);
-                CHECK_OB_ERROR_BREAK(&ob_err);
+
+                if(device_clock_reset(device_handle) != K4A_RESULT_SUCCEEDED){
+                    break;
+                }
             }else{
                 device_ctx->current_device_clock_sync_mode = K4A_DEVICE_CLOCK_SYNC_MODE_SYNC;
                 device_ctx->clock_sync_cv.notify_one();
@@ -636,7 +655,10 @@ void switch_device_clock_sync_mode(k4a_device_t device_handle, uint32_t param, k
                 device_ctx->clock_sync_thread = new std::thread(device_timestamp_sync_with_host, device_handle, param);
             }
         }
+        result = K4A_RESULT_SUCCEEDED;
     }while(0);
+
+    return result;
 }
 
 void k4a_device_close(k4a_device_t device_handle)
@@ -651,8 +673,12 @@ void k4a_device_close(k4a_device_t device_handle)
     }
     ob_error *ob_err = NULL;
 
-    if( device_ctx->is_streaming ){
+    if( device_ctx->is_camera_streaming ){
         k4a_device_stop_cameras(device_handle);
+    }
+
+    if( device_ctx->is_imu_streaming ){
+        k4a_device_stop_imu(device_handle);
     }
 
     if (device_ctx->device)
@@ -781,7 +807,6 @@ void ob_accel_frame(ob_frame *frame, void *user_data)
     imu_data.temp = temperature;
 
     imusync_push_frame(device_ctx->imusync, imu_data, ACCEL_FRAME_TYPE);
-    // LOG_ERROR("timestamp =%lld", timestamp);
     ob_delete_frame(frame, &ob_err);
     CHECK_OB_ERROR_RETURN(&ob_err);
 }
@@ -816,7 +841,6 @@ void ob_gyro_frame(ob_frame *frame, void *user_data)
     memcpy(imu_data.data, &gyro_value, sizeof(gyro_value));
     imu_data.temp = temperature;
     imusync_push_frame(device_ctx->imusync, imu_data, GYRO_FRAME_TYPE);
-    // LOG_ERROR("gyro.x =%f,gyro.y =%f,gyro.z=f", gyro_value.x,gyro_value.y,gyro_value.z);
 
     ob_delete_frame(frame, &ob_err);
     CHECK_OB_ERROR_RETURN(&ob_err);
@@ -849,196 +873,192 @@ k4a_result_t k4a_device_start_imu(k4a_device_t device_handle)
     k4a_device_context_t *device_ctx = k4a_device_t_get_context(device_handle);
     ob_error *ob_err = NULL;
 
-    if(!(device_ctx->is_streaming)){
-        if(device_ctx->current_device_clock_sync_mode == K4A_DEVICE_CLOCK_SYNC_MODE_RESET){
-            OB_DEVICE_SYNC_CONFIG ob_sync_config;
-            memset(&ob_sync_config, 0, sizeof(OB_DEVICE_SYNC_CONFIG));
-            uint32_t len;
-            ob_device_get_structured_data(device_ctx->device,
-                                            OB_STRUCT_MULTI_DEVICE_SYNC_CONFIG,
-                                            &ob_sync_config,
-                                            &len,
-                                            &ob_err);
-            CHECK_OB_ERROR_RETURN_K4A_RESULT(&ob_err);
-            if((ob_sync_config.syncMode == OB_SYNC_MODE_PRIMARY_MCU_TRIGGER)) {
-                switch_device_clock_sync_mode(device_handle, 0, K4A_DEVICE_CLOCK_SYNC_MODE_RESET);
-            }
+    if(device_ctx->is_imu_streaming){
+        LOG_ERROR("IMU is already streaming", 0);
+        return K4A_RESULT_FAILED;
+    }
+
+    if(!device_ctx->is_camera_streaming && device_ctx->current_device_clock_sync_mode == K4A_DEVICE_CLOCK_SYNC_MODE_RESET){
+        OB_DEVICE_SYNC_CONFIG ob_sync_config;
+        memset(&ob_sync_config, 0, sizeof(OB_DEVICE_SYNC_CONFIG));
+        uint32_t len;
+        ob_device_get_structured_data(device_ctx->device,
+                                        OB_STRUCT_MULTI_DEVICE_SYNC_CONFIG,
+                                        &ob_sync_config,
+                                        &len,
+                                        &ob_err);
+        CHECK_OB_ERROR_RETURN_K4A_RESULT(&ob_err);
+        if(ob_sync_config.syncMode == OB_SYNC_MODE_PRIMARY_MCU_TRIGGER && device_clock_reset(device_handle) != K4A_RESULT_SUCCEEDED){
+             return K4A_RESULT_FAILED;
         }
     }
 
-    if (device_ctx->device == NULL)
-    {
-        LOG_ERROR("device_ctx->device == NULL", 0);
-        return K4A_RESULT_FAILED;
-    }
+    k4a_result_t result = K4A_RESULT_FAILED;
+    ob_sensor_list *sensor_list = NULL;
+    ob_sensor *accel_sensor = NULL;
+    ob_stream_profile_list *accel_profile_list = NULL;
+    ob_stream_profile *accel_profile = NULL;
 
-    ob_sensor_list *sensor_list = ob_device_get_sensor_list(device_ctx->device, &ob_err);
-    CHECK_OB_ERROR_RETURN_K4A_RESULT(&ob_err);
+    ob_sensor *gyro_sensor = NULL;
+    ob_stream_profile_list *gyro_profile_list = NULL;
+    ob_stream_profile *gyro_profile = NULL;
 
-    ob_sensor *accel_sensor = ob_sensor_list_get_sensor_by_type(sensor_list, OB_SENSOR_ACCEL, &ob_err);
-    if (ob_err != NULL)
-    {
-        CHECK_OB_ERROR(&ob_err);
-        ob_delete_sensor_list(sensor_list, &ob_err);
-        CHECK_OB_ERROR(&ob_err);
-        return K4A_RESULT_FAILED;
-    }
+    do{
+        sensor_list = ob_device_get_sensor_list(device_ctx->device, &ob_err);
+        CHECK_OB_ERROR_BREAK(&ob_err);
 
-    ob_stream_profile_list *accel_profile_list = ob_sensor_get_stream_profile_list(accel_sensor, &ob_err);
-    if (ob_err != NULL)
-    {
-        CHECK_OB_ERROR(&ob_err);
-        ob_delete_sensor_list(sensor_list, &ob_err);
-        CHECK_OB_ERROR(&ob_err);
-        ob_delete_stream_profile_list(accel_profile_list, &ob_err);
-        CHECK_OB_ERROR(&ob_err);
-        return K4A_RESULT_FAILED;
-    }
+        accel_sensor = ob_sensor_list_get_sensor_by_type(sensor_list, OB_SENSOR_ACCEL, &ob_err);
+        CHECK_OB_ERROR_BREAK(&ob_err);
 
-    uint32_t count = ob_stream_profile_list_count(accel_profile_list, &ob_err);
-    if (ob_err != NULL)
-    {
-        CHECK_OB_ERROR(&ob_err);
-        ob_delete_sensor_list(sensor_list, &ob_err);
-        CHECK_OB_ERROR(&ob_err);
-        ob_delete_stream_profile_list(accel_profile_list, &ob_err);
-        CHECK_OB_ERROR(&ob_err);
-        return K4A_RESULT_FAILED;
-    }
+        accel_profile_list = ob_sensor_get_stream_profile_list(accel_sensor, &ob_err);
+        CHECK_OB_ERROR_BREAK(&ob_err);
 
-    if (count > 0)
-    {
-        ob_stream_profile *profile = NULL;
+        uint32_t count = ob_stream_profile_list_count(accel_profile_list, &ob_err);
+        CHECK_OB_ERROR_BREAK(&ob_err);
+
+        if (count == 0)
+        {
+            LOG_ERROR("accel_profile_list is empty", 0);
+            break;
+        }
+
+        bool found = false;
         for (uint32_t i = 0; i < count; i++)
         {
-            profile = ob_stream_profile_list_get_profile(accel_profile_list, i, &ob_err);
-            CHECK_OB_ERROR_CONTINUE(&ob_err);
-
-            ob_accel_sample_rate accel_rate = ob_accel_stream_profile_sample_rate(profile, &ob_err);
-            CHECK_OB_ERROR_CONTINUE(&ob_err);
-
-            ob_accel_full_scale_range accel_range = ob_accel_stream_profile_full_scale_range(profile, &ob_err);
-            CHECK_OB_ERROR_CONTINUE(&ob_err);
-
+            accel_profile = ob_stream_profile_list_get_profile(accel_profile_list, i, &ob_err);
+            CHECK_OB_ERROR_BREAK(&ob_err);
+            ob_accel_sample_rate accel_rate = ob_accel_stream_profile_sample_rate(accel_profile, &ob_err);
+            CHECK_OB_ERROR_BREAK(&ob_err);
+            ob_accel_full_scale_range accel_range = ob_accel_stream_profile_full_scale_range(accel_profile, &ob_err);
+            CHECK_OB_ERROR_BREAK(&ob_err);
             if (accel_rate == OB_SAMPLE_RATE_500_HZ && accel_range == OB_ACCEL_FS_4g)
             {
+                found = true;
                 break;
             }
-
-            ob_delete_stream_profile(profile, &ob_err);
-            CHECK_OB_ERROR_CONTINUE(&ob_err);
+            ob_delete_stream_profile(accel_profile, &ob_err);
+            CHECK_OB_ERROR_BREAK(&ob_err);
+            accel_profile = NULL;
         }
 
-        ob_sensor_start(accel_sensor, profile, ob_accel_frame, device_handle, &ob_err);
-        CHECK_OB_ERROR(&ob_err);
-        ob_delete_stream_profile(profile, &ob_err);
-        if (ob_err != NULL)
-        {
-            CHECK_OB_ERROR(&ob_err);
-            ob_delete_sensor_list(sensor_list, &ob_err);
-            CHECK_OB_ERROR(&ob_err);
-            ob_delete_stream_profile_list(accel_profile_list, &ob_err);
-            CHECK_OB_ERROR(&ob_err);
-            return K4A_RESULT_FAILED;
+        if(!found){
+            LOG_ERROR("accel_profile_list is empty", 0);
+            break;
         }
-    }
 
-    ob_sensor *gyro_sensor = ob_sensor_list_get_sensor_by_type(sensor_list, OB_SENSOR_GYRO, &ob_err);
-    if (ob_err != NULL)
-    {
-        CHECK_OB_ERROR(&ob_err);
-        ob_delete_sensor_list(sensor_list, &ob_err);
-        CHECK_OB_ERROR(&ob_err);
-        ob_delete_stream_profile_list(accel_profile_list, &ob_err);
-        CHECK_OB_ERROR(&ob_err);
-        return K4A_RESULT_FAILED;
-    }
+        ob_sensor_start(accel_sensor, accel_profile, ob_accel_frame, device_handle, &ob_err);
+        CHECK_OB_ERROR_BREAK(&ob_err);
 
-    ob_stream_profile_list *gyro_profile_list = ob_sensor_get_stream_profile_list(gyro_sensor, &ob_err);
-    if (ob_err != NULL)
-    {
-        CHECK_OB_ERROR(&ob_err);
-        ob_delete_sensor(gyro_sensor,  &ob_err);
-        CHECK_OB_ERROR(&ob_err);
-        ob_delete_sensor_list(sensor_list, &ob_err);
-        CHECK_OB_ERROR(&ob_err);
-        ob_delete_stream_profile_list(accel_profile_list, &ob_err);
-        CHECK_OB_ERROR(&ob_err);
-        ob_delete_stream_profile_list(gyro_profile_list, &ob_err);
-        CHECK_OB_ERROR(&ob_err);
-        return K4A_RESULT_FAILED;
-    }
+        gyro_sensor = ob_sensor_list_get_sensor_by_type(sensor_list, OB_SENSOR_GYRO, &ob_err);
+        CHECK_OB_ERROR_BREAK(&ob_err);
 
-    count = ob_stream_profile_list_count(gyro_profile_list, &ob_err);
-    if (ob_err != NULL)
-    {
-        CHECK_OB_ERROR(&ob_err);
-        ob_delete_sensor(gyro_sensor,  &ob_err);
-        CHECK_OB_ERROR(&ob_err);
-        ob_delete_sensor_list(sensor_list, &ob_err);
-        CHECK_OB_ERROR(&ob_err);
-        ob_delete_stream_profile_list(accel_profile_list, &ob_err);
-        CHECK_OB_ERROR(&ob_err);
-        ob_delete_stream_profile_list(gyro_profile_list, &ob_err);
-        CHECK_OB_ERROR(&ob_err);
-        return K4A_RESULT_FAILED;
-    }
+        gyro_profile_list = ob_sensor_get_stream_profile_list(gyro_sensor, &ob_err);
+        CHECK_OB_ERROR_BREAK(&ob_err);
 
-    if (count > 0)
-    {
-        ob_stream_profile *profile = NULL;
+        count = ob_stream_profile_list_count(gyro_profile_list, &ob_err);
+        CHECK_OB_ERROR_BREAK(&ob_err);
+
+        if(count == 0){
+            LOG_ERROR("gyro_profile_list is empty", 0);
+            break;
+        }
+
+        found = false;
         for (uint32_t i = 0; i < count; i++)
         {
-            profile = ob_stream_profile_list_get_profile(gyro_profile_list, i, &ob_err);
-            CHECK_OB_ERROR_CONTINUE(&ob_err);
+            gyro_profile = ob_stream_profile_list_get_profile(gyro_profile_list, i, &ob_err);
+            CHECK_OB_ERROR_BREAK(&ob_err);
 
-            ob_gyro_sample_rate gyro_rate = ob_gyro_stream_profile_sample_rate(profile, &ob_err);
-            CHECK_OB_ERROR_CONTINUE(&ob_err);
+            ob_gyro_sample_rate gyro_rate = ob_gyro_stream_profile_sample_rate(gyro_profile, &ob_err);
+            CHECK_OB_ERROR_BREAK(&ob_err);
 
-            ob_gyro_full_scale_range gyro_range = ob_gyro_stream_profile_full_scale_range(profile, &ob_err);
-            CHECK_OB_ERROR_CONTINUE(&ob_err);
+            ob_gyro_full_scale_range gyro_range = ob_gyro_stream_profile_full_scale_range(gyro_profile, &ob_err);
+            CHECK_OB_ERROR_BREAK(&ob_err);
 
             if (gyro_rate == OB_SAMPLE_RATE_500_HZ && gyro_range == OB_GYRO_FS_500dps)
             {
+                found = true;
                 break;
             }
 
-            ob_delete_stream_profile(profile, &ob_err);
-            CHECK_OB_ERROR_CONTINUE(&ob_err);
+            ob_delete_stream_profile(gyro_profile, &ob_err);
+            CHECK_OB_ERROR_BREAK(&ob_err);
+            gyro_profile = NULL;
         }
 
-        ob_sensor_start(gyro_sensor, profile, ob_gyro_frame, device_handle, &ob_err);
-        CHECK_OB_ERROR(&ob_err);
-        ob_delete_stream_profile(profile, &ob_err);
-        if (ob_err != NULL)
-        {
-            CHECK_OB_ERROR(&ob_err);
-            ob_delete_sensor_list(sensor_list, &ob_err);
-            CHECK_OB_ERROR(&ob_err);
-            ob_delete_stream_profile_list(accel_profile_list, &ob_err);
-            CHECK_OB_ERROR(&ob_err);
-            ob_delete_stream_profile_list(gyro_profile_list, &ob_err);
-            CHECK_OB_ERROR(&ob_err);
-            LOG_ERROR("ob_sensor_start failed", 0);
-            return K4A_RESULT_FAILED;
+        if(!found){
+            LOG_ERROR("gyro_profile_list is empty", 0);
+            break;
         }
-    }
 
-    ob_delete_sensor_list(sensor_list, &ob_err);
-    CHECK_OB_ERROR(&ob_err);
-    ob_delete_stream_profile_list(accel_profile_list, &ob_err);
-    CHECK_OB_ERROR(&ob_err);
-    ob_delete_stream_profile_list(gyro_profile_list, &ob_err);
-    CHECK_OB_ERROR(&ob_err);
+        ob_sensor_start(gyro_sensor, gyro_profile, ob_gyro_frame, device_handle, &ob_err);
+        CHECK_OB_ERROR_BREAK(&ob_err);
 
-    device_ctx->accel_sensor = accel_sensor;
-    device_ctx->gyro_sensor = gyro_sensor;
+        if (device_ctx->imusync != NULL &&  TRACE_CALL(imusync_start(device_ctx->imusync)) != K4A_RESULT_SUCCEEDED){
+            break;
+        }
 
-    if (device_ctx->imusync != NULL)
+        device_ctx->is_imu_streaming = true;
+        result = K4A_RESULT_SUCCEEDED;
+
+    }while(0);
+
+    if (sensor_list != NULL)
     {
-        return TRACE_CALL(imusync_start(device_ctx->imusync));
+        ob_delete_sensor_list(sensor_list, &ob_err);
+        CHECK_OB_ERROR(&ob_err);
+        sensor_list = NULL;
     }
-    return K4A_RESULT_FAILED;
+
+    if(accel_profile != NULL){
+        ob_delete_stream_profile(accel_profile, &ob_err);
+        CHECK_OB_ERROR(&ob_err);
+        accel_profile = NULL;
+    }
+
+    if(accel_profile_list != NULL){
+        ob_delete_stream_profile_list(accel_profile_list, &ob_err);
+        CHECK_OB_ERROR(&ob_err);
+        accel_profile_list = NULL;
+    }
+
+    if(gyro_profile != NULL){
+        ob_delete_stream_profile(gyro_profile, &ob_err);
+        CHECK_OB_ERROR(&ob_err);
+        gyro_profile = NULL;
+    }
+
+    if(gyro_profile_list != NULL){
+        ob_delete_stream_profile_list(gyro_profile_list, &ob_err);
+        CHECK_OB_ERROR(&ob_err);
+        gyro_profile_list = NULL;
+    }
+
+    if(result != K4A_RESULT_SUCCEEDED){
+        if(accel_sensor != NULL){
+            ob_sensor_stop(accel_sensor, &ob_err);
+            CHECK_OB_ERROR(&ob_err);
+
+            ob_delete_sensor(accel_sensor, &ob_err);
+            CHECK_OB_ERROR(&ob_err);
+            accel_sensor = NULL;
+        }
+
+        if(gyro_sensor != NULL){
+            ob_sensor_stop(gyro_sensor, &ob_err);
+            CHECK_OB_ERROR(&ob_err);
+
+            ob_delete_sensor(gyro_sensor, &ob_err);
+            CHECK_OB_ERROR(&ob_err);
+            gyro_sensor = NULL;
+        }
+    }
+    else{
+        device_ctx->accel_sensor = accel_sensor;
+        device_ctx->gyro_sensor = gyro_sensor;
+    }
+
+    return result;
 }
 
 void k4a_device_stop_imu(k4a_device_t device_handle)
@@ -1070,6 +1090,7 @@ void k4a_device_stop_imu(k4a_device_t device_handle)
     {
         imusync_stop(device_ctx->imusync);
     }
+    device_ctx->is_imu_streaming = false;
 }
 
 k4a_result_t k4a_capture_create(k4a_capture_t *capture_handle)
@@ -1916,7 +1937,25 @@ k4a_result_t k4a_device_start_cameras(k4a_device_t device_handle, const k4a_devi
     RETURN_VALUE_IF_HANDLE_INVALID(K4A_RESULT_FAILED, k4a_device_t, device_handle);
     CHECK_AND_TRY_INIT_DEVICE_CONTEXT(K4A_RESULT_FAILED, device_handle);
     k4a_device_context_t *device_ctx = k4a_device_t_get_context(device_handle);
+    k4a_result_t result = K4A_RESULT_FAILED;
     ob_error *ob_err = NULL;
+
+    LOG_INFO("Starting camera's with the following config.", 0);
+    LOG_INFO("    color_format:%d", config->color_format);
+    LOG_INFO("    color_resolution:%d", config->color_resolution);
+    LOG_INFO("    depth_mode:%d", config->depth_mode);
+    LOG_INFO("    camera_fps:%d", config->camera_fps);
+    LOG_INFO("    synchronized_images_only:%d", config->synchronized_images_only);
+    LOG_INFO("    depth_delay_off_color_usec:%d", config->depth_delay_off_color_usec);
+    LOG_INFO("    wired_sync_mode:%d", config->wired_sync_mode);
+    LOG_INFO("    subordinate_delay_off_master_usec:%d", config->subordinate_delay_off_master_usec);
+    LOG_INFO("    disable_streaming_indicator:%d", config->disable_streaming_indicator);
+    result = TRACE_CALL(validate_configuration(device_ctx, config));
+    if (K4A_FAILED(result))
+    {
+        return result;
+    }
+
     OB_DEVICE_SYNC_CONFIG ob_sync_config;
     memset(&ob_sync_config, 0, sizeof(OB_DEVICE_SYNC_CONFIG));
     uint32_t len;
@@ -1927,38 +1966,11 @@ k4a_result_t k4a_device_start_cameras(k4a_device_t device_handle, const k4a_devi
                                     &ob_err);
     CHECK_OB_ERROR_RETURN_K4A_RESULT(&ob_err);
 
-    if(device_ctx->current_device_clock_sync_mode == K4A_DEVICE_CLOCK_SYNC_MODE_RESET){
-        CHECK_OB_ERROR_RETURN_K4A_RESULT(&ob_err);
-        if(ob_sync_config.syncMode == OB_SYNC_MODE_PRIMARY_MCU_TRIGGER) {
-            switch_device_clock_sync_mode(device_handle, 0, K4A_DEVICE_CLOCK_SYNC_MODE_RESET);
+    if(device_ctx->current_device_clock_sync_mode == K4A_DEVICE_CLOCK_SYNC_MODE_RESET &&
+        ob_sync_config.syncMode == OB_SYNC_MODE_PRIMARY_MCU_TRIGGER){
+        if(device_clock_reset(device_handle) != K4A_RESULT_SUCCEEDED){
+            return K4A_RESULT_FAILED;
         }
-    }
-
-    k4a_result_t result = K4A_RESULT_SUCCEEDED;
-    if (config == NULL)
-    {
-        LOG_ERROR("param invalid,[%s]", __func__);
-        return K4A_RESULT_FAILED;
-    }
-
-    if (K4A_SUCCEEDED(result))
-    {
-        LOG_INFO("Starting camera's with the following config.", 0);
-        LOG_INFO("    color_format:%d", config->color_format);
-        LOG_INFO("    color_resolution:%d", config->color_resolution);
-        LOG_INFO("    depth_mode:%d", config->depth_mode);
-        LOG_INFO("    camera_fps:%d", config->camera_fps);
-        LOG_INFO("    synchronized_images_only:%d", config->synchronized_images_only);
-        LOG_INFO("    depth_delay_off_color_usec:%d", config->depth_delay_off_color_usec);
-        LOG_INFO("    wired_sync_mode:%d", config->wired_sync_mode);
-        LOG_INFO("    subordinate_delay_off_master_usec:%d", config->subordinate_delay_off_master_usec);
-        LOG_INFO("    disable_streaming_indicator:%d", config->disable_streaming_indicator);
-        result = TRACE_CALL(validate_configuration(device_ctx, config));
-    }
-
-    if (K4A_FAILED(result))
-    {
-        return K4A_RESULT_FAILED;
     }
 
     if (config->depth_delay_off_color_usec > MAX_DELAY_TIME || config->depth_delay_off_color_usec < MIN_DELAY_TIME)
@@ -2114,10 +2126,7 @@ k4a_result_t k4a_device_start_cameras(k4a_device_t device_handle, const k4a_devi
         break;
     }
 
-    device_ctx->pipe = ob_create_pipeline_with_device((ob_device *)device_ctx->device, &ob_err);
-    CHECK_OB_ERROR_RETURN_K4A_RESULT(&ob_err);
-
-    ob_config *obConfig = ob_create_config(&ob_err);
+    ob_config *pipe_config = ob_create_config(&ob_err);
     CHECK_OB_ERROR_RETURN_K4A_RESULT(&ob_err);
 
     ob_stream_profile *depth_profile = NULL;
@@ -2129,226 +2138,152 @@ k4a_result_t k4a_device_start_cameras(k4a_device_t device_handle, const k4a_devi
     ob_stream_profile *color_profile = NULL;
     ob_stream_profile_list *color_profiles = NULL;
 
-    if (config->depth_mode != K4A_DEPTH_MODE_OFF)
-    {
-
-        if (config->depth_mode != K4A_DEPTH_MODE_PASSIVE_IR)
+    result = K4A_RESULT_FAILED;
+    do{
+        if (config->depth_mode != K4A_DEPTH_MODE_OFF)
         {
-
             if (pid == ORBBEC_MEGA_PID || pid == ORBBEC_BOLT_PID)
             {
-                ob_device_set_int_property(device_ctx->device, OB_PROP_SWITCH_IR_MODE_INT, ACTIVE_IR, &ob_err);
-                CHECK_OB_ERROR_RETURN_K4A_RESULT(&ob_err);
-            }
-            depth_profiles = ob_pipeline_get_stream_profile_list(device_ctx->pipe, OB_SENSOR_DEPTH, &ob_err);
-            CHECK_OB_ERROR_RETURN_K4A_RESULT(&ob_err);
-            depth_profile = ob_stream_profile_list_get_video_stream_profile(depth_profiles,
-                                                                            k4a_depth_width,
-                                                                            k4a_depth_height,
-                                                                            OB_FORMAT_Y16, // OB_FORMAT_YUYV
-                                                                                           // OB_FORMAT_Y16
-                                                                            k4a_fps,
-                                                                            &ob_err);
-            CHECK_OB_ERROR(&ob_err);
-
-            if (!depth_profile)
-            {
-
-                ob_delete_pipeline(device_ctx->pipe, &ob_err);
-                device_ctx->pipe = NULL;
-                CHECK_OB_ERROR(&ob_err);
-
-                ob_delete_config(obConfig, &ob_err);
-                obConfig = NULL;
-                CHECK_OB_ERROR(&ob_err);
-
-                ob_delete_stream_profile_list(depth_profiles, &ob_err);
-                depth_profiles = NULL;
-                CHECK_OB_ERROR(&ob_err);
-                return K4A_RESULT_FAILED;
+                ir_mode_t ir_mode=  config->depth_mode == K4A_DEPTH_MODE_PASSIVE_IR ? PASSIVE_IR : ACTIVE_IR;
+                ob_device_set_int_property(device_ctx->device, OB_PROP_SWITCH_IR_MODE_INT, ir_mode, &ob_err);
+                CHECK_OB_ERROR_BREAK(&ob_err);
             }
 
-            ob_config_enable_stream(obConfig, depth_profile, &ob_err);
-            CHECK_OB_ERROR_RETURN_K4A_RESULT(&ob_err);
-        }
-        else
-        {
-
-            if (pid == ORBBEC_MEGA_PID || pid == ORBBEC_BOLT_PID)
-            {
-                ob_device_set_int_property(device_ctx->device, OB_PROP_SWITCH_IR_MODE_INT, PASSIVE_IR, &ob_err);
-                CHECK_OB_ERROR_RETURN_K4A_RESULT(&ob_err);
-            }
-        }
-
-        ir_profiles = ob_pipeline_get_stream_profile_list(device_ctx->pipe, OB_SENSOR_IR, &ob_err);
-        CHECK_OB_ERROR_RETURN_K4A_RESULT(&ob_err);
-
-        ir_profile = ob_stream_profile_list_get_video_stream_profile(ir_profiles,
-                                                                     k4a_depth_width,
-                                                                     k4a_depth_height,
-                                                                     OB_FORMAT_Y16,
-                                                                     k4a_fps,
-                                                                     &ob_err);
-        CHECK_OB_ERROR(&ob_err);
-
-        if (!ir_profile)
-        {
-
-            ob_delete_pipeline(device_ctx->pipe, &ob_err);
-            CHECK_OB_ERROR(&ob_err);
-            device_ctx->pipe = NULL;
-            ob_delete_config(obConfig, &ob_err);
-            CHECK_OB_ERROR(&ob_err);
             if (config->depth_mode != K4A_DEPTH_MODE_PASSIVE_IR)
             {
-                ob_delete_stream_profile_list(depth_profiles, &ob_err);
-                depth_profiles = NULL;
-                CHECK_OB_ERROR(&ob_err);
+                depth_profiles = ob_pipeline_get_stream_profile_list(device_ctx->pipe, OB_SENSOR_DEPTH, &ob_err);
+                CHECK_OB_ERROR_BREAK(&ob_err);
+                depth_profile = ob_stream_profile_list_get_video_stream_profile(depth_profiles,
+                                                                                k4a_depth_width,
+                                                                                k4a_depth_height,
+                                                                                OB_FORMAT_Y16,
+                                                                                k4a_fps,
+                                                                                &ob_err);
+                CHECK_OB_ERROR_BREAK(&ob_err);
+
+                ob_config_enable_stream(pipe_config, depth_profile, &ob_err);
+                CHECK_OB_ERROR_BREAK(&ob_err);
             }
 
-            ob_delete_stream_profile_list(ir_profiles, &ob_err);
-            ir_profiles = NULL;
-            CHECK_OB_ERROR(&ob_err);
+            ir_profiles = ob_pipeline_get_stream_profile_list(device_ctx->pipe, OB_SENSOR_IR, &ob_err);
+            CHECK_OB_ERROR_BREAK(&ob_err);
 
-            return K4A_RESULT_FAILED;
-        }
-        ob_config_enable_stream(obConfig, ir_profile, &ob_err);
-        CHECK_OB_ERROR_RETURN_K4A_RESULT(&ob_err);
-    }
-
-    if (config->color_resolution != K4A_COLOR_RESOLUTION_OFF)
-    {
-
-        color_profiles = ob_pipeline_get_stream_profile_list(device_ctx->pipe, OB_SENSOR_COLOR, &ob_err);
-        CHECK_OB_ERROR_RETURN_K4A_RESULT(&ob_err);
-
-        ob_format color_format = OB_FORMAT_UNKNOWN;
-        switch (config->color_format)
-        {
-        case K4A_IMAGE_FORMAT_COLOR_MJPG:
-            color_format = OB_FORMAT_MJPG;
-            break;
-        case K4A_IMAGE_FORMAT_COLOR_BGRA32:
-            color_format = OB_FORMAT_BGRA;
-            break;
-        case K4A_IMAGE_FORMAT_COLOR_YUY2:
-            color_format = OB_FORMAT_YUYV;
-            break;
-        case K4A_IMAGE_FORMAT_COLOR_NV12:
-            color_format = OB_FORMAT_NV12;
-            break;
-        default:
-            break;
-        }
-
-        if (color_format == OB_FORMAT_UNKNOWN)
-        {
-            LOG_ERROR("color format unsupport,[%s]", __func__);
-            return K4A_RESULT_FAILED;
-        }
-
-        color_profile = ob_stream_profile_list_get_video_stream_profile(color_profiles,
-                                                                        k4a_color_width,
-                                                                        k4a_color_height,
-                                                                        color_format, // OB_FORMAT_MJPG
+            ir_profile = ob_stream_profile_list_get_video_stream_profile(ir_profiles,
+                                                                        k4a_depth_width,
+                                                                        k4a_depth_height,
+                                                                        OB_FORMAT_Y16,
                                                                         k4a_fps,
                                                                         &ob_err);
-        CHECK_OB_ERROR(&ob_err);
+            CHECK_OB_ERROR_BREAK(&ob_err);
 
-        if (!color_profile)
-        {
 
-            ob_delete_pipeline(device_ctx->pipe, &ob_err);
-            device_ctx->pipe= NULL;
-            CHECK_OB_ERROR(&ob_err);
-
-            ob_delete_config(obConfig, &ob_err);
-            obConfig = NULL;
-            CHECK_OB_ERROR(&ob_err);
-
-            ob_delete_stream_profile_list(color_profiles, &ob_err);
-            color_profiles = NULL;
-            CHECK_OB_ERROR(&ob_err);
-
-            if (config->depth_mode != K4A_DEPTH_MODE_OFF)
-            {
-                if (config->depth_mode != K4A_DEPTH_MODE_PASSIVE_IR)
-                {
-                    ob_delete_stream_profile_list(depth_profiles, &ob_err);
-                    depth_profiles = NULL;
-                    CHECK_OB_ERROR(&ob_err);
-                }
-
-                ob_delete_stream_profile_list(ir_profiles, &ob_err);
-                ir_profiles = NULL;
-                CHECK_OB_ERROR(&ob_err);
-            }
-
-            return K4A_RESULT_FAILED;
+            ob_config_enable_stream(pipe_config, ir_profile, &ob_err);
+            CHECK_OB_ERROR_BREAK(&ob_err);
         }
 
-        ob_config_enable_stream(obConfig, color_profile, &ob_err);
-        CHECK_OB_ERROR_RETURN_K4A_RESULT(&ob_err);
+        if (config->color_resolution != K4A_COLOR_RESOLUTION_OFF)
+        {
+
+            color_profiles = ob_pipeline_get_stream_profile_list(device_ctx->pipe, OB_SENSOR_COLOR, &ob_err);
+            CHECK_OB_ERROR_BREAK(&ob_err);
+
+            ob_format color_format = OB_FORMAT_UNKNOWN;
+            switch (config->color_format)
+            {
+            case K4A_IMAGE_FORMAT_COLOR_MJPG:
+                color_format = OB_FORMAT_MJPG;
+                break;
+            case K4A_IMAGE_FORMAT_COLOR_BGRA32:
+                color_format = OB_FORMAT_BGRA;
+                break;
+            case K4A_IMAGE_FORMAT_COLOR_YUY2:
+                color_format = OB_FORMAT_YUYV;
+                break;
+            case K4A_IMAGE_FORMAT_COLOR_NV12:
+                color_format = OB_FORMAT_NV12;
+                break;
+            default:
+
+                break;
+            }
+
+            if (color_format == OB_FORMAT_UNKNOWN)
+            {
+                LOG_ERROR("color format unsupport,[%s]", __func__);
+                break;;
+            }
+
+            color_profile = ob_stream_profile_list_get_video_stream_profile(color_profiles,
+                                                                            k4a_color_width,
+                                                                            k4a_color_height,
+                                                                            color_format, // OB_FORMAT_MJPG
+                                                                            k4a_fps,
+                                                                            &ob_err);
+            CHECK_OB_ERROR_BREAK(&ob_err);
+
+            ob_config_enable_stream(pipe_config, color_profile, &ob_err);
+            CHECK_OB_ERROR_BREAK(&ob_err);
+        }
+
+        ob_pipeline_enable_frame_sync(device_ctx->pipe, &ob_err);
+        CHECK_OB_ERROR_BREAK(&ob_err);
+
+        if (config->synchronized_images_only && config->depth_mode != K4A_DEPTH_MODE_PASSIVE_IR)
+        {
+            ob_config_set_frame_aggregate_output_mode(pipe_config, OB_FRAME_AGGREGATE_OUTPUT_FULL_FRAME_REQUIRE, &ob_err);
+            CHECK_OB_ERROR_BREAK(&ob_err);
+        }
+
+        frame_queue_enable(device_ctx->frameset_queue);
+
+        ob_pipeline_start_with_callback(device_ctx->pipe, pipe_config, ob_frame_set_ready, device_handle, &ob_err);
+        CHECK_OB_ERROR_BREAK(&ob_err);
+        device_ctx->is_camera_streaming = true;
+
+        result = K4A_RESULT_SUCCEEDED;
+    }while(0);
+
+    if(pipe_config != NULL){
+        ob_delete_config(pipe_config, &ob_err);
+        CHECK_OB_ERROR(&ob_err);
+        pipe_config = NULL;
     }
 
-    ob_pipeline_enable_frame_sync(device_ctx->pipe, &ob_err);
-    CHECK_OB_ERROR_RETURN_K4A_RESULT(&ob_err);
-
-    if (config->synchronized_images_only && config->depth_mode != K4A_DEPTH_MODE_PASSIVE_IR)
-    {
-        ob_config_set_frame_aggregate_output_mode(obConfig, OB_FRAME_AGGREGATE_OUTPUT_FULL_FRAME_REQUIRE, &ob_err);
-        CHECK_OB_ERROR_RETURN_K4A_RESULT(&ob_err);
-    }
-
-    frame_queue_enable(device_ctx->frameset_queue);
-
-    ob_pipeline_start_with_callback(device_ctx->pipe, obConfig, ob_frame_set_ready, device_handle, &ob_err);
-    CHECK_OB_ERROR_RETURN_K4A_RESULT(&ob_err);
-    device_ctx->is_streaming = true;
-
-    CHECK_OB_ERROR_RETURN_K4A_RESULT(&ob_err);
-    ob_delete_config(obConfig, &ob_err);
-    if (config->depth_mode != K4A_DEPTH_MODE_OFF)
-    {
-        ob_delete_stream_profile_list(depth_profiles, &ob_err);
-        CHECK_OB_ERROR_RETURN_K4A_RESULT(&ob_err);
-        depth_profiles = NULL;
-
-        ob_delete_stream_profile_list(ir_profiles, &ob_err);
-        CHECK_OB_ERROR_RETURN_K4A_RESULT(&ob_err);
-        ir_profiles = NULL;
-    }
-
-    if (config->color_resolution != K4A_COLOR_RESOLUTION_OFF)
-    {
-        ob_delete_stream_profile_list(color_profiles, &ob_err);
-        CHECK_OB_ERROR_RETURN_K4A_RESULT(&ob_err);
-        color_profiles = NULL;
-    }
     if (color_profiles != NULL)
     {
         ob_delete_stream_profile_list(color_profiles, &ob_err);
+        CHECK_OB_ERROR(&ob_err);
+        color_profiles = NULL;
     }
     if (color_profile != NULL)
     {
         ob_delete_stream_profile(color_profile, &ob_err);
+        CHECK_OB_ERROR(&ob_err);
+        color_profile = NULL;
     }
     if (depth_profiles != NULL)
     {
         ob_delete_stream_profile_list(depth_profiles, &ob_err);
+        CHECK_OB_ERROR(&ob_err);
+        depth_profiles = NULL;
     }
     if (depth_profile != NULL)
     {
         ob_delete_stream_profile(depth_profile, &ob_err);
+        CHECK_OB_ERROR(&ob_err);
+        depth_profile = NULL;
     }
     if (ir_profiles != NULL)
     {
         ob_delete_stream_profile_list(ir_profiles, &ob_err);
+        CHECK_OB_ERROR(&ob_err);
+        ir_profiles = NULL;
     }
     if (ir_profile != NULL)
     {
         ob_delete_stream_profile(ir_profile, &ob_err);
+        CHECK_OB_ERROR(&ob_err);
+        ir_profile = NULL;
     }
     return result;
 }
@@ -2366,10 +2301,6 @@ void k4a_device_stop_cameras(k4a_device_t device_handle)
         {
             ob_pipeline_stop(device_ctx->pipe, &ob_err);
             CHECK_OB_ERROR(&ob_err);
-
-            ob_delete_pipeline(device_ctx->pipe, &ob_err);
-            CHECK_OB_ERROR(&ob_err);
-            device_ctx->pipe = NULL;
         }
 
         frame_queue_disable(device_ctx->frameset_queue);
