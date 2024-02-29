@@ -1523,9 +1523,17 @@ public:
     {
         return k4a_device_get_installed_count();
     }
-
-    void set_device_clock_sync_mode(int clock_sync_time, k4a_device_clock_sync_mode_t timestamp_mode){
-        switch_device_clock_sync_mode(m_handle, clock_sync_time, timestamp_mode);
+    /**
+     * @brief switch the device clock sync mode object
+     *
+     * \sa k4a_switch_device_clock_sync_mode
+     */
+    void switch_device_clock_sync_mode(k4a_device_clock_sync_mode_t timestamp_mode, int param){
+        k4a_result_t result =  k4a_switch_device_clock_sync_mode(m_handle, timestamp_mode, param);
+        if (K4A_RESULT_SUCCEEDED != result)
+        {
+            throw error("Failed to switch device clock sync mode!");
+        }
     }
 
 private:
