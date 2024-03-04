@@ -168,6 +168,25 @@ K4A_DECLARE_CONTEXT(k4a_depthengine_t, k4a_depthengine_instance_helper_t);
 #define K4A_FPS_TO_STRING_CASE(fps)                                                                                    \
     case fps:                                                                                                          \
         return #fps
+k4a_wired_sync_mode_t k4a_get_device_sync_mode(k4a_device_t device_handle){
+    k4a_device_context_t *device_ctx = k4a_device_t_get_context(device_handle);
+    OB_DEVICE_SYNC_CONFIG ob_config;
+    memset(&ob_config, 0, sizeof(OB_DEVICE_SYNC_CONFIG));
+    uint32_t len;
+    ob_error *ob_err = NULL;
+    ob_device_get_structured_data(device_ctx->device,
+                                    OB_STRUCT_MULTI_DEVICE_SYNC_CONFIG,
+                                    &ob_config,
+                                    &len,
+                                    &ob_err);
+    if(ob_config.syncMode == OB_SYNC_MODE_PRIMARY_MCU_TRIGGER){
+        return K4A_WIRED_SYNC_MODE_MASTER;
+    }else if(ob_config.syncMode == OB_SYNC_MODE_SECONDARY){
+        return K4A_WIRED_SYNC_MODE_SUBORDINATE;
+    }else{
+        return K4A_WIRED_SYNC_MODE_STANDALONE;
+    }
+}
 
 k4a_result_t k4a_depth_engine_helper_create(k4a_depthengine_t* handle){
     RETURN_VALUE_IF_ARG(K4A_RESULT_FAILED, handle == NULL);
