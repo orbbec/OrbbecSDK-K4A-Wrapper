@@ -888,8 +888,10 @@ k4a_result_t k4a_device_start_imu(k4a_device_t device_handle)
                                         &len,
                                         &ob_err);
         CHECK_OB_ERROR_RETURN_K4A_RESULT(&ob_err);
-        if(ob_sync_config.syncMode == OB_SYNC_MODE_PRIMARY_MCU_TRIGGER && device_clock_reset(device_handle) != K4A_RESULT_SUCCEEDED){
-             return K4A_RESULT_FAILED;
+        if(device_ctx->current_device_clock_sync_mode == K4A_DEVICE_CLOCK_SYNC_MODE_RESET && ob_sync_config.syncMode == OB_SYNC_MODE_PRIMARY_MCU_TRIGGER){
+            if(device_clock_reset(device_handle) != K4A_RESULT_SUCCEEDED){
+                return K4A_RESULT_FAILED;
+            }
         }
     }
 
@@ -1966,13 +1968,6 @@ k4a_result_t k4a_device_start_cameras(k4a_device_t device_handle, const k4a_devi
                                     &ob_err);
     CHECK_OB_ERROR_RETURN_K4A_RESULT(&ob_err);
 
-    if(device_ctx->current_device_clock_sync_mode == K4A_DEVICE_CLOCK_SYNC_MODE_RESET &&
-        ob_sync_config.syncMode == OB_SYNC_MODE_PRIMARY_MCU_TRIGGER){
-        if(device_clock_reset(device_handle) != K4A_RESULT_SUCCEEDED){
-            return K4A_RESULT_FAILED;
-        }
-    }
-
     if (config->depth_delay_off_color_usec > MAX_DELAY_TIME || config->depth_delay_off_color_usec < MIN_DELAY_TIME)
     {
         LOG_ERROR("depth_delay_off_color_usec out of range", 0);
@@ -2031,6 +2026,13 @@ k4a_result_t k4a_device_start_cameras(k4a_device_t device_handle, const k4a_devi
                                       &ob_err);
 
         CHECK_OB_ERROR_RETURN_K4A_RESULT(&ob_err);
+    }
+
+    if(device_ctx->current_device_clock_sync_mode == K4A_DEVICE_CLOCK_SYNC_MODE_RESET &&
+        ob_sync_config.syncMode == OB_SYNC_MODE_PRIMARY_MCU_TRIGGER){
+        if(device_clock_reset(device_handle) != K4A_RESULT_SUCCEEDED){
+            return K4A_RESULT_FAILED;
+        }
     }
 
     if (pid != ORBBEC_MEGA_PID && pid != ORBBEC_BOLT_PID && config->depth_mode == K4A_DEPTH_MODE_PASSIVE_IR)
