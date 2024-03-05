@@ -33,6 +33,27 @@ extern "C" {
  * @{
  */
 
+
+/** set device soft filter switch
+ *
+ * \param device_handle
+ * Output parameter which on success will return a handle to the device.
+ *
+ * \param filter_switch
+ * Device clock synchronization mode
+ *
+ * \remarks This API is used to set filtering.
+ *
+ * \xmlonly
+ * <requirements>
+ *   <requirement name="Header">k4a.h (include k4a/k4a.h)</requirement>
+ *   <requirement name="Library">k4a.lib</requirement>
+ *   <requirement name="DLL">k4a.dll</requirement>
+ * </requirements>
+ * \endxmlonly
+*/
+K4A_EXPORT k4a_result_t k4a_set_soft_filter(k4a_device_t device_handle, bool filter_switch);
+
 /** switch device clock sync mode
  *
  * \param device_handle
