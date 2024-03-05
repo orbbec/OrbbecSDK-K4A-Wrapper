@@ -1536,6 +1536,10 @@ public:
         }
     }
 
+    void set_soft_filter(bool filter_switch){
+        k4a_set_soft_filter(m_handle, filter_switch);
+    }
+
 private:
     k4a_device_t m_handle;
 };

@@ -594,6 +594,14 @@ void device_timestamp_sync_with_host(k4a_device_t device_handle, uint32_t interv
         }
     }
 }
+k4a_result_t k4a_set_soft_filter(k4a_device_t device_handle, bool filter_switch){
+    RETURN_VALUE_IF_HANDLE_INVALID(K4A_RESULT_FAILED, k4a_device_t, device_handle);
+    k4a_device_context_t *device_ctx = k4a_device_t_get_context(device_handle);
+    ob_error *ob_err = NULL;
+    ob_device_set_bool_property(device_ctx->device, OB_PROP_DEPTH_SOFT_FILTER_BOOL, filter_switch, &ob_err);
+    CHECK_OB_ERROR_RETURN_K4A_RESULT(&ob_err);
+    return K4A_RESULT_SUCCEEDED;
+}
 
 k4a_result_t device_clock_reset(k4a_device_t device_handle){
     RETURN_VALUE_IF_HANDLE_INVALID(K4A_RESULT_FAILED, k4a_device_t, device_handle);
