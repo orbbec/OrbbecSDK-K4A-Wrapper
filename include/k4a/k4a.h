@@ -38,6 +38,8 @@ extern "C" {
  *
  * \remarks This API is currently mainly used to get device sync mode
  *
+ * \remarks The device synchronization mode will change according to the mode configured in the start_cameras function
+ *
  * \xmlonly
  * <requirements>
  *   <requirement name="Header">k4a.h (include k4a/k4a.h)</requirement>
