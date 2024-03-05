@@ -1540,8 +1540,8 @@ public:
         k4a_set_soft_filter(m_handle, filter_switch);
     }
 
-    void get_device_sync_mode(){
-        k4a_get_device_sync_mode(m_handle);
+    k4a_wired_sync_mode_t get_device_sync_mode(){
+        return k4a_get_device_sync_mode(m_handle);
     }
 
 private:
