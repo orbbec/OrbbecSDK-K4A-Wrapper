@@ -2037,7 +2037,7 @@ k4a_result_t k4a_device_start_cameras(k4a_device_t device_handle, const k4a_devi
     }
 
     if(device_ctx->current_device_clock_sync_mode == K4A_DEVICE_CLOCK_SYNC_MODE_RESET &&
-        ob_sync_config.syncMode == OB_SYNC_MODE_PRIMARY_MCU_TRIGGER){
+        ob_sync_config.syncMode == OB_SYNC_MODE_PRIMARY_MCU_TRIGGER && !device_ctx->is_imu_streaming){
         if(device_clock_reset(device_handle) != K4A_RESULT_SUCCEEDED){
             return K4A_RESULT_FAILED;
         }
