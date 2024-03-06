@@ -47,9 +47,9 @@ extern "C" {
  * </requirements>
  * \endxmlonly
 */
-K4A_EXPORT k4a_wired_sync_mode_t k4a_get_wired_sync_mode(k4a_device_t device);
+K4A_EXPORT k4a_wired_sync_mode_t k4a_device_get_wired_sync_mode(k4a_device_t device);
 
-/** set device soft filter switch
+/** enable/disable soft filter for depth camera
  *
  * \param device_handle
  * Output parameter which on success will return a handle to the device.
@@ -67,7 +67,7 @@ K4A_EXPORT k4a_wired_sync_mode_t k4a_get_wired_sync_mode(k4a_device_t device);
  * </requirements>
  * \endxmlonly
 */
-K4A_EXPORT k4a_result_t k4a_enable_soft_filter(k4a_device_t device_handle, bool enable);
+K4A_EXPORT k4a_result_t k4a_device_enable_soft_filter(k4a_device_t device_handle, bool enable);
 
 /** switch device clock sync mode
  *
@@ -91,7 +91,7 @@ K4A_EXPORT k4a_result_t k4a_enable_soft_filter(k4a_device_t device_handle, bool 
  * </requirements>
  * \endxmlonly
 */
-K4A_EXPORT k4a_result_t k4a_switch_device_clock_sync_mode(k4a_device_t device_handle, k4a_device_clock_sync_mode_t timestamp_mode, uint32_t param);
+K4A_EXPORT k4a_result_t k4a_device_switch_device_clock_sync_mode(k4a_device_t device_handle, k4a_device_clock_sync_mode_t timestamp_mode, uint32_t param);
 
 /** create depthengine helper
  *

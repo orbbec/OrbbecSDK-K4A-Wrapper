@@ -179,7 +179,7 @@ K4A_DECLARE_CONTEXT(k4a_depthengine_t, k4a_depthengine_instance_helper_t);
     case fps:                                                                                                          \
         return #fps
 
-k4a_wired_sync_mode_t k4a_get_wired_sync_mode(k4a_device_t device_handle){
+k4a_wired_sync_mode_t k4a_device_get_wired_sync_mode(k4a_device_t device_handle){
     k4a_device_context_t *device_ctx = k4a_device_t_get_context(device_handle);
     OB_DEVICE_SYNC_CONFIG ob_config;
     memset(&ob_config, 0, sizeof(OB_DEVICE_SYNC_CONFIG));
@@ -525,7 +525,7 @@ k4a_result_t init_device_context(k4a_device_t device_handle)
 
         const k4a_device_clock_sync_mode_t default_clock_sync_mode = K4A_DEVICE_CLOCK_SYNC_MODE_SYNC;
         const uint32_t default_interval_us = 60*1000*1000; // 60s
-        k4a_switch_device_clock_sync_mode(device_handle, default_clock_sync_mode, default_interval_us);
+        k4a_device_switch_device_clock_sync_mode(device_handle, default_clock_sync_mode, default_interval_us);
 
     } while (0);
 
@@ -614,7 +614,7 @@ void device_timestamp_sync_with_host(k4a_device_t device_handle, uint32_t interv
         }
     }
 }
-k4a_result_t k4a_enable_soft_filter(k4a_device_t device_handle, bool enable){
+k4a_result_t k4a_device_enable_soft_filter(k4a_device_t device_handle, bool enable){
     RETURN_VALUE_IF_HANDLE_INVALID(K4A_RESULT_FAILED, k4a_device_t, device_handle);
     k4a_device_context_t *device_ctx = k4a_device_t_get_context(device_handle);
     ob_error *ob_err = NULL;
@@ -633,7 +633,7 @@ k4a_result_t device_clock_reset(k4a_device_t device_handle){
     return K4A_RESULT_SUCCEEDED;
 }
 
-k4a_result_t k4a_switch_device_clock_sync_mode(k4a_device_t device_handle, k4a_device_clock_sync_mode_t timestamp_mode, uint32_t param){
+k4a_result_t k4a_device_switch_device_clock_sync_mode(k4a_device_t device_handle, k4a_device_clock_sync_mode_t timestamp_mode, uint32_t param){
     RETURN_VALUE_IF_HANDLE_INVALID(K4A_RESULT_FAILED, k4a_device_t, device_handle);
     CHECK_AND_TRY_INIT_DEVICE_CONTEXT(K4A_RESULT_FAILED, device_handle);
     ob_error *ob_err = NULL;

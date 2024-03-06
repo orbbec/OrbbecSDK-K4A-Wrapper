@@ -1526,10 +1526,10 @@ public:
     /**
      * @brief switch the device clock sync mode object
      *
-     * \sa k4a_switch_device_clock_sync_mode
+     * \sa k4a_device_switch_device_clock_sync_mode
      */
     void switch_device_clock_sync_mode(k4a_device_clock_sync_mode_t timestamp_mode, int param){
-        k4a_result_t result =  k4a_switch_device_clock_sync_mode(m_handle, timestamp_mode, param);
+        k4a_result_t result =  k4a_device_switch_device_clock_sync_mode(m_handle, timestamp_mode, param);
         if (K4A_RESULT_SUCCEEDED != result)
         {
             throw error("Failed to switch device clock sync mode!");
@@ -1537,11 +1537,11 @@ public:
     }
 
     void set_soft_filter(bool filter_switch){
-        k4a_enable_soft_filter(m_handle, filter_switch);
+        k4a_device_enable_soft_filter(m_handle, filter_switch);
     }
 
     k4a_wired_sync_mode_t get_wired_sync_mode(){
-        return k4a_get_wired_sync_mode(m_handle);
+        return k4a_device_get_wired_sync_mode(m_handle);
     }
 
 private:
