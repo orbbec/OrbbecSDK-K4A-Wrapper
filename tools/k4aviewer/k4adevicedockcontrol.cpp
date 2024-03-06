@@ -740,7 +740,7 @@ K4ADockControlStatus K4ADeviceDockControl::Show()
     ImGui::SameLine();
     framerateUpdated |= ImGuiExtensions::K4ARadioButton(" 5 FPS", pFramerate, K4A_FRAMES_PER_SECOND_5, enableFramerate);
 
-    // ImGuiExtensions::K4ACheckbox("Disable streaming LED", &m_config.DisableStreamingIndicator, !deviceIsStarted);
+    ImGuiExtensions::K4ACheckbox("Disable streaming LED", &m_config.DisableStreamingIndicator, !deviceIsStarted);
 
     ImGui::Separator();
 
