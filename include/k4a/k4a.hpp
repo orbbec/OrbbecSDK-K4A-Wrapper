@@ -1537,11 +1537,11 @@ public:
     }
 
     void set_soft_filter(bool filter_switch){
-        k4a_set_soft_filter(m_handle, filter_switch);
+        k4a_enable_soft_filter(m_handle, filter_switch);
     }
 
-    k4a_wired_sync_mode_t get_device_sync_mode(){
-        return k4a_get_device_sync_mode(m_handle);
+    k4a_wired_sync_mode_t get_wired_sync_mode(){
+        return k4a_get_wired_sync_mode(m_handle);
     }
 
 private:
