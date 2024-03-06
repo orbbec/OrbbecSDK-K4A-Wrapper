@@ -1,18 +1,11 @@
-# release v1.9.x
+# release v1.9.2
 ## Change List
-1. Switch OrbbecSDK version to v1.9.4;
-2. Support pre initialization of depthengine;
-3. Support nv12;
-4. Adjust the imu data to be consistent with AKDK;
-5. Support for obaining imu extrinsic parameter data;
-6. Add color hdr control in color control command;
-7. Fix system timestamp setting error;
-8. Adapt indicator light switch;
-9. Shut unsupport resolutions by k4aviewer;
-10. Filter out device not supported by k4aviewer;
-11. Filter out null device by k4aviewer;
-12. Turn off prompts that do not support audio by k4aviewer;
-13. Fix log display error by k4aviewer.
+1. switch OrbbecSDK version to v1.9.5;
+2. add k4a_device_switch_device_clock_sync_mode interface;
+3. add k4a_device_get_wired_sync_mode interface;
+4. add k4a_device_enable_soft_filter interface;
+5. k4aviewer support indicator switch;
+6. fix other bugs;
 
 ## Product support
 | **products list** | **firmware version** |**platform**|
