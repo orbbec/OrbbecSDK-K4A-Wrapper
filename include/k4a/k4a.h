@@ -47,15 +47,15 @@ extern "C" {
  * </requirements>
  * \endxmlonly
 */
-K4A_EXPORT k4a_wired_sync_mode_t k4a_get_device_sync_mode(k4a_device_t device);
+K4A_EXPORT k4a_wired_sync_mode_t k4a_get_wired_sync_mode(k4a_device_t device);
 
 /** set device soft filter switch
  *
  * \param device_handle
  * Output parameter which on success will return a handle to the device.
  *
- * \param filter_switch
- * Device clock synchronization mode
+ * \param enable
+ * Device software filtering switch
  *
  * \remarks This API is used to set filtering.
  *
@@ -67,7 +67,7 @@ K4A_EXPORT k4a_wired_sync_mode_t k4a_get_device_sync_mode(k4a_device_t device);
  * </requirements>
  * \endxmlonly
 */
-K4A_EXPORT k4a_result_t k4a_set_soft_filter(k4a_device_t device_handle, bool filter_switch);
+K4A_EXPORT k4a_result_t k4a_enable_soft_filter(k4a_device_t device_handle, bool enable);
 
 /** switch device clock sync mode
  *

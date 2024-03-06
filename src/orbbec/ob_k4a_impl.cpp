@@ -179,7 +179,7 @@ K4A_DECLARE_CONTEXT(k4a_depthengine_t, k4a_depthengine_instance_helper_t);
     case fps:                                                                                                          \
         return #fps
 
-k4a_wired_sync_mode_t k4a_get_device_sync_mode(k4a_device_t device_handle){
+k4a_wired_sync_mode_t k4a_get_wired_sync_mode(k4a_device_t device_handle){
     k4a_device_context_t *device_ctx = k4a_device_t_get_context(device_handle);
     OB_DEVICE_SYNC_CONFIG ob_config;
     memset(&ob_config, 0, sizeof(OB_DEVICE_SYNC_CONFIG));
@@ -614,11 +614,11 @@ void device_timestamp_sync_with_host(k4a_device_t device_handle, uint32_t interv
         }
     }
 }
-k4a_result_t k4a_set_soft_filter(k4a_device_t device_handle, bool filter_switch){
+k4a_result_t k4a_enable_soft_filter(k4a_device_t device_handle, bool enable){
     RETURN_VALUE_IF_HANDLE_INVALID(K4A_RESULT_FAILED, k4a_device_t, device_handle);
     k4a_device_context_t *device_ctx = k4a_device_t_get_context(device_handle);
     ob_error *ob_err = NULL;
-    ob_device_set_bool_property(device_ctx->device, OB_PROP_DEPTH_SOFT_FILTER_BOOL, filter_switch, &ob_err);
+    ob_device_set_bool_property(device_ctx->device, OB_PROP_DEPTH_SOFT_FILTER_BOOL, enable, &ob_err);
     CHECK_OB_ERROR_RETURN_K4A_RESULT(&ob_err);
     return K4A_RESULT_SUCCEEDED;
 }

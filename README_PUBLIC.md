@@ -1,11 +1,11 @@
 # release v1.9.2
 ## Change List
-1. Switch OrbbecSDK version to v1.9.5;
+1. switch OrbbecSDK version to v1.9.5;
 2. add k4a_switch_device_clock_sync_mode interface;
-3. add k4a_get_device_sync_mode interface;
-4. add k4a_set_soft_filter interface;
+3. add k4a_get_wired_sync_mode interface;
+4. add k4a_enable_soft_filter interface;
 5. k4aviewer support indicator switch;
-6. fix vulnerabilities;
+6. fix other bugs;
 
 ## Product support
 | **products list** | **firmware version** |**platform**|
