@@ -90,6 +90,8 @@ std::vector<int> get_effective_device(ob_context* &context){
 extern "C" {
 #endif
 
+std::mutex frame_ref_mtx;
+
 char K4A_ENV_VAR_LOG_TO_A_FILE[] = K4A_ENABLE_LOG_TO_A_FILE;
 // char K4A_ENV_VAR_LOG_TO_A_FILE[] = "";
 #define MAX_FIREWARE_VERSION_LEN 64
@@ -156,6 +158,15 @@ typedef struct _k4a_device_context_t
 } k4a_device_context_t;
 
 K4A_DECLARE_CONTEXT(k4a_device_t, k4a_device_context_t);
+
+typedef struct _k4a_image_context_t
+{
+    ob_frame *frame;
+    int stride;
+    int ref_cnt;
+} k4a_image_context_t;
+
+K4A_DECLARE_CONTEXT(k4a_image_t, k4a_image_context_t);
 
 typedef struct _k4a_depthengine_instance_helper_t
 {
@@ -1185,7 +1196,10 @@ k4a_image_t k4a_capture_get_color_image(k4a_capture_t capture_handle)
         LOG_INFO("color_frame is null ", 0);
         return NULL;
     }
-    return (k4a_image_t)color_frame;
+    k4a_image_t handle = NULL;
+    k4a_image_context_t *image_ctx = k4a_image_t_create(&handle);
+    image_ctx->frame = color_frame;
+    return handle;
 }
 
 k4a_image_t k4a_capture_get_depth_image(k4a_capture_t capture_handle)
@@ -1206,7 +1220,10 @@ k4a_image_t k4a_capture_get_depth_image(k4a_capture_t capture_handle)
         return NULL;
     }
 
-    return (k4a_image_t)depth_frame;
+    k4a_image_t handle = NULL;
+    k4a_image_context_t *image_ctx = k4a_image_t_create(&handle);
+    image_ctx->frame = depth_frame;
+    return handle;
 }
 
 k4a_image_t k4a_capture_get_ir_image(k4a_capture_t capture_handle)
@@ -1227,8 +1244,10 @@ k4a_image_t k4a_capture_get_ir_image(k4a_capture_t capture_handle)
         LOG_INFO("ir_frame is null ", 0);
         return NULL;
     }
-
-    return (k4a_image_t)ir_frame;
+    k4a_image_t handle = NULL;
+    k4a_image_context_t *image_ctx = k4a_image_t_create(&handle);
+    image_ctx->frame = ir_frame;
+    return handle;
 }
 
 void k4a_capture_set_color_image(k4a_capture_t capture_handle, k4a_image_t image_handle)
@@ -1241,7 +1260,8 @@ void k4a_capture_set_color_image(k4a_capture_t capture_handle, k4a_image_t image
 
     ob_error *ob_err = NULL;
     ob_frame *frame_set = (ob_frame *)capture_handle;
-    ob_frame *color_frame = (ob_frame *)image_handle;
+    auto image_ctx = k4a_image_t_get_context(image_handle);
+    ob_frame *color_frame = image_ctx->frame;
     ob_frameset_push_frame(frame_set, OB_FRAME_COLOR, color_frame, &ob_err);
     CHECK_OB_ERROR_RETURN(&ob_err);
 }
@@ -1256,7 +1276,8 @@ void k4a_capture_set_depth_image(k4a_capture_t capture_handle, k4a_image_t image
 
     ob_error *ob_err = NULL;
     ob_frame *frame_set = (ob_frame *)capture_handle;
-    ob_frame *depth_frame = (ob_frame *)image_handle;
+    auto image_ctx = k4a_image_t_get_context(image_handle);
+    ob_frame *depth_frame = image_ctx->frame;
     ob_frameset_push_frame(frame_set, OB_FRAME_DEPTH, depth_frame, &ob_err);
     CHECK_OB_ERROR_RETURN(&ob_err);
 }
@@ -1271,7 +1292,8 @@ void k4a_capture_set_ir_image(k4a_capture_t capture_handle, k4a_image_t image_ha
 
     ob_error *ob_err = NULL;
     ob_frame *frame_set = (ob_frame *)capture_handle;
-    ob_frame *ir_frame = (ob_frame *)image_handle;
+    auto image_ctx = k4a_image_t_get_context(image_handle);
+    ob_frame *ir_frame = image_ctx->frame;
     ob_frameset_push_frame(frame_set, OB_FRAME_IR, ir_frame, &ob_err);
     CHECK_OB_ERROR_RETURN(&ob_err);
 }
@@ -1321,16 +1343,18 @@ k4a_result_t k4a_image_create(k4a_image_format_t format,
         obFrame = ob_create_frame(OB_FORMAT_Y16, width_pixels, height_pixels, stride_bytes, OB_FRAME_COLOR, &ob_err);
         break;
     case K4A_IMAGE_FORMAT_CUSTOM:
-        obFrame =
-            ob_create_frame(OB_FORMAT_UNKNOWN, width_pixels, height_pixels, stride_bytes, OB_FRAME_COLOR, &ob_err);
+        obFrame = ob_create_frame(OB_FORMAT_UNKNOWN, width_pixels, height_pixels, stride_bytes, OB_FRAME_COLOR, &ob_err);
         break;
     default:
         obFrame = ob_create_frame(OB_FORMAT_BGRA, width_pixels, height_pixels, stride_bytes, OB_FRAME_COLOR, &ob_err);
         break;
     }
     CHECK_OB_ERROR_RETURN_K4A_RESULT(&ob_err);
-
-    *image_handle = (k4a_image_t)obFrame;
+    k4a_image_t handle = NULL;
+    k4a_image_context_t *image_ctx = k4a_image_t_create(&handle);
+    image_ctx->frame = obFrame;
+    image_ctx->stride = stride_bytes;
+    *image_handle = handle;
     return result;
 }
 
@@ -1345,7 +1369,6 @@ k4a_result_t k4a_image_create_from_buffer(k4a_image_format_t format,
                                           k4a_image_t *image_handle)
 {
     k4a_result_t result = K4A_RESULT_FAILED;
-    stride_bytes = stride_bytes;
 
     ob_error *ob_err = NULL;
     ob_frame *obFrame = NULL;
@@ -1400,7 +1423,11 @@ k4a_result_t k4a_image_create_from_buffer(k4a_image_format_t format,
     CHECK_OB_ERROR_RETURN_K4A_RESULT(&ob_err);
     if (obFrame != NULL)
     {
-        *image_handle = (k4a_image_t)obFrame;
+        k4a_image_t handle = NULL;
+        k4a_image_context_t *image_ctx = k4a_image_t_create(&handle);
+        image_ctx->frame = obFrame;
+        image_ctx->stride = stride_bytes;
+        *image_handle = handle;
         result = K4A_RESULT_SUCCEEDED;
     }
 
@@ -1416,7 +1443,8 @@ uint8_t *k4a_image_get_buffer(k4a_image_t image_handle)
     }
 
     ob_error *ob_err = NULL;
-    ob_frame *frame = (ob_frame *)image_handle;
+    auto image_ctx = k4a_image_t_get_context(image_handle);
+    ob_frame *frame = image_ctx->frame;
     uint8_t *data = (uint8_t *)ob_frame_data(frame, &ob_err);
     CHECK_OB_ERROR_RETURN_VALUE(&ob_err, NULL);
     return data;
@@ -1431,7 +1459,8 @@ size_t k4a_image_get_size(k4a_image_t image_handle)
     }
 
     ob_error *ob_err = NULL;
-    ob_frame *frame = (ob_frame *)image_handle;
+    auto image_ctx = k4a_image_t_get_context(image_handle);
+    ob_frame *frame = image_ctx->frame;
     uint32_t data_size = ob_frame_data_size(frame, &ob_err);
     CHECK_OB_ERROR_RETURN_VALUE(&ob_err, 0);
     return (size_t)data_size;
@@ -1446,7 +1475,8 @@ k4a_image_format_t k4a_image_get_format(k4a_image_t image_handle)
     }
 
     ob_error *ob_err = NULL;
-    ob_frame *frame = (ob_frame *)image_handle;
+    auto image_ctx = k4a_image_t_get_context(image_handle);
+    ob_frame *frame = image_ctx->frame;
     ob_format frame_format = ob_frame_format(frame, &ob_err);
     CHECK_OB_ERROR_RETURN_VALUE(&ob_err, K4A_IMAGE_FORMAT_CUSTOM);
     k4a_image_format_t k4a_image_format = K4A_IMAGE_FORMAT_CUSTOM;
@@ -1513,7 +1543,8 @@ int k4a_image_get_width_pixels(k4a_image_t image_handle)
         return 0;
     }
     ob_error *ob_err = NULL;
-    ob_frame *frame = (ob_frame *)image_handle;
+    auto image_ctx = k4a_image_t_get_context(image_handle);
+    ob_frame *frame = image_ctx->frame;
     int width_pixels = ob_video_frame_width(frame, &ob_err);
     CHECK_OB_ERROR_RETURN_VALUE(&ob_err, 0);
     return width_pixels;
@@ -1527,7 +1558,8 @@ int k4a_image_get_height_pixels(k4a_image_t image_handle)
         return 0;
     }
     ob_error *ob_err = NULL;
-    ob_frame *frame = (ob_frame *)image_handle;
+    auto image_ctx = k4a_image_t_get_context(image_handle);
+    ob_frame *frame = image_ctx->frame;
     int height_pixels = ob_video_frame_height(frame, &ob_err);
     CHECK_OB_ERROR_RETURN_VALUE(&ob_err, 0);
     return height_pixels;
@@ -1535,21 +1567,20 @@ int k4a_image_get_height_pixels(k4a_image_t image_handle)
 
 int k4a_image_get_stride_bytes(k4a_image_t image_handle)
 {
-    // return image_get_stride_bytes(image_handle);
     if (image_handle == NULL)
     {
         LOG_WARNING("k4a_image_get_stride_bytes param invalid ", 0);
         return 0;
     }
 
+    auto image_ctx = k4a_image_t_get_context(image_handle);
+    ob_frame *frame = image_ctx->frame;
     ob_error *ob_err = NULL;
-    ob_frame *frame = (ob_frame *)image_handle;
     ob_format frame_format = ob_frame_format(frame, &ob_err);
     CHECK_OB_ERROR_RETURN_VALUE(&ob_err, 0);
     int width_pixels = ob_video_frame_width(frame, &ob_err);
     CHECK_OB_ERROR_RETURN_VALUE(&ob_err, 0);
     int stride_bytes = 0;
-
     switch (frame_format)
     {
     case OB_FORMAT_YUYV:
@@ -1568,6 +1599,9 @@ int k4a_image_get_stride_bytes(k4a_image_t image_handle)
     case OB_FORMAT_BGRA:
         stride_bytes = width_pixels * 4;
         break;
+    case OB_FORMAT_UNKNOWN:
+        image_ctx = k4a_image_t_get_context(image_handle);
+        stride_bytes = image_ctx->stride;
         break;
     default:
         break;
@@ -1590,7 +1624,8 @@ uint64_t k4a_image_get_device_timestamp_usec(k4a_image_t image_handle)
     }
 
     ob_error *ob_err = NULL;
-    ob_frame *frame = (ob_frame *)image_handle;
+    auto image_ctx = k4a_image_t_get_context(image_handle);
+    ob_frame *frame = image_ctx->frame;
 
     uint64_t time_stamp = ob_frame_time_stamp_us(frame, &ob_err);
     CHECK_OB_ERROR_RETURN_VALUE(&ob_err, 0);
@@ -1608,7 +1643,8 @@ uint64_t k4a_image_get_system_timestamp_nsec(k4a_image_t image_handle)
     }
 
     ob_error *ob_err = NULL;
-    ob_frame *frame = (ob_frame *)image_handle;
+    auto image_ctx = k4a_image_t_get_context(image_handle);
+    ob_frame *frame = image_ctx->frame;
 
     uint64_t time_stamp = ob_frame_system_time_stamp(frame, &ob_err);
     CHECK_OB_ERROR_RETURN_VALUE(&ob_err, 0);
@@ -1621,7 +1657,8 @@ uint64_t k4a_image_get_system_timestamp_nsec(k4a_image_t image_handle)
 uint64_t k4a_image_get_exposure_usec(k4a_image_t image_handle)
 {
     ob_error *ob_err = NULL;
-    ob_frame *frame = (ob_frame *)image_handle;
+    auto image_ctx = k4a_image_t_get_context(image_handle);
+    ob_frame *frame = image_ctx->frame;
 
     void *metadata = ob_video_frame_metadata(frame, &ob_err);
     CHECK_OB_ERROR_RETURN_VALUE(&ob_err, 0);
@@ -1640,7 +1677,8 @@ uint64_t k4a_image_get_exposure_usec(k4a_image_t image_handle)
 uint32_t k4a_image_get_white_balance(k4a_image_t image_handle)
 {
     ob_error *ob_err = NULL;
-    ob_frame *frame = (ob_frame *)image_handle;
+    auto image_ctx = k4a_image_t_get_context(image_handle);
+    ob_frame *frame = image_ctx->frame;
 
     void *metadata = ob_video_frame_metadata(frame, &ob_err);
     CHECK_OB_ERROR_RETURN_VALUE(&ob_err, 0);
@@ -1659,7 +1697,8 @@ uint32_t k4a_image_get_white_balance(k4a_image_t image_handle)
 uint32_t k4a_image_get_iso_speed(k4a_image_t image_handle)
 {
     ob_error *ob_err = NULL;
-    ob_frame *frame = (ob_frame *)image_handle;
+    auto image_ctx = k4a_image_t_get_context(image_handle);
+    ob_frame *frame = image_ctx->frame;
 
     void *metadata = ob_video_frame_metadata(frame, &ob_err);
     CHECK_OB_ERROR_RETURN_VALUE(&ob_err, 0);
@@ -1683,7 +1722,8 @@ void k4a_image_set_device_timestamp_usec(k4a_image_t image_handle, uint64_t time
         return;
     }
 
-    ob_frame *frame = (ob_frame *)image_handle;
+    auto image_ctx = k4a_image_t_get_context(image_handle);
+    ob_frame *frame = image_ctx->frame;
     ob_error *ob_err = NULL;
 
     ob_frame_set_device_time_stamp_us(frame, timestamp_usec, &ob_err);
@@ -1709,7 +1749,8 @@ void k4a_image_set_system_timestamp_nsec(k4a_image_t image_handle, uint64_t time
         return;
     }
 
-    ob_frame *frame = (ob_frame *)image_handle;
+    auto image_ctx = k4a_image_t_get_context(image_handle);
+    ob_frame *frame = image_ctx->frame;
     ob_error *ob_err = NULL;
     uint64_t timestamp_mill = timestamp_nsec / 1000000;
 
@@ -1753,23 +1794,30 @@ void k4a_image_set_iso_speed(k4a_image_t image_handle, uint32_t iso_speed)
 
 void k4a_image_reference(k4a_image_t image_handle)
 {
+    std::lock_guard<std::mutex> lock(frame_ref_mtx);
     if (image_handle != NULL)
     {
         ob_error *ob_err = NULL;
-        ob_frame *frame = (ob_frame *)image_handle;
-        ob_frame_add_ref(frame, &ob_err);
+        auto image_ctx = k4a_image_t_get_context(image_handle);
+        image_ctx->ref_cnt ++;
         CHECK_OB_ERROR_RETURN(&ob_err);
     }
 }
 
 void k4a_image_release(k4a_image_t image_handle)
 {
+    std::lock_guard<std::mutex> lock(frame_ref_mtx);
     if (image_handle != NULL)
     {
-        ob_error *ob_err = NULL;
-        ob_frame *frame = (ob_frame *)image_handle;
-        ob_delete_frame(frame, &ob_err);
-        CHECK_OB_ERROR_RETURN(&ob_err);
+        auto image_ctx = k4a_image_t_get_context(image_handle);
+        image_ctx->ref_cnt --;
+        if(image_ctx->ref_cnt  == 0){
+            ob_error *ob_err = NULL;
+            ob_frame *frame = image_ctx->frame;
+            ob_delete_frame(frame, &ob_err);
+            k4a_image_t_destroy(image_handle);
+            CHECK_OB_ERROR_RETURN(&ob_err);
+        }
     }
 }
 /*

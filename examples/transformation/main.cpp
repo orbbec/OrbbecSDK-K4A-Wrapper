@@ -25,6 +25,8 @@ static bool point_cloud_color_to_depth(k4a_transformation_t transformation_handl
         return false;
     }
 
+    int stride1 = k4a_image_get_stride_bytes(transformed_color_image);
+
     k4a_image_t point_cloud_image = NULL;
     if (K4A_RESULT_SUCCEEDED != k4a_image_create(K4A_IMAGE_FORMAT_CUSTOM,
                                                  depth_image_width_pixels,
@@ -35,6 +37,8 @@ static bool point_cloud_color_to_depth(k4a_transformation_t transformation_handl
         printf("Failed to create point cloud image\n");
         return false;
     }
+    int stride = k4a_image_get_stride_bytes(point_cloud_image);
+
 
     if (K4A_RESULT_SUCCEEDED != k4a_transformation_color_image_to_depth_camera(transformation_handle,
                                                                                depth_image,
@@ -49,6 +53,7 @@ static bool point_cloud_color_to_depth(k4a_transformation_t transformation_handl
                                                                               depth_image,
                                                                               K4A_CALIBRATION_TYPE_DEPTH,
                                                                               point_cloud_image))
+
     {
         printf("Failed to compute point cloud\n");
         return false;
@@ -107,6 +112,8 @@ static bool point_cloud_depth_to_color(k4a_transformation_t transformation_handl
         printf("Failed to compute point cloud\n");
         return false;
     }
+
+    int stride = k4a_image_get_stride_bytes(point_cloud_image);
 
     tranformation_helpers_write_point_cloud(point_cloud_image, color_image, file_name.c_str());
 
