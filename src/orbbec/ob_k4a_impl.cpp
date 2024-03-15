@@ -41,6 +41,7 @@
 #include <thread>
 #include <chrono>
 #include <mutex>
+#include <atomic>
 #include <condition_variable>
 
 #define ORBBEC_MEGA_PID 0x0669
@@ -162,8 +163,7 @@ typedef struct _k4a_image_context_t
 {
     ob_frame *frame;
     int stride;
-    int ref_cnt;
-    std::mutex frame_ref_mtx;
+    std::atomic<int> ref_cnt;
 } k4a_image_context_t;
 
 K4A_DECLARE_CONTEXT(k4a_image_t, k4a_image_context_t);
@@ -1802,7 +1802,6 @@ void k4a_image_reference(k4a_image_t image_handle)
     {
         ob_error *ob_err = NULL;
         auto image_ctx = k4a_image_t_get_context(image_handle);
-        std::lock_guard<std::mutex> lock(image_ctx->frame_ref_mtx);
         image_ctx->ref_cnt ++;
         CHECK_OB_ERROR_RETURN(&ob_err);
     }
@@ -1813,8 +1812,7 @@ void k4a_image_release(k4a_image_t image_handle)
     if (image_handle != NULL)
     {
         auto image_ctx = k4a_image_t_get_context(image_handle);
-        std::lock_guard<std::mutex> lock(image_ctx->frame_ref_mtx);
-        image_ctx->ref_cnt --;
+        image_ctx->ref_cnt--;
         if(image_ctx->ref_cnt  == 0){
             ob_error *ob_err = NULL;
             ob_frame *frame = image_ctx->frame;
