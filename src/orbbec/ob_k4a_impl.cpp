@@ -152,7 +152,7 @@ typedef struct _k4a_device_context_t
     k4a_device_clock_sync_mode_t current_device_clock_sync_mode;
     std::condition_variable clock_sync_cv;
     std::mutex clock_sync_mtx;
-    std::thread *clock_sync_thread;
+    std::thread clock_sync_thread;
 } k4a_device_context_t;
 
 K4A_DECLARE_CONTEXT(k4a_device_t, k4a_device_context_t);
@@ -643,45 +643,32 @@ k4a_result_t k4a_device_switch_device_clock_sync_mode(k4a_device_t device_handle
         OB_DEVICE_SYNC_CONFIG ob_sync_config;
         memset(&ob_sync_config, 0, sizeof(OB_DEVICE_SYNC_CONFIG));
         uint32_t len;
-
         ob_device_get_structured_data(device_ctx->device,
                                       OB_STRUCT_MULTI_DEVICE_SYNC_CONFIG,
                                       &ob_sync_config,
                                       &len,
                                       &ob_err);
         CHECK_OB_ERROR_BREAK(&ob_err);
+        device_ctx->clock_sync_cv.notify_one();
+        if(device_ctx->clock_sync_thread.joinable()){
+            device_ctx->clock_sync_thread.join();
+        }
+        device_ctx->current_device_clock_sync_mode =  timestamp_mode;
 
-        if(ob_sync_config.syncMode == OB_SYNC_MODE_PRIMARY_MCU_TRIGGER) {
-            if(timestamp_mode == K4A_DEVICE_CLOCK_SYNC_MODE_RESET){
-                device_ctx->current_device_clock_sync_mode = K4A_DEVICE_CLOCK_SYNC_MODE_RESET;
-                device_ctx->clock_sync_cv.notify_one();
-                if(device_ctx->clock_sync_thread != NULL){
-                    if(device_ctx->clock_sync_thread->joinable()){
-                        device_ctx->clock_sync_thread->join();
-                    }
-                }
-                ob_device_timestamp_reset_config reset_config = {true, static_cast<int>(param), true};
-                const ob_device_timestamp_reset_config* device_timestamp_reset_config = &reset_config;
-                ob_device_set_timestamp_reset_config(device_ctx->device, device_timestamp_reset_config, &ob_err);
-                CHECK_OB_ERROR_BREAK(&ob_err);
-
-                if(device_clock_reset(device_handle) != K4A_RESULT_SUCCEEDED){
-                    break;
-                }
-            }else{
-                device_ctx->current_device_clock_sync_mode = K4A_DEVICE_CLOCK_SYNC_MODE_SYNC;
-                device_ctx->clock_sync_cv.notify_one();
-                if(device_ctx->clock_sync_thread != NULL){
-                    if(device_ctx->clock_sync_thread->joinable()){
-                        device_ctx->clock_sync_thread->join();
-                    }
-                }
-                ob_device_timestamp_reset_config reset_config = {false, 0, false};
-                const ob_device_timestamp_reset_config* device_timestamp_reset_config = &reset_config;
-                ob_device_set_timestamp_reset_config(device_ctx->device, device_timestamp_reset_config, &ob_err);
-                CHECK_OB_ERROR_BREAK(&ob_err);
-                device_ctx->clock_sync_thread = new std::thread(device_timestamp_sync_with_host, device_handle, param);
+        if(timestamp_mode == K4A_DEVICE_CLOCK_SYNC_MODE_RESET && ob_sync_config.syncMode == OB_SYNC_MODE_PRIMARY_MCU_TRIGGER){
+            ob_device_timestamp_reset_config reset_config = {true, static_cast<int>(param), true};
+            const ob_device_timestamp_reset_config* device_timestamp_reset_config = &reset_config;
+            ob_device_set_timestamp_reset_config(device_ctx->device, device_timestamp_reset_config, &ob_err);
+            CHECK_OB_ERROR_BREAK(&ob_err);
+            if(device_clock_reset(device_handle) != K4A_RESULT_SUCCEEDED){
+                break;
             }
+        } else if(timestamp_mode == K4A_DEVICE_CLOCK_SYNC_MODE_SYNC){
+            ob_device_timestamp_reset_config reset_config = {false, 0, false};
+            const ob_device_timestamp_reset_config* device_timestamp_reset_config = &reset_config;
+            ob_device_set_timestamp_reset_config(device_ctx->device, device_timestamp_reset_config, &ob_err);
+            CHECK_OB_ERROR_BREAK(&ob_err);
+            device_ctx->clock_sync_thread = std::thread(device_timestamp_sync_with_host, device_handle, param);
         }
         result = K4A_RESULT_SUCCEEDED;
     }while(0);
@@ -694,10 +681,9 @@ void k4a_device_close(k4a_device_t device_handle)
     RETURN_VALUE_IF_HANDLE_INVALID(VOID_VALUE, k4a_device_t, device_handle);
     k4a_device_context_t *device_ctx = k4a_device_t_get_context(device_handle);
     device_ctx->clock_sync_cv.notify_one();
-    if(device_ctx->clock_sync_thread != NULL){
-        if(device_ctx->clock_sync_thread->joinable()){
-            device_ctx->clock_sync_thread->join();
-        }
+
+    if(device_ctx->clock_sync_thread.joinable()){
+        device_ctx->clock_sync_thread.join();
     }
     ob_error *ob_err = NULL;
 
@@ -2020,11 +2006,11 @@ k4a_result_t k4a_device_start_cameras(k4a_device_t device_handle, const k4a_devi
         CHECK_OB_ERROR_RETURN_K4A_RESULT(&ob_err);
 
         uint32_t base_delay = 0;
-        if ((config->wired_sync_mode == K4A_WIRED_SYNC_MODE_MASTER) || (ob_sync_config.syncMode == OB_SYNC_MODE_PRIMARY_MCU_TRIGGER))
+        if (config->wired_sync_mode == K4A_WIRED_SYNC_MODE_MASTER)
         {
             ob_sync_config.syncMode = OB_SYNC_MODE_PRIMARY_MCU_TRIGGER;
         }
-        else if ((config->wired_sync_mode == K4A_WIRED_SYNC_MODE_SUBORDINATE) || (ob_sync_config.syncMode == OB_SYNC_MODE_SECONDARY))
+        else if (config->wired_sync_mode == K4A_WIRED_SYNC_MODE_SUBORDINATE)
         {
             ob_sync_config.syncMode = OB_SYNC_MODE_SECONDARY;
             base_delay = config->subordinate_delay_off_master_usec;
