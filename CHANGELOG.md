@@ -1,5 +1,9 @@
 ## Change Log
 
+### v1.9.3
+1. fix multi device sync bug;
+2. support for obtaining stride.
+
 ### v1.9.2
 
 1. switch OrbbecSDK version to v1.9.5;

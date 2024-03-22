@@ -1,11 +1,8 @@
-# release v1.9.2
+# release v1.9.3
 ## Change List
-1. switch OrbbecSDK version to v1.9.5;
-2. add k4a_device_switch_device_clock_sync_mode interface;
-3. add k4a_device_get_wired_sync_mode interface;
-4. add k4a_device_enable_soft_filter interface;
-5. k4aviewer support indicator switch;
-6. fix other bugs;
+1. fix multi device sync bug;
+2. support for obtaining stride.
+
 
 ## Product support
 | **products list** | **firmware version** |**platform**|
