@@ -1444,7 +1444,8 @@ public:
     /** Get the device jack status for the synchronization in connector
      * Throws error on failure.
      *
-     * \attention Orbbec cameras must preset the synchronization mode in advance, which can be achieved through k4aviewer advance preset
+     * \attention Orbbec cameras must preset the synchronization mode in advance, which can be achieved through k4aviewer advance preset,
+     * This synchronization mode is implemented using the mapping orbbecsdk synchronization mode.
      *
      * \sa k4a_device_get_sync_jack
      */
@@ -1459,7 +1460,8 @@ public:
     /** Get the device jack status for the synchronization out connector
      * Throws error on failure.
      *
-     * \attention Orbbec cameras must preset the synchronization mode in advance, which can be achieved through k4aviewer advance preset
+     * \attention Orbbec cameras must preset the synchronization mode in advance, which can be achieved through k4aviewer advance preset,
+     * This synchronization mode is implemented using the mapping orbbecsdk synchronization mode.
      *
      * \sa k4a_device_get_sync_jack
      */
