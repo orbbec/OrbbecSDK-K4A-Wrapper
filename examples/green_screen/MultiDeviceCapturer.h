@@ -8,7 +8,7 @@
 #include <k4a/k4a.hpp>
 
 // This is the maximum difference between when we expected an image's timestamp to be and when it actually occurred.
-constexpr std::chrono::microseconds MAX_ALLOWABLE_TIME_OFFSET_ERROR_FOR_IMAGE_TIMESTAMP(100);
+constexpr std::chrono::microseconds MAX_ALLOWABLE_TIME_OFFSET_ERROR_FOR_IMAGE_TIMESTAMP(3000);
 
 constexpr int64_t WAIT_FOR_SYNCHRONIZED_CAPTURE_TIMEOUT = 60000;
 
@@ -16,7 +16,8 @@ static void log_lagging_time(const char *lagger, k4a::capture &master, k4a::capt
 {
     std::cout << std::setw(6) << lagger << " lagging: mc:" << std::setw(6)
               << master.get_color_image().get_device_timestamp().count() << "us sc:" << std::setw(6)
-              << sub.get_color_image().get_device_timestamp().count() << "us\n";
+              << sub.get_color_image().get_device_timestamp().count() << "us"<< "   sd:" << std::setw(6)
+              << sub.get_depth_image().get_device_timestamp().count() << "us\n";
 }
 
 static void log_synced_image_time(k4a::capture &master, k4a::capture &sub)
