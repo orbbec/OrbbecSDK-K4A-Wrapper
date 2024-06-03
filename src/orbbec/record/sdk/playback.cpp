@@ -17,6 +17,16 @@
 using namespace k4arecord;
 using namespace LIBMATROSKA_NAMESPACE;
 
+void check_error(ob_error *error) {
+    if(error) {
+        printf("ob_error was raised: \n\tcall: %s(%s)\n", ob_error_function(error), ob_error_args(error));
+        printf("\tmessage: %s\n", ob_error_message(error));
+        printf("\terror type: %d\n", ob_error_exception_type(error));
+        ob_delete_error(error);
+        exit(EXIT_FAILURE);
+    }
+}
+
 k4a_result_t k4a_playback_open(const char *path, k4a_playback_t *playback_handle)
 {
     RETURN_VALUE_IF_ARG(K4A_RESULT_FAILED, path == NULL);
@@ -29,6 +39,7 @@ k4a_result_t k4a_playback_open(const char *path, k4a_playback_t *playback_handle
 
     ob_error *error;
     context->ob_ctx = ob_create_context(&error);
+    check_error(error);
 
     if (K4A_SUCCEEDED(result))
     {
@@ -674,6 +685,9 @@ void k4a_playback_close(const k4a_playback_t playback_handle)
 
         context->file_closing = true;
 
+        ob_error *error;
+        ob_delete_context(context->ob_ctx, &error);
+        check_error(error);
         try
         {
             try
