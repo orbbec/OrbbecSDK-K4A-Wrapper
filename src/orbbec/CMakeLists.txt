@@ -2,6 +2,7 @@
 # Licensed under the MIT License.
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
+add_subdirectory(record)
 add_subdirectory(frame_queue)
 add_subdirectory(imu_sync)
 
