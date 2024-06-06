@@ -12,6 +12,7 @@ target_include_directories(k4a_allocator PUBLIC
 # Dependencies of this library
 target_link_libraries(k4a_allocator PUBLIC
     azure::aziotsharedutil
+    k4ainternal::image
     k4ainternal::logging)
 
 # Define alias for other targets to link against

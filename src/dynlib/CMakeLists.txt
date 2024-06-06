@@ -19,7 +19,7 @@ add_library(k4a_dynlib STATIC
 target_include_directories(k4a_dynlib PUBLIC ${K4A_PRIV_INCLUDE_DIR})
 
 target_link_libraries(k4a_dynlib PUBLIC
-    k4ainternal::allocator
+    # k4ainternal::allocator
     k4ainternal::logging
 	${DYNLIB_DEPENDENCIES})
 

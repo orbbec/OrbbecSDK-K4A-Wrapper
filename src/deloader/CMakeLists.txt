@@ -10,7 +10,7 @@ target_include_directories(k4a_deloader PUBLIC
     ${K4A_PRIV_INCLUDE_DIR})
 
 target_link_libraries(k4a_deloader PUBLIC
-    k4ainternal::allocator
+    # k4ainternal::allocator
     k4ainternal::dynlib
     k4ainternal::logging)
 

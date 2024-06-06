@@ -10,16 +10,15 @@ else()
     set(K4A_PRIV_INCLUDE_DIR ${CMAKE_CURRENT_LIST_DIR}/../include ${CMAKE_CURRENT_BINARY_DIR}/sdk/include)
     add_subdirectory(sdk)
     add_subdirectory(firmware)
+
 endif()
 
-# Add folders in Alphabetical order to help reduce merge issues
-add_subdirectory(allocator)
+add_subdirectory(math)
 add_subdirectory(calibration)
 add_subdirectory(deloader)
 add_subdirectory(dynlib)
 add_subdirectory(global)
 add_subdirectory(logging)
-add_subdirectory(math)
 add_subdirectory(queue)
 add_subdirectory(rwlock)
 add_subdirectory(tewrapper)

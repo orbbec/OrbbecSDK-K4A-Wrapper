@@ -6,11 +6,11 @@ add_library(k4a_math STATIC
             )
 
 # Consumers should #include <k4ainternal/math.h>
-target_include_directories(k4a_math PUBLIC 
+target_include_directories(k4a_math PUBLIC
     ${K4A_PRIV_INCLUDE_DIR})
 
 # Dependencies of this library
-target_link_libraries(k4a_math PUBLIC 
+target_link_libraries(k4a_math PUBLIC
     )
 
 # Define alias for other targets to link against

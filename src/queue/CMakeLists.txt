@@ -11,7 +11,7 @@ target_include_directories(k4a_queue PUBLIC
 
 target_link_libraries(k4a_queue PUBLIC 
     azure::aziotsharedutil
-    k4ainternal::allocator
+    # k4ainternal::allocator
     k4ainternal::logging
 )
 
