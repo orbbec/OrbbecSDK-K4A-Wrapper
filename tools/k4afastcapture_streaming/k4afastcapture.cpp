@@ -86,7 +86,7 @@ bool K4AFastCapture::Configure(const char *fileDirectory, int32_t exposureValue,
     }
 
     m_deviceConfig.color_format = K4A_IMAGE_FORMAT_COLOR_MJPG;
-    m_deviceConfig.color_resolution = K4A_COLOR_RESOLUTION_3072P;
+    m_deviceConfig.color_resolution = K4A_COLOR_RESOLUTION_2160P;
     m_deviceConfig.depth_mode = K4A_DEPTH_MODE_PASSIVE_IR;
     m_deviceConfig.camera_fps = K4A_FRAMES_PER_SECOND_15;
     m_deviceConfig.synchronized_images_only = true;

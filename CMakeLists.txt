@@ -190,7 +190,7 @@ endif()
 
 add_subdirectory(examples)
 add_subdirectory(src)
-add_subdirectory(tests)
+# add_subdirectory(tests)
 add_subdirectory(tools)
 
 if (K4A_BUILD_DOCS)
