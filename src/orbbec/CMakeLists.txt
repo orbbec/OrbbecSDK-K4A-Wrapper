@@ -6,12 +6,22 @@ add_subdirectory(record)
 add_subdirectory(frame_queue)
 add_subdirectory(imu_sync)
 
+set(TRANSFORMATION_PATH ${CMAKE_SOURCE_DIR}/src/transformation)
+set(TRANSFORMATION_SOURCES
+    ${TRANSFORMATION_PATH}/extrinsic_transformation.c
+    ${TRANSFORMATION_PATH}/intrinsic_transformation.c
+    ${TRANSFORMATION_PATH}/mode_specific_calibration.c
+    ${TRANSFORMATION_PATH}/rgbz.c
+    ${TRANSFORMATION_PATH}/transformation.c
+)
+
 # Create K4A library
 add_library(k4a SHARED
             ob_k4a_impl.cpp
             dll_main.c
             ob_type_helper.cpp
-            ${CMAKE_CURRENT_BINARY_DIR}/version.rc)
+            ${CMAKE_CURRENT_BINARY_DIR}/version.rc
+            ${TRANSFORMATION_SOURCES})
 
 if(CACHE_OB_CONTEXT)
 target_compile_definitions(k4a PRIVATE -DCACHE_OB_CONTEXT)
@@ -62,12 +72,15 @@ find_package(OrbbecSDK REQUIRED)
 # Link in libraries
 target_link_libraries(k4a PRIVATE
     k4ainternal::calibration
-    k4ainternal::transformation
+    # k4ainternal::transformation
     k4ainternal::logging
     k4ainternal::queue
     k4ainternal::frame_queue
 	k4ainternal::imusync
     OrbbecSDK::OrbbecSDK
+    k4ainternal::math
+    k4ainternal::deloader
+    k4ainternal::tewrapper
 	)
 
 # Define alias for k4a
