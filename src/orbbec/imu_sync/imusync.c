@@ -71,7 +71,7 @@ void imusync_push_frame(imusync_t imusync_handle, imu_frame_data imu_data, imu_d
 
     if (K4A_SUCCEEDED(result))
     {
-        // TODO: ʹ���ڴ�ع���
+        // TODO: using memory pool management
         imu_sync_frame_data *p_imu_frame_data = (imu_sync_frame_data *)malloc(sizeof(imu_sync_frame_data));
         p_imu_frame_data->temp = imu_data.temp;
         p_imu_frame_data->timestamp = imu_data.timestamp;
@@ -87,7 +87,7 @@ void imusync_push_frame(imusync_t imusync_handle, imu_frame_data imu_data, imu_d
             frame_queue_push(sync->gyro_queue, (k4a_capture_t)p_imu_frame_data);
         }
 
-        //2.ȡ����ͷ�ڵ�
+        //2. retrieve queue header nodes
         k4a_capture_t accel_data = get_frame_queue_front(sync->accel_queue);
         k4a_capture_t gyro_data = get_frame_queue_front(sync->gyro_queue);
         if (accel_data != NULL && gyro_data != NULL)
@@ -96,7 +96,7 @@ void imusync_push_frame(imusync_t imusync_handle, imu_frame_data imu_data, imu_d
             imu_sync_frame_data *p_gyro_data = (imu_sync_frame_data *)gyro_data;
             if (p_accel_data->timestamp == p_gyro_data->timestamp)
             {
-                //�ϳ�һ��Imu��push��ͬ������
+                // Synthesize an Imu and push it to the synchronization queue
                 imu_sync_frame_data *p_imu_sync_frame_data = (imu_sync_frame_data *) malloc(sizeof(imu_sync_frame_data));
 
                 p_imu_sync_frame_data->timestamp = p_accel_data->timestamp;
@@ -284,7 +284,7 @@ k4a_wait_result_t imusync_get_frame(imusync_t imusync_handle, k4a_imu_sample_t *
         capture->acc_timestamp_usec = p_imu_sync_frame_data->timestamp;
         capture->gyro_timestamp_usec = p_imu_sync_frame_data->timestamp;
         capture->temperature = p_imu_sync_frame_data->temp;
-        //��λת�� g to m/s/s
+        // Unit conversion g to m/s/s
         capture->acc_sample.xyz.x = (float)(p_imu_sync_frame_data->accel_data[0] );
         capture->acc_sample.xyz.y = (float)(p_imu_sync_frame_data->accel_data[1] );
         capture->acc_sample.xyz.z = (float)(p_imu_sync_frame_data->accel_data[2] );
