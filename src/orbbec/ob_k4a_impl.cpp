@@ -936,55 +936,13 @@ k4a_result_t k4a_device_start_imu(k4a_device_t device_handle)
         sensor_list = ob_device_get_sensor_list(device_ctx->device, &ob_err);
         CHECK_OB_ERROR_BREAK(&ob_err);
 
-        accel_sensor = ob_sensor_list_get_sensor_by_type(sensor_list, OB_SENSOR_ACCEL, &ob_err);
-        CHECK_OB_ERROR_BREAK(&ob_err);
-
-        accel_profile_list = ob_sensor_get_stream_profile_list(accel_sensor, &ob_err);
-        CHECK_OB_ERROR_BREAK(&ob_err);
-
-        uint32_t count = ob_stream_profile_list_count(accel_profile_list, &ob_err);
-        CHECK_OB_ERROR_BREAK(&ob_err);
-
-        if (count == 0)
-        {
-            LOG_ERROR("accel_profile_list is empty", 0);
-            break;
-        }
-
-        bool found = false;
-        for (uint32_t i = 0; i < count; i++)
-        {
-            accel_profile = ob_stream_profile_list_get_profile(accel_profile_list, i, &ob_err);
-            CHECK_OB_ERROR_BREAK(&ob_err);
-            ob_accel_sample_rate accel_rate = ob_accel_stream_profile_sample_rate(accel_profile, &ob_err);
-            CHECK_OB_ERROR_BREAK(&ob_err);
-            ob_accel_full_scale_range accel_range = ob_accel_stream_profile_full_scale_range(accel_profile, &ob_err);
-            CHECK_OB_ERROR_BREAK(&ob_err);
-            if (accel_rate == OB_SAMPLE_RATE_500_HZ && accel_range == OB_ACCEL_FS_4g)
-            {
-                found = true;
-                break;
-            }
-            ob_delete_stream_profile(accel_profile, &ob_err);
-            CHECK_OB_ERROR_BREAK(&ob_err);
-            accel_profile = NULL;
-        }
-
-        if(!found){
-            LOG_ERROR("accel_profile_list is empty", 0);
-            break;
-        }
-
-        ob_sensor_start(accel_sensor, accel_profile, ob_accel_frame, device_handle, &ob_err);
-        CHECK_OB_ERROR_BREAK(&ob_err);
-
         gyro_sensor = ob_sensor_list_get_sensor_by_type(sensor_list, OB_SENSOR_GYRO, &ob_err);
         CHECK_OB_ERROR_BREAK(&ob_err);
 
         gyro_profile_list = ob_sensor_get_stream_profile_list(gyro_sensor, &ob_err);
         CHECK_OB_ERROR_BREAK(&ob_err);
 
-        count = ob_stream_profile_list_count(gyro_profile_list, &ob_err);
+        auto count = ob_stream_profile_list_count(gyro_profile_list, &ob_err);
         CHECK_OB_ERROR_BREAK(&ob_err);
 
         if(count == 0){
@@ -992,7 +950,7 @@ k4a_result_t k4a_device_start_imu(k4a_device_t device_handle)
             break;
         }
 
-        found = false;
+        bool found = false;
         for (uint32_t i = 0; i < count; i++)
         {
             gyro_profile = ob_stream_profile_list_get_profile(gyro_profile_list, i, &ob_err);
@@ -1021,6 +979,48 @@ k4a_result_t k4a_device_start_imu(k4a_device_t device_handle)
         }
 
         ob_sensor_start(gyro_sensor, gyro_profile, ob_gyro_frame, device_handle, &ob_err);
+        CHECK_OB_ERROR_BREAK(&ob_err);
+
+        accel_sensor = ob_sensor_list_get_sensor_by_type(sensor_list, OB_SENSOR_ACCEL, &ob_err);
+        CHECK_OB_ERROR_BREAK(&ob_err);
+
+        accel_profile_list = ob_sensor_get_stream_profile_list(accel_sensor, &ob_err);
+        CHECK_OB_ERROR_BREAK(&ob_err);
+
+        count = ob_stream_profile_list_count(accel_profile_list, &ob_err);
+        CHECK_OB_ERROR_BREAK(&ob_err);
+
+        if (count == 0)
+        {
+            LOG_ERROR("accel_profile_list is empty", 0);
+            break;
+        }
+
+        found = false;
+        for (uint32_t i = 0; i < count; i++)
+        {
+            accel_profile = ob_stream_profile_list_get_profile(accel_profile_list, i, &ob_err);
+            CHECK_OB_ERROR_BREAK(&ob_err);
+            ob_accel_sample_rate accel_rate = ob_accel_stream_profile_sample_rate(accel_profile, &ob_err);
+            CHECK_OB_ERROR_BREAK(&ob_err);
+            ob_accel_full_scale_range accel_range = ob_accel_stream_profile_full_scale_range(accel_profile, &ob_err);
+            CHECK_OB_ERROR_BREAK(&ob_err);
+            if (accel_rate == OB_SAMPLE_RATE_500_HZ && accel_range == OB_ACCEL_FS_4g)
+            {
+                found = true;
+                break;
+            }
+            ob_delete_stream_profile(accel_profile, &ob_err);
+            CHECK_OB_ERROR_BREAK(&ob_err);
+            accel_profile = NULL;
+        }
+
+        if(!found){
+            LOG_ERROR("accel_profile_list is empty", 0);
+            break;
+        }
+
+        ob_sensor_start(accel_sensor, accel_profile, ob_accel_frame, device_handle, &ob_err);
         CHECK_OB_ERROR_BREAK(&ob_err);
 
         if (device_ctx->imusync != NULL &&  TRACE_CALL(imusync_start(device_ctx->imusync)) != K4A_RESULT_SUCCEEDED){
