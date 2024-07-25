@@ -23,6 +23,12 @@ add_library(k4a SHARED
             ${CMAKE_CURRENT_BINARY_DIR}/version.rc
             ${TRANSFORMATION_SOURCES})
 
+if ("${CMAKE_C_COMPILER_ID}" STREQUAL "GNU" OR "${CMAKE_C_COMPILER_ID}" STREQUAL "Clang")
+    if ("${CMAKE_SYSTEM_PROCESSOR}" MATCHES "amd64.*|x86_64.*|AMD64.*|i686.*|i386.*|x86.*")
+        target_compile_options(k4a PRIVATE "-msse4.1")
+    endif()
+endif()
+
 if(CACHE_OB_CONTEXT)
 target_compile_definitions(k4a PRIVATE -DCACHE_OB_CONTEXT)
 endif()
