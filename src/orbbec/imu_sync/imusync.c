@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+ï»¿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
 // This library
@@ -17,7 +17,7 @@
 #include <stdlib.h>
 #include <stdbool.h>
 
-#define IMU_QUEUE_DEFAULT_SIZE 10
+#define IMU_QUEUE_DEFAULT_SIZE 26
 
 #define IMU_GRAVITATIONAL_CONSTANT 9.81f
 
@@ -27,8 +27,8 @@
 typedef struct _imusync_context_t
 {
     frame_queue_t sync_queue;    // Queue for storing synchronized captures in
-    frame_queue_t accel_queue;   
-    frame_queue_t gyro_queue;    
+    frame_queue_t accel_queue;
+    frame_queue_t gyro_queue;
 
     volatile bool running;              // We have received start and should be processing data when true.
     LOCK_HANDLE lock;
@@ -61,21 +61,21 @@ void imusync_push_frame(imusync_t imusync_handle, imu_frame_data imu_data, imu_d
         sync = imusync_t_get_context(imusync_handle);
         result = K4A_RESULT_FROM_BOOL(sync != NULL);
     }
-    
+
     if (K4A_SUCCEEDED(result))
     {
         Lock(sync->lock);
         locked = true;
         result = sync->running == true ? K4A_RESULT_SUCCEEDED : K4A_RESULT_FAILED;
     }
-   
+
     if (K4A_SUCCEEDED(result))
     {
-        // TODO: Ê¹ÓÃÄÚ´æ³Ø¹ÜÀí
+        // TODO: using memory pool management
         imu_sync_frame_data *p_imu_frame_data = (imu_sync_frame_data *)malloc(sizeof(imu_sync_frame_data));
         p_imu_frame_data->temp = imu_data.temp;
         p_imu_frame_data->timestamp = imu_data.timestamp;
-   
+
         if (imu_type == ACCEL_FRAME_TYPE)
         {
             memcpy(p_imu_frame_data->accel_data, imu_data.data, sizeof(imu_data.data));
@@ -87,7 +87,7 @@ void imusync_push_frame(imusync_t imusync_handle, imu_frame_data imu_data, imu_d
             frame_queue_push(sync->gyro_queue, (k4a_capture_t)p_imu_frame_data);
         }
 
-        //2.È¡¶ÓÁÐÍ·½Úµã
+        //2. retrieve queue header nodes
         k4a_capture_t accel_data = get_frame_queue_front(sync->accel_queue);
         k4a_capture_t gyro_data = get_frame_queue_front(sync->gyro_queue);
         if (accel_data != NULL && gyro_data != NULL)
@@ -96,7 +96,7 @@ void imusync_push_frame(imusync_t imusync_handle, imu_frame_data imu_data, imu_d
             imu_sync_frame_data *p_gyro_data = (imu_sync_frame_data *)gyro_data;
             if (p_accel_data->timestamp == p_gyro_data->timestamp)
             {
-                //ºÏ³ÉÒ»¸öImu£¬pushµ½Í¬²½¶ÓÁÐ
+                // Synthesize an Imu and push it to the synchronization queue
                 imu_sync_frame_data *p_imu_sync_frame_data = (imu_sync_frame_data *) malloc(sizeof(imu_sync_frame_data));
 
                 p_imu_sync_frame_data->timestamp = p_accel_data->timestamp;
@@ -284,16 +284,15 @@ k4a_wait_result_t imusync_get_frame(imusync_t imusync_handle, k4a_imu_sample_t *
         capture->acc_timestamp_usec = p_imu_sync_frame_data->timestamp;
         capture->gyro_timestamp_usec = p_imu_sync_frame_data->timestamp;
         capture->temperature = p_imu_sync_frame_data->temp;
-        //µ¥Î»×ª»» g to m/s/s
+        // Unit conversion g to m/s/s
         capture->acc_sample.xyz.x = (float)(p_imu_sync_frame_data->accel_data[0] );
         capture->acc_sample.xyz.y = (float)(p_imu_sync_frame_data->accel_data[1] );
         capture->acc_sample.xyz.z = (float)(p_imu_sync_frame_data->accel_data[2] );
 
-        
         capture->gyro_sample.xyz.x = (float)(p_imu_sync_frame_data->gyro_data[0] );
         capture->gyro_sample.xyz.y = (float)(p_imu_sync_frame_data->gyro_data[1] );
         capture->gyro_sample.xyz.z = (float)(p_imu_sync_frame_data->gyro_data[2] );
-        
+
     }
 
     free_imu_buff(capture_handle);

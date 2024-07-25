@@ -2,15 +2,32 @@
 # Licensed under the MIT License.
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
+add_subdirectory(record)
 add_subdirectory(frame_queue)
 add_subdirectory(imu_sync)
+
+set(TRANSFORMATION_PATH ${CMAKE_SOURCE_DIR}/src/transformation)
+set(TRANSFORMATION_SOURCES
+    ${TRANSFORMATION_PATH}/extrinsic_transformation.c
+    ${TRANSFORMATION_PATH}/intrinsic_transformation.c
+    ${TRANSFORMATION_PATH}/mode_specific_calibration.c
+    ${TRANSFORMATION_PATH}/rgbz.c
+    ${TRANSFORMATION_PATH}/transformation.c
+)
 
 # Create K4A library
 add_library(k4a SHARED
             ob_k4a_impl.cpp
             dll_main.c
             ob_type_helper.cpp
-            ${CMAKE_CURRENT_BINARY_DIR}/version.rc)
+            ${CMAKE_CURRENT_BINARY_DIR}/version.rc
+            ${TRANSFORMATION_SOURCES})
+
+if ("${CMAKE_C_COMPILER_ID}" STREQUAL "GNU" OR "${CMAKE_C_COMPILER_ID}" STREQUAL "Clang")
+    if ("${CMAKE_SYSTEM_PROCESSOR}" MATCHES "amd64.*|x86_64.*|AMD64.*|i686.*|i386.*|x86.*")
+        target_compile_options(k4a PRIVATE "-msse4.1")
+    endif()
+endif()
 
 if(CACHE_OB_CONTEXT)
 target_compile_definitions(k4a PRIVATE -DCACHE_OB_CONTEXT)
@@ -61,12 +78,15 @@ find_package(OrbbecSDK REQUIRED)
 # Link in libraries
 target_link_libraries(k4a PRIVATE
     k4ainternal::calibration
-    k4ainternal::transformation
+    # k4ainternal::transformation
     k4ainternal::logging
     k4ainternal::queue
     k4ainternal::frame_queue
 	k4ainternal::imusync
     OrbbecSDK::OrbbecSDK
+    k4ainternal::math
+    k4ainternal::deloader
+    k4ainternal::tewrapper
 	)
 
 # Define alias for k4a
@@ -167,20 +187,8 @@ file(COPY ${OrbbecSDK_RUNTIME_RESOURCE_FILES} DESTINATION ${K4A_OUTPUT_DIR}/)
 
 if(WIN32)
     install(FILES ${OrbbecSDK_DLL_FILES} DESTINATION ${CMAKE_INSTALL_BINDIR})
-    install(PROGRAMS ${CMAKE_BINARY_DIR}/bin/transformation_example.exe DESTINATION ${CMAKE_INSTALL_BINDIR})
-    install(PROGRAMS ${CMAKE_BINARY_DIR}/bin/streaming_samples.exe DESTINATION ${CMAKE_INSTALL_BINDIR})
-    install(PROGRAMS ${CMAKE_BINARY_DIR}/bin/viewer_opengl.exe DESTINATION ${CMAKE_INSTALL_BINDIR})
-    install(PROGRAMS ${CMAKE_BINARY_DIR}/bin/calibration_info.exe DESTINATION ${CMAKE_INSTALL_BINDIR})
-    install(PROGRAMS ${CMAKE_BINARY_DIR}/bin/fastpointcloud.exe DESTINATION ${CMAKE_INSTALL_BINDIR})
-    install(PROGRAMS ${CMAKE_BINARY_DIR}/bin/viewer_opengl.exe DESTINATION ${CMAKE_INSTALL_BINDIR})
 else()
     install(FILES ${OrbbecSDK_DLL_FILES} DESTINATION ${CMAKE_INSTALL_LIBDIR})
-    install(PROGRAMS ${CMAKE_BINARY_DIR}/bin/transformation_example DESTINATION ${CMAKE_INSTALL_BINDIR})
-    install(PROGRAMS ${CMAKE_BINARY_DIR}/bin/streaming_samples DESTINATION ${CMAKE_INSTALL_BINDIR})
-    install(PROGRAMS ${CMAKE_BINARY_DIR}/bin/viewer_opengl DESTINATION ${CMAKE_INSTALL_BINDIR})
-    install(PROGRAMS ${CMAKE_BINARY_DIR}/bin/calibration_info DESTINATION ${CMAKE_INSTALL_BINDIR})
-    install(PROGRAMS ${CMAKE_BINARY_DIR}/bin/fastpointcloud DESTINATION ${CMAKE_INSTALL_BINDIR})
-    install(PROGRAMS ${CMAKE_BINARY_DIR}/bin/viewer_opengl DESTINATION ${CMAKE_INSTALL_BINDIR})
 endif()
 
 install(FILES ${OrbbecSDK_RUNTIME_RESOURCE_FILES} DESTINATION ${CMAKE_INSTALL_BINDIR})
