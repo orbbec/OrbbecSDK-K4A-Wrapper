@@ -25,3 +25,8 @@ if (OpenCV_FOUND)
         file(COPY ${OpenCV_DIR}/../bin/ DESTINATION ${CMAKE_RUNTIME_OUTPUT_DIRECTORY} FILES_MATCHING PATTERN "*.dll")
     endif ()
 endif ()
+
+install(TARGETS streaming_samples transformation_example viewer_opengl calibration_info fastpointcloud
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+    COMPONENT samples
+)

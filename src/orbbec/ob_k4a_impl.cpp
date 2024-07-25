@@ -46,6 +46,7 @@
 
 #define ORBBEC_MEGA_PID 0x0669
 #define ORBBEC_BOLT_PID 0x066B
+#define ORBBEC_MEGA_I_PID 0x06C0
 
 std::vector<int> get_effective_device(ob_context* &context){
     ob_error *ob_err = NULL;
@@ -63,7 +64,8 @@ std::vector<int> get_effective_device(ob_context* &context){
             pid = ob_device_list_get_device_pid(ob_dev_list, index, &ob_err);
             CHECK_OB_ERROR_BREAK(&ob_err);
 
-            if(!(pid == ORBBEC_MEGA_PID || pid == ORBBEC_BOLT_PID)){
+            if (!(pid == ORBBEC_MEGA_PID || pid == ORBBEC_BOLT_PID || pid == ORBBEC_MEGA_I_PID))
+            {
                 const char * name = ob_device_list_get_device_name(ob_dev_list, index, &ob_err);
                 CHECK_OB_ERROR_BREAK(&ob_err);
 
@@ -464,7 +466,8 @@ k4a_result_t fetch_raw_calibration_data(k4a_device_context_t *device_ctx)
         int pid = ob_device_info_pid(device_info, &ob_err);
         CHECK_OB_ERROR_BREAK(&ob_err);
 
-        if (pid == ORBBEC_MEGA_PID || pid == ORBBEC_BOLT_PID){
+        if (pid == ORBBEC_MEGA_PID || pid == ORBBEC_BOLT_PID || pid == ORBBEC_MEGA_I_PID)
+        {
             if (device_ctx->json == NULL)
             {
                 device_ctx->json = (calibration_json_t *)malloc(sizeof(calibration_json_t));
@@ -936,55 +939,13 @@ k4a_result_t k4a_device_start_imu(k4a_device_t device_handle)
         sensor_list = ob_device_get_sensor_list(device_ctx->device, &ob_err);
         CHECK_OB_ERROR_BREAK(&ob_err);
 
-        accel_sensor = ob_sensor_list_get_sensor_by_type(sensor_list, OB_SENSOR_ACCEL, &ob_err);
-        CHECK_OB_ERROR_BREAK(&ob_err);
-
-        accel_profile_list = ob_sensor_get_stream_profile_list(accel_sensor, &ob_err);
-        CHECK_OB_ERROR_BREAK(&ob_err);
-
-        uint32_t count = ob_stream_profile_list_count(accel_profile_list, &ob_err);
-        CHECK_OB_ERROR_BREAK(&ob_err);
-
-        if (count == 0)
-        {
-            LOG_ERROR("accel_profile_list is empty", 0);
-            break;
-        }
-
-        bool found = false;
-        for (uint32_t i = 0; i < count; i++)
-        {
-            accel_profile = ob_stream_profile_list_get_profile(accel_profile_list, i, &ob_err);
-            CHECK_OB_ERROR_BREAK(&ob_err);
-            ob_accel_sample_rate accel_rate = ob_accel_stream_profile_sample_rate(accel_profile, &ob_err);
-            CHECK_OB_ERROR_BREAK(&ob_err);
-            ob_accel_full_scale_range accel_range = ob_accel_stream_profile_full_scale_range(accel_profile, &ob_err);
-            CHECK_OB_ERROR_BREAK(&ob_err);
-            if (accel_rate == OB_SAMPLE_RATE_500_HZ && accel_range == OB_ACCEL_FS_4g)
-            {
-                found = true;
-                break;
-            }
-            ob_delete_stream_profile(accel_profile, &ob_err);
-            CHECK_OB_ERROR_BREAK(&ob_err);
-            accel_profile = NULL;
-        }
-
-        if(!found){
-            LOG_ERROR("accel_profile_list is empty", 0);
-            break;
-        }
-
-        ob_sensor_start(accel_sensor, accel_profile, ob_accel_frame, device_handle, &ob_err);
-        CHECK_OB_ERROR_BREAK(&ob_err);
-
         gyro_sensor = ob_sensor_list_get_sensor_by_type(sensor_list, OB_SENSOR_GYRO, &ob_err);
         CHECK_OB_ERROR_BREAK(&ob_err);
 
         gyro_profile_list = ob_sensor_get_stream_profile_list(gyro_sensor, &ob_err);
         CHECK_OB_ERROR_BREAK(&ob_err);
 
-        count = ob_stream_profile_list_count(gyro_profile_list, &ob_err);
+        auto count = ob_stream_profile_list_count(gyro_profile_list, &ob_err);
         CHECK_OB_ERROR_BREAK(&ob_err);
 
         if(count == 0){
@@ -992,7 +953,7 @@ k4a_result_t k4a_device_start_imu(k4a_device_t device_handle)
             break;
         }
 
-        found = false;
+        bool found = false;
         for (uint32_t i = 0; i < count; i++)
         {
             gyro_profile = ob_stream_profile_list_get_profile(gyro_profile_list, i, &ob_err);
@@ -1021,6 +982,48 @@ k4a_result_t k4a_device_start_imu(k4a_device_t device_handle)
         }
 
         ob_sensor_start(gyro_sensor, gyro_profile, ob_gyro_frame, device_handle, &ob_err);
+        CHECK_OB_ERROR_BREAK(&ob_err);
+
+        accel_sensor = ob_sensor_list_get_sensor_by_type(sensor_list, OB_SENSOR_ACCEL, &ob_err);
+        CHECK_OB_ERROR_BREAK(&ob_err);
+
+        accel_profile_list = ob_sensor_get_stream_profile_list(accel_sensor, &ob_err);
+        CHECK_OB_ERROR_BREAK(&ob_err);
+
+        count = ob_stream_profile_list_count(accel_profile_list, &ob_err);
+        CHECK_OB_ERROR_BREAK(&ob_err);
+
+        if (count == 0)
+        {
+            LOG_ERROR("accel_profile_list is empty", 0);
+            break;
+        }
+
+        found = false;
+        for (uint32_t i = 0; i < count; i++)
+        {
+            accel_profile = ob_stream_profile_list_get_profile(accel_profile_list, i, &ob_err);
+            CHECK_OB_ERROR_BREAK(&ob_err);
+            ob_accel_sample_rate accel_rate = ob_accel_stream_profile_sample_rate(accel_profile, &ob_err);
+            CHECK_OB_ERROR_BREAK(&ob_err);
+            ob_accel_full_scale_range accel_range = ob_accel_stream_profile_full_scale_range(accel_profile, &ob_err);
+            CHECK_OB_ERROR_BREAK(&ob_err);
+            if (accel_rate == OB_SAMPLE_RATE_500_HZ && accel_range == OB_ACCEL_FS_4g)
+            {
+                found = true;
+                break;
+            }
+            ob_delete_stream_profile(accel_profile, &ob_err);
+            CHECK_OB_ERROR_BREAK(&ob_err);
+            accel_profile = NULL;
+        }
+
+        if(!found){
+            LOG_ERROR("accel_profile_list is empty", 0);
+            break;
+        }
+
+        ob_sensor_start(accel_sensor, accel_profile, ob_accel_frame, device_handle, &ob_err);
         CHECK_OB_ERROR_BREAK(&ob_err);
 
         if (device_ctx->imusync != NULL &&  TRACE_CALL(imusync_start(device_ctx->imusync)) != K4A_RESULT_SUCCEEDED){
@@ -2053,7 +2056,7 @@ k4a_result_t k4a_device_start_cameras(k4a_device_t device_handle, const k4a_devi
     ob_delete_device_info(dev_info, &ob_err);
     CHECK_OB_ERROR_RETURN_K4A_RESULT(&ob_err);
 
-    if (pid == ORBBEC_MEGA_PID || pid == ORBBEC_BOLT_PID)
+    if (pid == ORBBEC_MEGA_PID || pid == ORBBEC_BOLT_PID || pid == ORBBEC_MEGA_I_PID)
     {
         ob_device_set_bool_property(device_ctx->device, OB_PROP_INDICATOR_LIGHT_BOOL, !(config->disable_streaming_indicator), &ob_err);
         CHECK_OB_ERROR_RETURN_K4A_RESULT(&ob_err);
@@ -2102,7 +2105,8 @@ k4a_result_t k4a_device_start_cameras(k4a_device_t device_handle, const k4a_devi
         }
     }
 
-    if (pid != ORBBEC_MEGA_PID && pid != ORBBEC_BOLT_PID && config->depth_mode == K4A_DEPTH_MODE_PASSIVE_IR)
+    if (pid != ORBBEC_MEGA_PID && pid != ORBBEC_MEGA_I_PID && pid != ORBBEC_BOLT_PID &&
+        config->depth_mode == K4A_DEPTH_MODE_PASSIVE_IR)
     {
         LOG_ERROR("not support passive ir", 0);
         return K4A_RESULT_FAILED;
@@ -2211,7 +2215,7 @@ k4a_result_t k4a_device_start_cameras(k4a_device_t device_handle, const k4a_devi
     do{
         if (config->depth_mode != K4A_DEPTH_MODE_OFF)
         {
-            if (pid == ORBBEC_MEGA_PID || pid == ORBBEC_BOLT_PID)
+            if (pid == ORBBEC_MEGA_PID || pid == ORBBEC_MEGA_I_PID || pid == ORBBEC_BOLT_PID)
             {
                 ir_mode_t ir_mode=  config->depth_mode == K4A_DEPTH_MODE_PASSIVE_IR ? PASSIVE_IR : ACTIVE_IR;
                 ob_device_set_int_property(device_ctx->device, OB_PROP_SWITCH_IR_MODE_INT, ir_mode, &ob_err);
