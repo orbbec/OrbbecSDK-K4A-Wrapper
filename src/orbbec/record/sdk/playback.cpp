@@ -37,7 +37,7 @@ k4a_result_t k4a_playback_open(const char *path, k4a_playback_t *playback_handle
     context = k4a_playback_t_create(playback_handle);
     result = K4A_RESULT_FROM_BOOL(context != NULL);
 
-    ob_error *error;
+    ob_error *error = NULL;
     context->ob_ctx = ob_create_context(&error);
     check_error(error);
 
@@ -685,7 +685,7 @@ void k4a_playback_close(const k4a_playback_t playback_handle)
 
         context->file_closing = true;
 
-        ob_error *error;
+        ob_error *error = NULL;
         ob_delete_context(context->ob_ctx, &error);
         check_error(error);
         try
