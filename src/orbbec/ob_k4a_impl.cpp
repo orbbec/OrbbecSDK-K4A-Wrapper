@@ -3648,7 +3648,7 @@ k4a_result_t k4a_device_get_calibration(k4a_device_t device_handle,
     CHECK_OB_ERROR_RETURN_K4A_RESULT(&ob_err);
     ob_delete_device_info(dev_info, &ob_err);
     CHECK_OB_ERROR_RETURN_K4A_RESULT(&ob_err);
-    if (pid == ORBBEC_MEGA_PID || pid == ORBBEC_BOLT_PID)
+    if (pid == ORBBEC_MEGA_PID || pid == ORBBEC_BOLT_PID || pid == ORBBEC_MEGA_I_PID)
     {
         return k4a_device_get_calibration_from_json(device_handle, depth_mode, color_resolution, calibration);
     }
