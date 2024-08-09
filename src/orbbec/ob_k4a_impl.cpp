@@ -100,8 +100,6 @@ char K4A_ENV_VAR_LOG_TO_A_FILE[] = K4A_ENABLE_LOG_TO_A_FILE;
 #define UNREFERENCED_VALUE(P) ((void)P)
 
 #define MAX_JSON_FILE_SIZE 1024 * 10
-#define ORBBEC_MEGA_PID 0x0669
-#define ORBBEC_BOLT_PID 0x066B
 #define MAX_DELAY_TIME 33333
 #define MIN_DELAY_TIME -33333
 
@@ -191,6 +189,14 @@ K4A_DECLARE_CONTEXT(k4a_depthengine_t, k4a_depthengine_instance_helper_t);
 #define K4A_FPS_TO_STRING_CASE(fps)                                                                                    \
     case fps:                                                                                                          \
         return #fps
+
+int k4a_device_get_pid(k4a_device_t device_handle){
+    ob_error *ob_err = NULL;
+    k4a_device_context_t *device_ctx = k4a_device_t_get_context(device_handle);
+    ob_device_info *dev_info = ob_device_get_device_info(device_ctx->device, &ob_err);
+    int pid = ob_device_info_pid(dev_info, &ob_err);
+    return pid;
+}
 
 k4a_wired_sync_mode_t k4a_device_get_wired_sync_mode(k4a_device_t device_handle){
     k4a_device_context_t *device_ctx = k4a_device_t_get_context(device_handle);
@@ -2752,17 +2758,21 @@ k4a_result_t k4a_device_get_color_control_capabilities(k4a_device_t device_handl
     }
     break;
     case K4A_COLOR_CONTROL_HDR:{
-        ob_bool_property_range colorParamRange = ob_device_get_bool_property_range(obDevice,
-                                                                                 OB_PROP_COLOR_HDR_BOOL,
-                                                                                 &ob_err);
-        CHECK_OB_ERROR_RETURN_K4A_RESULT(&ob_err);
+        ob_device_info *dev_info = ob_device_get_device_info(device_ctx->device, &ob_err);
+        int pid = ob_device_info_pid(dev_info, &ob_err);
+        if(pid == ORBBEC_BOLT_PID){
+            ob_bool_property_range colorParamRange = ob_device_get_bool_property_range(obDevice,
+                                                                                     OB_PROP_COLOR_HDR_BOOL,
+                                                                                     &ob_err);
+            CHECK_OB_ERROR_RETURN_K4A_RESULT(&ob_err);
 
-        *supports_auto = false;
-        *min_value = colorParamRange.min;
-        *max_value = colorParamRange.max;
-        *step_value = colorParamRange.step;
-        *default_value = colorParamRange.def;
-        *default_mode = K4A_COLOR_CONTROL_MODE_MANUAL;
+            *supports_auto = false;
+            *min_value = colorParamRange.min;
+            *max_value = colorParamRange.max;
+            *step_value = colorParamRange.step;
+            *default_value = colorParamRange.def;
+            *default_mode = K4A_COLOR_CONTROL_MODE_MANUAL;
+        }
         result = K4A_RESULT_SUCCEEDED;
     }
     break;
