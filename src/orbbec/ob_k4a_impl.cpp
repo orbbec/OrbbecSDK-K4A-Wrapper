@@ -908,6 +908,9 @@ k4a_result_t k4a_device_start_imu(k4a_device_t device_handle)
         return K4A_RESULT_FAILED;
     }
 
+    ob_device_set_bool_property(device_ctx->device, OB_PROP_SDK_ACCEL_FRAME_TRANSFORMED_BOOL, true, &ob_err);
+    ob_device_set_bool_property(device_ctx->device, OB_PROP_SDK_GYRO_FRAME_TRANSFORMED_BOOL, true, &ob_err);
+
     if(!device_ctx->is_camera_streaming && device_ctx->current_device_clock_sync_mode == K4A_DEVICE_CLOCK_SYNC_MODE_RESET){
         OB_DEVICE_SYNC_CONFIG ob_sync_config;
         memset(&ob_sync_config, 0, sizeof(OB_DEVICE_SYNC_CONFIG));
