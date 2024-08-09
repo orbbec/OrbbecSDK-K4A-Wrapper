@@ -26,6 +26,10 @@
 
 using namespace k4aviewer;
 
+#define ORBBEC_MEGA_PID 0x0669
+#define ORBBEC_BOLT_PID 0x066B
+#define ORBBEC_MEGA_I_PID 0x06C0
+
 namespace
 {
 constexpr std::chrono::milliseconds CameraPollingTimeout(3000);
@@ -442,6 +446,12 @@ K4ADockControlStatus K4ADeviceDockControl::Show()
     bool colorResolutionUpdated = colorEnableStateChanged;
     if (ImGui::TreeNode("Color Configuration"))
     {
+        bool isMegaI = false;
+        int pid = m_device.get_pid();
+        if(pid == ORBBEC_MEGA_I_PID){
+            isMegaI = true;
+        }
+
         const bool colorSettingsEditable = !deviceIsStarted && m_config.EnableColorCamera;
 
         bool colorFormatUpdated = false;
@@ -455,10 +465,10 @@ K4ADockControlStatus K4ADeviceDockControl::Show()
         ImGui::SameLine();
         colorFormatUpdated |=
             ImGuiExtensions::K4ARadioButton("NV12", pColorFormat, K4A_IMAGE_FORMAT_COLOR_NV12,
-            colorSettingsEditable);
+            colorSettingsEditable && !isMegaI);
         ImGui::SameLine();
         colorFormatUpdated |=
-            ImGuiExtensions::K4ARadioButton("YUY2", pColorFormat, K4A_IMAGE_FORMAT_COLOR_YUY2, colorSettingsEditable);
+            ImGuiExtensions::K4ARadioButton("YUY2", pColorFormat, K4A_IMAGE_FORMAT_COLOR_YUY2, colorSettingsEditable && !isMegaI);
 
         // Uncompressed formats are only supported at 720p.
         //
@@ -498,14 +508,14 @@ K4ADockControlStatus K4ADeviceDockControl::Show()
                                                                   pColorResolution,
                                                                   K4A_COLOR_RESOLUTION_1440P,
                                                                   colorSettingsEditable &&
-                                                                      imageFormatSupportsHighResolution&&!(m_config.ColorFormat == K4A_IMAGE_FORMAT_COLOR_YUY2));
+                                                                      imageFormatSupportsHighResolution&&!(m_config.ColorFormat == K4A_IMAGE_FORMAT_COLOR_YUY2) &&!isMegaI);
         ImGuiExtensions::K4AShowTooltip(imageFormatHelpMessage, !imageFormatSupportsHighResolution);
         ImGui::SameLine();
         colorResolutionUpdated |= ImGuiExtensions::K4ARadioButton("2160p",
                                                                   pColorResolution,
                                                                   K4A_COLOR_RESOLUTION_2160P,
                                                                   colorSettingsEditable &&
-                                                                      imageFormatSupportsHighResolution&&!(m_config.ColorFormat == K4A_IMAGE_FORMAT_COLOR_YUY2));
+                                                                      imageFormatSupportsHighResolution&&!(m_config.ColorFormat == K4A_IMAGE_FORMAT_COLOR_YUY2) &&!isMegaI);
         ImGuiExtensions::K4AShowTooltip(imageFormatHelpMessage, !imageFormatSupportsHighResolution);
         ImGui::Unindent();
         ImGui::Text("4:3");
