@@ -1536,6 +1536,10 @@ public:
         return k4a_device_get_wired_sync_mode(m_handle);
     }
 
+    int get_pid(){
+        return k4a_device_get_pid(m_handle);
+    }
+
 private:
     k4a_device_t m_handle;
 };
