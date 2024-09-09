@@ -206,7 +206,7 @@ k4a_wired_sync_mode_t k4a_device_get_wired_sync_mode(k4a_device_t device_handle)
     ob_error *ob_err = NULL;
     ob_device_get_structured_data(device_ctx->device,
                                     OB_STRUCT_MULTI_DEVICE_SYNC_CONFIG,
-                                    &ob_config,
+                                    reinterpret_cast<uint8_t *>(&ob_config),
                                     &len,
                                     &ob_err);
     if(ob_config.syncMode == OB_SYNC_MODE_PRIMARY_MCU_TRIGGER){
@@ -486,7 +486,6 @@ k4a_result_t fetch_raw_calibration_data(k4a_device_context_t *device_ctx)
             ob_device_get_raw_data(device_ctx->device,
                                 OB_RAW_DATA_CAMERA_CALIB_JSON_FILE,
                                 ob_get_json_callback,
-                                false,
                                 device_ctx,
                                 &ob_err);
             CHECK_OB_ERROR_BREAK(&ob_err);
@@ -665,7 +664,7 @@ k4a_result_t k4a_device_switch_device_clock_sync_mode(k4a_device_t device_handle
         uint32_t len;
         ob_device_get_structured_data(device_ctx->device,
                                       OB_STRUCT_MULTI_DEVICE_SYNC_CONFIG,
-                                      &ob_sync_config,
+                                      reinterpret_cast<uint8_t *>(&ob_sync_config),
                                       &len,
                                       &ob_err);
         CHECK_OB_ERROR_BREAK(&ob_err);
@@ -923,7 +922,7 @@ k4a_result_t k4a_device_start_imu(k4a_device_t device_handle)
         uint32_t len;
         ob_device_get_structured_data(device_ctx->device,
                                         OB_STRUCT_MULTI_DEVICE_SYNC_CONFIG,
-                                        &ob_sync_config,
+                                        reinterpret_cast<uint8_t *>(&ob_sync_config),
                                         &len,
                                         &ob_err);
         CHECK_OB_ERROR_RETURN_K4A_RESULT(&ob_err);
@@ -1265,7 +1264,7 @@ void k4a_capture_set_color_image(k4a_capture_t capture_handle, k4a_image_t image
     ob_frame *frame_set = (ob_frame *)capture_handle;
     auto image_ctx = k4a_image_t_get_context(image_handle);
     ob_frame *color_frame = image_ctx->frame;
-    ob_frameset_push_frame(frame_set, OB_FRAME_COLOR, color_frame, &ob_err);
+    ob_frameset_push_frame(frame_set, color_frame, &ob_err);
     CHECK_OB_ERROR_RETURN(&ob_err);
 }
 
@@ -1281,7 +1280,7 @@ void k4a_capture_set_depth_image(k4a_capture_t capture_handle, k4a_image_t image
     ob_frame *frame_set = (ob_frame *)capture_handle;
     auto image_ctx = k4a_image_t_get_context(image_handle);
     ob_frame *depth_frame = image_ctx->frame;
-    ob_frameset_push_frame(frame_set, OB_FRAME_DEPTH, depth_frame, &ob_err);
+    ob_frameset_push_frame(frame_set, depth_frame, &ob_err);
     CHECK_OB_ERROR_RETURN(&ob_err);
 }
 
@@ -1297,7 +1296,7 @@ void k4a_capture_set_ir_image(k4a_capture_t capture_handle, k4a_image_t image_ha
     ob_frame *frame_set = (ob_frame *)capture_handle;
     auto image_ctx = k4a_image_t_get_context(image_handle);
     ob_frame *ir_frame = image_ctx->frame;
-    ob_frameset_push_frame(frame_set, OB_FRAME_IR, ir_frame, &ob_err);
+    ob_frameset_push_frame(frame_set, ir_frame, &ob_err);
     CHECK_OB_ERROR_RETURN(&ob_err);
 }
 
@@ -1322,34 +1321,34 @@ k4a_result_t k4a_image_create(k4a_image_format_t format,
     switch (format)
     {
     case K4A_IMAGE_FORMAT_DEPTH16:
-        obFrame = ob_create_frame(OB_FORMAT_Y16, width_pixels, height_pixels, stride_bytes, OB_FRAME_DEPTH, &ob_err);
+        obFrame = ob_create_video_frame(OB_FRAME_DEPTH, OB_FORMAT_Y16, width_pixels, height_pixels, stride_bytes, &ob_err);
         break;
     case K4A_IMAGE_FORMAT_IR16:
-        obFrame = ob_create_frame(OB_FORMAT_Y16, width_pixels, height_pixels, stride_bytes, OB_FRAME_IR, &ob_err);
+        obFrame = ob_create_video_frame(OB_FRAME_IR, OB_FORMAT_Y16, width_pixels, height_pixels, stride_bytes, &ob_err);
         break;
     case K4A_IMAGE_FORMAT_COLOR_BGRA32:
-        obFrame = ob_create_frame(OB_FORMAT_BGRA, width_pixels, height_pixels, stride_bytes, OB_FRAME_COLOR, &ob_err);
+        obFrame = ob_create_video_frame(OB_FRAME_COLOR, OB_FORMAT_BGRA, width_pixels, height_pixels, stride_bytes, &ob_err);
         break;
     case K4A_IMAGE_FORMAT_COLOR_YUY2:
-        obFrame = ob_create_frame(OB_FORMAT_YUYV, width_pixels, height_pixels, stride_bytes, OB_FRAME_COLOR, &ob_err);
+        obFrame = ob_create_video_frame(OB_FRAME_COLOR, OB_FORMAT_YUYV, width_pixels, height_pixels, stride_bytes, &ob_err);
         break;
     case K4A_IMAGE_FORMAT_COLOR_NV12:
-        obFrame = ob_create_frame(OB_FORMAT_NV12, width_pixels, height_pixels, stride_bytes, OB_FRAME_COLOR, &ob_err);
+        obFrame = ob_create_video_frame(OB_FRAME_COLOR, OB_FORMAT_NV12, width_pixels, height_pixels, stride_bytes, &ob_err);
         break;
     case K4A_IMAGE_FORMAT_COLOR_MJPG:
-        obFrame = ob_create_frame(OB_FORMAT_MJPEG, width_pixels, height_pixels, stride_bytes, OB_FRAME_COLOR, &ob_err);
+        obFrame = ob_create_video_frame(OB_FRAME_COLOR, OB_FORMAT_MJPG, width_pixels, height_pixels, stride_bytes, &ob_err);
         break;
     case K4A_IMAGE_FORMAT_CUSTOM8:
-        obFrame = ob_create_frame(OB_FORMAT_Y8, width_pixels, height_pixels, stride_bytes, OB_FRAME_COLOR, &ob_err);
+        obFrame = ob_create_video_frame(OB_FRAME_VIDEO, OB_FORMAT_Y8, width_pixels, height_pixels, stride_bytes, &ob_err);
         break;
     case K4A_IMAGE_FORMAT_CUSTOM16:
-        obFrame = ob_create_frame(OB_FORMAT_Y16, width_pixels, height_pixels, stride_bytes, OB_FRAME_COLOR, &ob_err);
+        obFrame = ob_create_video_frame(OB_FRAME_VIDEO, OB_FORMAT_Y16, width_pixels, height_pixels, stride_bytes, &ob_err);
         break;
     case K4A_IMAGE_FORMAT_CUSTOM:
-        obFrame = ob_create_frame(OB_FORMAT_UNKNOWN, width_pixels, height_pixels, stride_bytes, OB_FRAME_COLOR, &ob_err);
+        obFrame = ob_create_video_frame(OB_FRAME_VIDEO, OB_FORMAT_UNKNOWN, width_pixels, height_pixels, stride_bytes, &ob_err);
         break;
     default:
-        obFrame = ob_create_frame(OB_FORMAT_BGRA, width_pixels, height_pixels, stride_bytes, OB_FRAME_COLOR, &ob_err);
+        obFrame = ob_create_video_frame(OB_FRAME_COLOR, OB_FORMAT_BGRA, width_pixels, height_pixels, stride_bytes, &ob_err);
         break;
     }
     CHECK_OB_ERROR_RETURN_K4A_RESULT(&ob_err);
@@ -1361,6 +1360,19 @@ k4a_result_t k4a_image_create(k4a_image_format_t format,
     *image_handle = handle;
     return result;
 }
+
+struct k4a_frame_buffer_destroy_context
+{
+    k4a_memory_destroy_cb_t *buffer_release_cb;
+    void *buffer_release_cb_context;
+};
+
+void k4a_frame_buffer_destroy(uint8_t* data, void* context){
+    auto k4a_buffer_ctx = (k4a_frame_buffer_destroy_context *)context;
+    k4a_buffer_ctx->buffer_release_cb(data, k4a_buffer_ctx->buffer_release_cb_context);
+    delete k4a_buffer_ctx;
+};
+
 
 k4a_result_t k4a_image_create_from_buffer(k4a_image_format_t format,
                                           int width_pixels,
@@ -1376,32 +1388,41 @@ k4a_result_t k4a_image_create_from_buffer(k4a_image_format_t format,
 
     ob_error *ob_err = NULL;
     ob_frame *obFrame = NULL;
+    ob_frame_type obFrameType = OB_FRAME_UNKNOWN;
     ob_format obFormat = OB_FORMAT_UNKNOWN;
     switch (format)
     {
     case K4A_IMAGE_FORMAT_DEPTH16:
         obFormat = OB_FORMAT_Y16;
+        obFrameType = OB_FRAME_DEPTH;
         break;
     case K4A_IMAGE_FORMAT_IR16:
         obFormat = OB_FORMAT_Y16;
+        obFrameType = OB_FRAME_IR;
         break;
     case K4A_IMAGE_FORMAT_COLOR_BGRA32:
         obFormat = OB_FORMAT_BGRA;
+        obFrameType = OB_FRAME_COLOR;
         break;
     case K4A_IMAGE_FORMAT_COLOR_MJPG:
         obFormat = OB_FORMAT_MJPG;
+        obFrameType = OB_FRAME_COLOR;
         break;
     case K4A_IMAGE_FORMAT_COLOR_YUY2:
         obFormat = OB_FORMAT_YUYV;
+        obFrameType = OB_FRAME_COLOR;
         break;
     case K4A_IMAGE_FORMAT_COLOR_NV12:
         obFormat = OB_FORMAT_NV12;
+        obFrameType = OB_FRAME_COLOR;
         break;
     case K4A_IMAGE_FORMAT_CUSTOM8:
         obFormat = OB_FORMAT_Y8;
+        obFrameType = OB_FRAME_VIDEO;
         break;
     case K4A_IMAGE_FORMAT_CUSTOM16:
         obFormat = OB_FORMAT_Y16;
+        obFrameType = OB_FRAME_VIDEO;
         break;
     case K4A_IMAGE_FORMAT_CUSTOM:
         obFormat = OB_FORMAT_UNKNOWN;
@@ -1416,14 +1437,21 @@ k4a_result_t k4a_image_create_from_buffer(k4a_image_format_t format,
         return result;
     }
 
-    obFrame = ob_create_frame_from_buffer(obFormat,
+    k4a_frame_buffer_destroy_context* k4a_buffer_ctx = new k4a_frame_buffer_destroy_context();
+    k4a_buffer_ctx->buffer_release_cb = buffer_release_cb;
+    k4a_buffer_ctx->buffer_release_cb_context = buffer_release_cb_context;
+
+    obFrame = ob_create_video_frame_from_buffer(obFrameType,
+                                          obFormat,
                                           width_pixels,
                                           height_pixels,
+                                          stride_bytes,
                                           buffer,
                                           (uint32_t)buffer_size,
-                                          buffer_release_cb,
-                                          buffer_release_cb_context,
+                                          k4a_frame_buffer_destroy,
+                                          k4a_buffer_ctx,
                                           &ob_err);
+
     CHECK_OB_ERROR_RETURN_K4A_RESULT(&ob_err);
     if (obFrame != NULL)
     {
@@ -2042,7 +2070,7 @@ k4a_result_t k4a_device_start_cameras(k4a_device_t device_handle, const k4a_devi
     uint32_t len;
     ob_device_get_structured_data(device_ctx->device,
                                     OB_STRUCT_MULTI_DEVICE_SYNC_CONFIG,
-                                    &ob_sync_config,
+                                    reinterpret_cast<uint8_t *>(&ob_sync_config),
                                     &len,
                                     &ob_err);
     CHECK_OB_ERROR_RETURN_K4A_RESULT(&ob_err);
@@ -2100,7 +2128,7 @@ k4a_result_t k4a_device_start_cameras(k4a_device_t device_handle, const k4a_devi
 
         ob_device_set_structured_data(device_ctx->device,
                                       OB_STRUCT_MULTI_DEVICE_SYNC_CONFIG,
-                                      &ob_sync_config,
+                                      reinterpret_cast<uint8_t *>(&ob_sync_config),
                                       sizeof(ob_sync_config),
                                       &ob_err);
 
@@ -2243,7 +2271,7 @@ k4a_result_t k4a_device_start_cameras(k4a_device_t device_handle, const k4a_devi
                                                                                 &ob_err);
                 CHECK_OB_ERROR_BREAK(&ob_err);
 
-                ob_config_enable_stream(pipe_config, depth_profile, &ob_err);
+                ob_config_enable_stream_with_stream_profile(pipe_config, depth_profile, &ob_err);
                 CHECK_OB_ERROR_BREAK(&ob_err);
             }
 
@@ -2259,7 +2287,7 @@ k4a_result_t k4a_device_start_cameras(k4a_device_t device_handle, const k4a_devi
             CHECK_OB_ERROR_BREAK(&ob_err);
 
 
-            ob_config_enable_stream(pipe_config, ir_profile, &ob_err);
+            ob_config_enable_stream_with_stream_profile(pipe_config, ir_profile, &ob_err);
             CHECK_OB_ERROR_BREAK(&ob_err);
         }
 
@@ -2303,7 +2331,7 @@ k4a_result_t k4a_device_start_cameras(k4a_device_t device_handle, const k4a_devi
                                                                             &ob_err);
             CHECK_OB_ERROR_BREAK(&ob_err);
 
-            ob_config_enable_stream(pipe_config, color_profile, &ob_err);
+            ob_config_enable_stream_with_stream_profile(pipe_config, color_profile, &ob_err);
             CHECK_OB_ERROR_BREAK(&ob_err);
         }
 
