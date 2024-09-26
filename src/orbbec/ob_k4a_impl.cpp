@@ -2126,13 +2126,6 @@ k4a_result_t k4a_device_start_cameras(k4a_device_t device_handle, const k4a_devi
             ob_sync_config.rgbTriggerSignalInDelay = color_delay > 65535 ? 65535 : (uint16_t)color_delay;
         }
 
-        ob_device_set_structured_data(device_ctx->device,
-                                      OB_STRUCT_MULTI_DEVICE_SYNC_CONFIG,
-                                      reinterpret_cast<uint8_t *>(&ob_sync_config),
-                                      sizeof(ob_sync_config),
-                                      &ob_err);
-
-        CHECK_OB_ERROR_RETURN_K4A_RESULT(&ob_err);
     }
 
     if(device_ctx->current_device_clock_sync_mode == K4A_DEVICE_CLOCK_SYNC_MODE_RESET &&
@@ -2343,6 +2336,21 @@ k4a_result_t k4a_device_start_cameras(k4a_device_t device_handle, const k4a_devi
             ob_config_set_frame_aggregate_output_mode(pipe_config, OB_FRAME_AGGREGATE_OUTPUT_FULL_FRAME_REQUIRE, &ob_err);
             CHECK_OB_ERROR_BREAK(&ob_err);
         }
+
+        int retry = 1;
+        do{
+            ob_device_set_structured_data(device_ctx->device,
+                                        OB_STRUCT_MULTI_DEVICE_SYNC_CONFIG,
+                                        reinterpret_cast<uint8_t *>(&ob_sync_config),
+                                        sizeof(ob_sync_config),
+                                        &ob_err);
+            if(ob_err != NULL){
+                ob_pipeline_start_with_config(device_ctx->pipe, pipe_config, &ob_err);
+                ob_pipeline_stop(device_ctx->pipe, &ob_err);
+                CHECK_OB_ERROR_CONTINUE(&ob_err);
+            }
+        }while (retry--);
+        CHECK_OB_ERROR_RETURN_K4A_RESULT(&ob_err);
 
         frame_queue_enable(device_ctx->frameset_queue);
 
