@@ -1,11 +1,6 @@
-# release v1.10.1
-1.adjust imu queue default size;
-2.adapt to image related Interface;
-3.remove excess compilation items;
-4.palyback pre-init ob_context;
-5.adjust the order of IMU starting;
-6.adapt to mega-i device;
-7.update orbbecsdk version to last.
+# release v2.0.2
+1.Adapt to OrbbecSDK-V2.0.10;
+2.fix the exception that occurs when attempting to start a device while it has not been stopped.
 
 ## Product support
 | **products list** | **firmware version** |**platform**|

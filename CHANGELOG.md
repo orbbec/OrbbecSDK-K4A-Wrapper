@@ -1,6 +1,15 @@
 ## Change Log
 
-# release v1.10.1
+# release v2.0.2
+1.Adapt to OrbbecSDK-V2.0.10;
+fix the exception that occurs when attempting to start a device while it has not been stopped.
+
+# release v1.10.3
+1.Adapt to mega-i;
+2.Fix the playback issue of K4aViewer;
+3.Correct the IMU data of Femto Bolt.
+
+# release v1.10.2
 1.adjust imu queue default size;
 2.adapt to image related Interface;
 3.remove excess compilation items;
