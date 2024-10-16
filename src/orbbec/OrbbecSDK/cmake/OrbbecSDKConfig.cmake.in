@@ -1,0 +1,10 @@
+@PACKAGE_INIT@
+
+# Note: targets are specified in the namespaces they were exported from.
+
+set(OrbbecSDK_LIBS_DIR ${CMAKE_CURRENT_LIST_DIR})
+find_library(OrbbecSDK_LIBRARY NAMES OrbbecSDK PATHS ${OrbbecSDK_LIBS_DIR})
+set(OrbbecSDK_INCLUDE_DIRS ${CMAKE_CURRENT_LIST_DIR}/../include/)
+set(OrbbecSDK_LIBS ${OrbbecSDK_LIBRARY})
+
+check_required_components(OrbbecSDK)
