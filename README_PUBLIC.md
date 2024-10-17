@@ -1,6 +1,5 @@
-# release v2.0.2
-1.Adapt to OrbbecSDK-V2.0.10;
-2.fix the exception that occurs when attempting to start a device while it has not been stopped.
+# release v2.0.3
+1.Adapt to OrbbecSDK-V2.0.16;
 
 ## Product support
 | **products list** | **firmware version** |**platform**|

@@ -22,7 +22,7 @@ extern "C" {
 
 #define WRAPPER_VERSION_MAJOR 2
 #define WRAPPER_VERSION_MINOR 0
-#define WRAPPER_VERSION_PATCH 2
+#define WRAPPER_VERSION_PATCH 3
 
 /**
  * \defgroup Functions Functions
