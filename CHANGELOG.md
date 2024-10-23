@@ -1,7 +1,10 @@
 ## Change Log
 
+# release v2.0.4
+1.update OrbbecSDK version to V2.0.18;
+
 # release v2.0.3
-1.Adapt to OrbbecSDK-V2.0.16;
+1.update OrbbecSDK version to V2.0.16;
 
 # release v2.0.2
 1.Adapt to OrbbecSDK-V2.0.10;

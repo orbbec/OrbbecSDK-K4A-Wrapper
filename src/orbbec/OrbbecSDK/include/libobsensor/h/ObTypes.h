@@ -1,4 +1,4 @@
-﻿// Copyright (c) Orbbec Inc. All Rights Reserved.
+// Copyright (c) Orbbec Inc. All Rights Reserved.
 // Licensed under the MIT License.
 
 // License: Apache 2.0. See LICENSE file in root directory.
