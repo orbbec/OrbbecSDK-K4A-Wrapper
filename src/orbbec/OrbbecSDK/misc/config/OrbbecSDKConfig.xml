@@ -81,7 +81,7 @@
     <!-- Default configuration of data streams for different types of devices -->
     <Device>
         <!-- Whether to enumerate network devices, bool type, true-enable, false-disable (default) -->
-        <EnumerateNetDevice>false</EnumerateNetDevice>
+        <EnumerateNetDevice>true</EnumerateNetDevice>
 
         <!-- UVC Backend select on Linux; optional values: Auto, V4L2, LibUVC; Auto is the default
         value -->
