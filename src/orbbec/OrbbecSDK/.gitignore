@@ -1,0 +1,10 @@
+# cmake build directory
+build
+
+# cpack output
+packages
+
+# IDE files
+.vscode
+.idea
+cmake-build-debug/
