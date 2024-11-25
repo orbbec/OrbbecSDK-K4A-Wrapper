@@ -1,5 +1,5 @@
-# release v2.0.5
-1.update OrbbecSDK version to V2.0.21;
+# release v2.0.6
+1.update OrbbecSDK version to V2.0.23;
 
 ## Product support
 | **products list** | **firmware version** |**platform**|
