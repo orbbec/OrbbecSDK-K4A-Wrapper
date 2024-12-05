@@ -1,5 +1,5 @@
-# release v2.0.6
-1.update OrbbecSDK version to V2.0.23;
+# release v2.0.7
+1.solve point cloud anomaly issue;
 
 ## Product support
 | **products list** | **firmware version** |**platform**|
