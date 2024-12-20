@@ -771,28 +771,6 @@ k4a_wait_result_t k4a_device_get_capture(k4a_device_t device_handle,
 
     result = frame_queue_pop(device_ctx->frameset_queue, timeout_in_ms, (k4a_capture_t *)capture_handle);
 
-    // for test
-    // if (result == K4A_WAIT_RESULT_SUCCEEDED)
-    // {
-    //     static int count = 0;
-    //     ob_frame *frameset = (ob_frame *)*capture_handle;
-    //     ob_error *ob_err = NULL;
-    //     ob_frame *color_frame = ob_frameset_color_frame(frameset, &ob_err);
-    //     uint64_t color_timestamp = ob_frame_time_stamp_us(color_frame, &ob_err);
-    //     ob_frame *depth_frame = ob_frameset_depth_frame(frameset, &ob_err);
-    //     uint64_t depth_timestamp = ob_frame_time_stamp_us(depth_frame, &ob_err);
-    //     ob_frame *ir_frame = ob_frameset_ir_frame(frameset, &ob_err);
-    //     uint64_t ir_timestamp = ob_frame_time_stamp_us(ir_frame, &ob_err);
-    //     LOG_ERROR("color_timestamp =%lld,depth_timestamp =%lld,ir_timestamp=%lld,count=%d",
-    //               color_timestamp,
-    //               depth_timestamp,
-    //               ir_timestamp,
-    //               count++);
-    //     ob_delete_frame(color_frame, &ob_err);
-    //     ob_delete_frame(depth_frame, &ob_err);
-    //     ob_delete_frame(ir_frame, &ob_err);
-    // }
-
     switch (result)
     {
     case K4A_WAIT_RESULT_FAILED:
@@ -3264,52 +3242,6 @@ k4a_result_t k4a_device_set_color_control(k4a_device_t device_handle,
     }
     break;
 
-        //  case K4A_COLOR_CONTROL_AUTO_EXPOSURE_PRIORITY: {
-        //     // LOG_WARNING("K4A_COLOR_CONTROL_AUTO_EXPOSURE_PRIORITY is deprecated and does nothing.");
-        //
-        // ob_int_property_range colorParamRange =
-        //         ob_device_get_int_property_range(obDevice, OB_PROP_COLOR_AUTO_EXPOSURE_PRIORITY_INT,
-        //                                                                               &ob_err);
-        //      if (ob_err == NULL)
-        //      {
-        //          int min = colorParamRange.min;
-        //          int max = colorParamRange.max;
-        //          if (min <= value && value <= max)
-        //          {
-        //              ob_device_set_int_property(obDevice, OB_PROP_COLOR_AUTO_EXPOSURE_PRIORITY_INT, value, &ob_err);
-        //              if (ob_err != NULL)
-        //              {
-        //                   LOG_WARNING("k4a color control set exposure priority failed ",0);
-        //                  result = K4A_RESULT_FAILED;
-        //              }
-        //          }
-        //          else
-        //          {
-        //              LOG_WARNING("k4a color control set exposure priority  failed [exposure priority out of "
-        //                          "range(min=%d,max=%d,value=%d)]",
-        //                          min,
-        //                          max,
-        //                          value);
-        //              result = K4A_RESULT_FAILED;
-        //          }
-        //      }
-        //      else if (ob_err->exception_type == OB_EXCEPTION_TYPE_UNSUPPORTED_OPERATION)
-        //      {
-        //          ob_device_set_int_property(obDevice, OB_PROP_COLOR_AUTO_EXPOSURE_PRIORITY_INT, value, &ob_err);
-        //          if (ob_err != NULL)
-        //          {
-        //              LOG_WARNING("k4a color control set exposure priority failed ",0);
-        //              result = K4A_RESULT_FAILED;
-        //          }
-        //      }
-        //      else
-        //      {
-        //          LOG_WARNING("k4a color control set exposure priority  failed [get exposure priority  range
-        //          failed]",0); result = K4A_RESULT_FAILED;
-        //      }
-
-        //  }
-        //  break;
     default:
         LOG_ERROR("Failing, unknown command %u", command);
         return K4A_RESULT_FAILED;
@@ -3318,46 +3250,6 @@ k4a_result_t k4a_device_set_color_control(k4a_device_t device_handle,
     return result;
 }
 
-/*
-#include <stdio.h>
-
-bool get_calibration_json_file(uint8_t *data,size_t *data_size)
-{
-    FILE *file;
-    //file = fopen("F:\\Camera_Calibration_Json_File.json","rb");
-    file = fopen("F:\\kinect1.json", "rb");
-
-    fseek(file, 0, SEEK_END);
-    int len = ftell(file);
-    fseek(file, 0, SEEK_SET);
-    uint8_t *calibration_file = (uint8_t *)malloc(len + 1);
-    fread(calibration_file, 1, len, file);
-    fclose(file);
-
-    if (*data_size > len)
-    {
-        memcpy(data,calibration_file,len);
-        *data_size = len;
-        free(calibration_file);
-        return true;
-    }
-    else
-    {
-        free(calibration_file);
-        return false;
-    }
-}
-
-bool writeFile(uint8_t* data, size_t* data_size)
-{
-    FILE *file;
-    file = fopen("kinect1_1.json", "w");
-
-    fwrite(data, 1, data_size, file);
-    fclose(file);
-    return true;
-}
-*/
 
 k4a_buffer_result_t k4a_device_get_raw_calibration(k4a_device_t device_handle, uint8_t *data, size_t *data_size)
 {
@@ -3399,7 +3291,6 @@ k4a_buffer_result_t k4a_device_get_raw_calibration(k4a_device_t device_handle, u
             {
                 *data_size = device_ctx->json->json_actual_size;
                 memcpy(data, device_ctx->json->calibration_json, *data_size);
-                // writeFile(data, *data_size);
             }
         }
         else
