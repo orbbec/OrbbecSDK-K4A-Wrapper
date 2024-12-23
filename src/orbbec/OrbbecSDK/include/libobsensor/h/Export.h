@@ -9,20 +9,20 @@
 #  ifndef OB_EXPORT
 #    ifdef OrbbecSDK_EXPORTS
         /* We are building this library */
-#      define OB_EXPORT __attribute__((visibility("default")))
+#      define OB_EXPORT __declspec(dllexport)
 #    else
         /* We are using this library */
-#      define OB_EXPORT __attribute__((visibility("default")))
+#      define OB_EXPORT __declspec(dllimport)
 #    endif
 #  endif
 
 #  ifndef OB_NO_EXPORT
-#    define OB_NO_EXPORT __attribute__((visibility("hidden")))
+#    define OB_NO_EXPORT 
 #  endif
 #endif
 
 #ifndef OB_DEPRECATED
-#  define OB_DEPRECATED __attribute__ ((__deprecated__))
+#  define OB_DEPRECATED __declspec(deprecated)
 #endif
 
 #ifndef OB_DEPRECATED_EXPORT

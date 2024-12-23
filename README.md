@@ -15,7 +15,7 @@ This repository contains the K4A wrapper for Orbbec SDK, allowing users to devel
 
 **What we did?**
 
-The [k4a.h](./include/k4a/k4a.h) is the header file of K4A API, and the source code in [k4a.c](./src/sdk/k4a.c) is the implementation of K4A API. We have reimplemented the K4A API in [ob_k4a_impl.c](./src/orbbec/ob_k4a_impl.cpp) with Orbbec SDK, and keep the same effect as the original K4A API. Therefore, all functions called on user's side will be redirected to the Orbbec SDK, and user can access the Orbbec camera like the K4A device.
+The [k4a.h](./include/k4a/k4a.h) is the header file of K4A API, and the source code in [k4a.cpp](./src/sdk/k4a.c) is the implementation of K4A API. We have reimplemented the K4A API in [ob_k4a_impl.c](./src/orbbec/ob_k4a_impl.cpp) with Orbbec SDK, and keep the same effect as the original K4A API. Therefore, all functions called on user's side will be redirected to the Orbbec SDK, and user can access the Orbbec camera like the K4A device.
 
 ![Orbbec SDK K4A Wrapper](src/orbbec/docs/resource/OrbbecSDKK4AWrapper.png)
 
