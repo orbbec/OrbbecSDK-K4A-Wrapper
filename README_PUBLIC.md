@@ -1,5 +1,5 @@
-# release v2.0.7
-1.solve point cloud anomaly issue;
+# release v2.0.8
+1.update orbbecsdk version to v2.1.1
 
 ## Product support
 | **products list** | **firmware version** |**platform**|
