@@ -12,7 +12,7 @@
 #      define OB_EXPORT __declspec(dllexport)
 #    else
         /* We are using this library */
-#      define OB_EXPORT __declspec(dllimport)
+#      define OB_EXPORT
 #    endif
 #  endif
 
