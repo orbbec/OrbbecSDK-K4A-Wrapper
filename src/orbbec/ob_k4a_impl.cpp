@@ -48,6 +48,11 @@
 #define ORBBEC_BOLT_PID 0x066B
 #define ORBBEC_MEGA_I_PID 0x06C0
 
+void k4a_set_orbbec_extensions_directory(const char *directory){
+    ob_error *ob_err = NULL;
+    ob_set_extensions_directory(directory, &ob_err);
+}
+
 std::vector<int> get_effective_device(ob_context* &context){
     ob_error *ob_err = NULL;
     std::vector<int> effective_devices;

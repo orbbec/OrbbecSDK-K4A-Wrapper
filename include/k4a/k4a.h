@@ -33,6 +33,23 @@ extern "C" {
  * @{
  */
 
+
+/** set the directory for OrbbecSDK extensions
+ *
+ * \remarks In platforms such as Unity, the executable file's location is typically regarded as the current directory. When the OrbbecSDK and the executable file
+ *  are not situated in the same directory, it is likely that the OrbbecSDK will fail to locate the extensions within the same directory as itself. In the event
+ *  of this occurrence, please utilize this interface to designate the path of the extensions library.
+ *
+ * \xmlonly 
+ * <requirements>
+ *   <requirement name="Header">k4a.h (include k4a/k4a.h)</requirement>
+ *   <requirement name="Library">k4a.lib</requirement>
+ *   <requirement name="DLL">k4a.dll</requirement>
+ * </requirements>
+ * \endxmlonly
+*/
+K4A_EXPORT void k4a_set_orbbec_extensions_directory(const char *directory);
+
 /** get device pid
  *
  * \remarks This API is currently mainly used to get device pid

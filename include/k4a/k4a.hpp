@@ -27,6 +27,23 @@ namespace k4a
  * @{
  */
 
+
+/** \class context_helper k4a.hpp <k4a/k4a.hpp>
+ * Set the directory for OrbbecSDK extensions
+ *
+ * \remarks The extensions directory is used to search for dynamic libraries that provide additional functionality to the SDK， such as the Frame filters.
+ * \remarks In platforms such as Unity, the executable file's location is typically regarded as the current directory. When the OrbbecSDK and the executable file
+ *  are not situated in the same directory, it is likely that the OrbbecSDK will fail to locate the extensions within the same directory as itself. In the event
+ *  of this occurrence, please utilize this interface to designate the path of the extensions library.
+*/
+struct context_helper
+{
+    static void setObExtensionsDirectory(std::string directory){
+        k4a_set_orbbec_extensions_directory(directory.c_str());
+    }
+};
+
+
 /** Exception type thrown when a K4A API call fails
  */
 class error : public std::runtime_error
@@ -35,8 +52,8 @@ public:
     using runtime_error::runtime_error;
 };
 
-/** \class context k4a.hpp <k4a/k4a.hpp>
- * Avoid deep engine initialization failures when using multiple opengl contexts within user applications and SDKs!
+/** \class depth_engine_helper k4a.hpp <k4a/k4a.hpp>
+ * Avoid depth engine initialization failures when using multiple opengl contexts within user applications and SDKs!
  *
  * \sa k4a_transformation_t
  *
