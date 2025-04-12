@@ -190,6 +190,16 @@ K4A_DECLARE_CONTEXT(k4a_depthengine_t, k4a_depthengine_instance_helper_t);
     case fps:                                                                                                          \
         return #fps
 
+k4a_result_t k4a_device_reboot(k4a_device_t device_handle)
+{
+    RETURN_VALUE_IF_HANDLE_INVALID(K4A_RESULT_FAILED, k4a_device_t, device_handle);
+    k4a_device_context_t *device_ctx = k4a_device_t_get_context(device_handle);
+    ob_error *ob_err = NULL;
+    ob_device_reboot(device_ctx->device, &ob_err);
+    CHECK_OB_ERROR_RETURN_K4A_RESULT(&ob_err);
+    return K4A_RESULT_SUCCEEDED;
+}
+
 int k4a_device_get_pid(k4a_device_t device_handle){
     ob_error *ob_err = NULL;
     k4a_device_context_t *device_ctx = k4a_device_t_get_context(device_handle);

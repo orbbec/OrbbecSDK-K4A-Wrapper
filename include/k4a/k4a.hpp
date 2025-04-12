@@ -1528,9 +1528,24 @@ public:
         }
     }
 
+   /** enable/disable soft filter for depth camera
+     *
+     * \sa set_soft_filter
+     */
     void set_soft_filter(bool filter_switch){
         k4a_device_enable_soft_filter(m_handle, filter_switch);
     }
+
+   /** This API is used to reboot device
+     * After reboot device,it is necessary to close the device and then reopen it to access frame data.
+     *
+     * \sa device_reboot
+     */
+    void device_reboot()
+    {
+         k4a_device_reboot(m_handle);
+    }
+    
 
     k4a_wired_sync_mode_t get_wired_sync_mode(){
         return k4a_device_get_wired_sync_mode(m_handle);
