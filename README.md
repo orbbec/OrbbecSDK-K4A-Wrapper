@@ -152,10 +152,10 @@ git submodule update --init --recursive
 
 ## Versioning
 
-| **products list** | **firmware version** |**windows platform**|**linux platform**|
+| **Products list** | **Minimal firmware version** |**Windows platform**|**Linux platform**|
 | --- | --- | --- | --- |
-| Orbbec Femto Bolt  | 1.0.6/1.0.9/1.1.1  |Windows10, Windows11 | Ubuntu18.04, Ubuntu20.04, Ubuntu22.04|
-| Orbbec Femto Mega  | 1.1.5/1.1.7/1.2.8  |Windows10, Windows11 | Ubuntu20.04, Ubuntu22.04|
+| Orbbec Femto Bolt  | 1.0.6  |Windows10, Windows11 | Ubuntu18.04, Ubuntu20.04, Ubuntu22.04|
+| Orbbec Femto Mega  | 1.1.7  |Windows10, Windows11 | Ubuntu20.04, Ubuntu22.04|
 
 
 ## Testing
