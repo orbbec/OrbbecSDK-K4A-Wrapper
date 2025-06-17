@@ -39,3 +39,7 @@
 	path = extern/libuvc/src
 	url = https://github.com/microsoft/libuvc.git
 	branch = Azure-Kinect-Sensor-SDK
+[submodule "src/orbbec/OrbbecSDK"]
+	path = src/orbbec/OrbbecSDK
+	url = https://github.com/orbbec/OrbbecSDK.git
+	branch = v2-main
