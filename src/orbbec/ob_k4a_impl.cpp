@@ -2731,8 +2731,8 @@ k4a_result_t k4a_device_get_color_control_capabilities(k4a_device_t device_handl
     }
     break;
     case K4A_COLOR_CONTROL_BACKLIGHT_COMPENSATION: {
-        LOG_WARNING("unsupport api ", 0);
-        result = K4A_RESULT_FAILED;
+        // LOG_WARNING("unsupport api ", 0);
+        // result = K4A_RESULT_FAILED;
     }
     break;
     case K4A_COLOR_CONTROL_GAIN: {
