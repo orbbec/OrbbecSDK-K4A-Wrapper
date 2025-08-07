@@ -976,14 +976,18 @@ void K4ADeviceDockControl::Start()
     const bool enableCameras = m_config.EnableColorCamera || m_config.EnableDepthCamera;
     if (enableCameras)
     {
-        bool camerasStarted = StartCameras();
+        GLFWwindow *currentContext = glfwGetCurrentContext(); // store the current context
+        glfwMakeContextCurrent(NULL);                         // make current context to NULL
+
+        bool camerasStarted = StartCameras(); //  will initialize the DepthEngine
+
+        glfwMakeContextCurrent(currentContext); // restore the current context
 
         if (camerasStarted && m_config.EnableImu)
         {
             StartImu();
         }
     }
-
 
     // don't support
     if (m_config.EnableMicrophone)
