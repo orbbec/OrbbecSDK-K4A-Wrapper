@@ -44,6 +44,8 @@ int main(int argc, char **argv)
     config.depth_mode = K4A_DEPTH_MODE_NFOV_UNBINNED;
     config.camera_fps = K4A_FRAMES_PER_SECOND_25;
 
+    config.synchronized_images_only = true;
+
     if (K4A_RESULT_SUCCEEDED != k4a_device_start_cameras(device, &config))
     {
         printf("Failed to start device\n");
