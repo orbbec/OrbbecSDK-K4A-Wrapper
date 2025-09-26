@@ -42,6 +42,7 @@ public:
     void PushBottomDockControl(std::unique_ptr<IK4ADockControl> &&dockControl);
 
     void ShowAll();
+    void CloseAll();
 
     K4AWindowManager(const K4AWindowManager &) = delete;
     K4AWindowManager &operator=(const K4AWindowManager &) = delete;
@@ -55,8 +56,7 @@ private:
         WindowListEntry() : IsWindowGroup(true) {}
 
         WindowListEntry(std::unique_ptr<IK4AVisualizationWindow> &&window) :
-            IsWindowGroup(false),
-            Window(std::move(window))
+            IsWindowGroup(false), Window(std::move(window))
         {
         }
 

@@ -38,6 +38,7 @@ public:
     K4AWindowDock(Edge edge);
     void PushDockControl(std::unique_ptr<IK4ADockControl> &&dockControl);
     void Show(ImVec2 regionPosition, ImVec2 regionSize);
+    void ClearDockControls();
     ImVec2 GetSize();
 
 private:

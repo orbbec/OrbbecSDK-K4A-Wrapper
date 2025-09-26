@@ -222,6 +222,8 @@ void K4AViewer::Run()
 
         glfwSwapBuffers(m_window);
     }
+
+    K4AWindowManager::Instance().CloseAll();
 }
 
 void K4AViewer::ShowMainMenuBar()

@@ -14,6 +14,7 @@
 //
 #include "k4aimgui_all.h"
 #include "k4awindowsizehelpers.h"
+#include "k4adevicedockcontrol.h"
 
 // Project headers
 //
@@ -219,6 +220,14 @@ void K4AWindowDock::Show(ImVec2 regionPosition, ImVec2 regionSize)
         }
 
         SetSize(newSize);
+    }
+}
+
+void K4AWindowDock::ClearDockControls()
+{
+    while (!m_dockControls.empty())
+    {
+        m_dockControls.pop();
     }
 }
 

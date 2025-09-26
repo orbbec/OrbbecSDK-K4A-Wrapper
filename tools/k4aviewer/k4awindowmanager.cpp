@@ -70,6 +70,13 @@ void K4AWindowManager::PushBottomDockControl(std::unique_ptr<IK4ADockControl> &&
     m_bottomDock.PushDockControl(std::move(dockControl));
 }
 
+void K4AWindowManager::CloseAll()
+{
+    m_leftDock.ClearDockControls();
+    m_bottomDock.ClearDockControls();
+    ClearWindows();
+}
+
 void K4AWindowManager::ShowAll()
 {
     const ImVec2 leftDockRegionPos(0.f, m_menuBarHeight);
