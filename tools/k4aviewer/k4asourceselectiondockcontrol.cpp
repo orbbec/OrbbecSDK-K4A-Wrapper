@@ -112,7 +112,8 @@ void K4ASourceSelectionDockControl::RefreshDevices()
     // if (audioRefreshStatus != SoundIoErrorNone)
     // {
     //     std::stringstream errorBuilder;
-    //     errorBuilder << "Failed to refresh audio devices: " << soundio_strerror(audioRefreshStatus) << "!" << std::endl
+    //     errorBuilder << "Failed to refresh audio devices: " << soundio_strerror(audioRefreshStatus) << "!" <<
+    //     std::endl
     //                  << "Attempting to open microphones may fail!";
 
     //     K4AViewerErrorManager::Instance().SetErrorStatus(errorBuilder.str());
@@ -130,6 +131,12 @@ void K4ASourceSelectionDockControl::OpenDevice()
         }
 
         k4a::device device = k4a::device::open(static_cast<uint32_t>(m_selectedDevice));
+        if (!k4a::device::is_accessible(static_cast<uint32_t>(m_selectedDevice)))
+        {
+            K4AViewerErrorManager::Instance().SetErrorStatus(
+                "Unable to open the selected device. Please check the connection!");
+            return;
+        }
         K4AWindowManager::Instance().PushLeftDockControl(std14::make_unique<K4ADeviceDockControl>(std::move(device)));
     }
     catch (const k4a::error &e)

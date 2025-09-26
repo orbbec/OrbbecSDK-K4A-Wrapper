@@ -33,21 +33,21 @@ extern "C" {
  * @{
  */
 
-
 /** set the directory for OrbbecSDK extensions
  *
- * \remarks In platforms such as Unity, the executable file's location is typically regarded as the current directory. When the OrbbecSDK and the executable file
- *  are not situated in the same directory, it is likely that the OrbbecSDK will fail to locate the extensions within the same directory as itself. In the event
- *  of this occurrence, please utilize this interface to designate the path of the extensions library.
+ * \remarks In platforms such as Unity, the executable file's location is typically regarded as the current directory.
+ * When the OrbbecSDK and the executable file are not situated in the same directory, it is likely that the OrbbecSDK
+ * will fail to locate the extensions within the same directory as itself. In the event of this occurrence, please
+ * utilize this interface to designate the path of the extensions library.
  *
- * \xmlonly 
+ * \xmlonly
  * <requirements>
  *   <requirement name="Header">k4a.h (include k4a/k4a.h)</requirement>
  *   <requirement name="Library">k4a.lib</requirement>
  *   <requirement name="DLL">k4a.dll</requirement>
  * </requirements>
  * \endxmlonly
-*/
+ */
 K4A_EXPORT void k4a_set_orbbec_extensions_directory(const char *directory);
 
 /** get device pid
@@ -61,9 +61,8 @@ K4A_EXPORT void k4a_set_orbbec_extensions_directory(const char *directory);
  *   <requirement name="DLL">k4a.dll</requirement>
  * </requirements>
  * \endxmlonly
-*/
+ */
 K4A_EXPORT int k4a_device_get_pid(k4a_device_t device);
-
 
 /** get device sync mode
  *
@@ -78,7 +77,7 @@ K4A_EXPORT int k4a_device_get_pid(k4a_device_t device);
  *   <requirement name="DLL">k4a.dll</requirement>
  * </requirements>
  * \endxmlonly
-*/
+ */
 K4A_EXPORT k4a_wired_sync_mode_t k4a_device_get_wired_sync_mode(k4a_device_t device);
 
 /** enable/disable soft filter for depth camera
@@ -98,7 +97,7 @@ K4A_EXPORT k4a_wired_sync_mode_t k4a_device_get_wired_sync_mode(k4a_device_t dev
  *   <requirement name="DLL">k4a.dll</requirement>
  * </requirements>
  * \endxmlonly
-*/
+ */
 K4A_EXPORT k4a_result_t k4a_device_enable_soft_filter(k4a_device_t device_handle, bool enable);
 
 /** switch device clock sync mode
@@ -110,12 +109,14 @@ K4A_EXPORT k4a_result_t k4a_device_enable_soft_filter(k4a_device_t device_handle
  * Device clock synchronization mode
  *
  * \param param
- * If timestamp_mode is K4A_DEVICE_CLOCK_SYNC_MODE_RESET: The delay time of executing the timestamp reset function after receiving the command or signal in microseconds.
- * If timestamp_mode is K4A_DEVICE_CLOCK_SYNC_MODE_SYNC: The interval for auto-repeated synchronization, in microseconds. If the value is 0, synchronization is performed only once.
+ * If timestamp_mode is K4A_DEVICE_CLOCK_SYNC_MODE_RESET: The delay time of executing the timestamp reset function after
+ * receiving the command or signal in microseconds. If timestamp_mode is K4A_DEVICE_CLOCK_SYNC_MODE_SYNC: The interval
+ * for auto-repeated synchronization, in microseconds. If the value is 0, synchronization is performed only once.
  *
  * \remarks This API is used for device clock synchronization mode switching.
  *
- * \remarks It is necessary to ensure that the mode switching of all devices is completed before any device start_cameras.
+ * \remarks It is necessary to ensure that the mode switching of all devices is completed before any device
+ * start_cameras.
  *
  * \remarks It is necessary to ensure that the master and slave devices are configured in the same mode.
  *
@@ -126,12 +127,15 @@ K4A_EXPORT k4a_result_t k4a_device_enable_soft_filter(k4a_device_t device_handle
  *   <requirement name="DLL">k4a.dll</requirement>
  * </requirements>
  * \endxmlonly
-*/
-K4A_EXPORT k4a_result_t k4a_device_switch_device_clock_sync_mode(k4a_device_t device_handle, k4a_device_clock_sync_mode_t timestamp_mode, uint32_t param);
+ */
+K4A_EXPORT k4a_result_t k4a_device_switch_device_clock_sync_mode(k4a_device_t device_handle,
+                                                                 k4a_device_clock_sync_mode_t timestamp_mode,
+                                                                 uint32_t param);
 
 /** create depthengine helper
  *
- * \remarks This API is currently mainly used to initialize depthengine, This function only needs to be called when on the Linux platform
+ * \remarks This API is currently mainly used to initialize depthengine, This function only needs to be called when on
+ * the Linux platform
  *
  * \xmlonly
  * <requirements>
@@ -140,8 +144,8 @@ K4A_EXPORT k4a_result_t k4a_device_switch_device_clock_sync_mode(k4a_device_t de
  *   <requirement name="DLL">k4a.dll</requirement>
  * </requirements>
  * \endxmlonly
-*/
-K4A_EXPORT k4a_result_t k4a_depth_engine_helper_create(k4a_depthengine_t* handle);
+ */
+K4A_EXPORT k4a_result_t k4a_depth_engine_helper_create(k4a_depthengine_t *handle);
 
 /** release depthengine helper
  *
@@ -154,7 +158,7 @@ K4A_EXPORT k4a_result_t k4a_depth_engine_helper_create(k4a_depthengine_t* handle
  *   <requirement name="DLL">k4a.dll</requirement>
  * </requirements>
  * \endxmlonly
-*/
+ */
 K4A_EXPORT void k4a_depth_engine_helper_release(k4a_depthengine_t handle);
 
 /** Gets the number of connected devices
@@ -175,6 +179,32 @@ K4A_EXPORT void k4a_depth_engine_helper_release(k4a_depthengine_t handle);
  * \endxmlonly
  */
 K4A_EXPORT uint32_t k4a_device_get_installed_count(void);
+
+/** Check whether the device at the specified index is accessible.
+ *
+ * \param index
+ * The zero-based index of the device to check. Valid indices are in the range of
+ * [0, k4a_device_get_installed_count()).
+ *
+ * \return
+ * - ::K4A_RESULT_SUCCEEDED if the device is present and can be accessed.
+ * - ::K4A_RESULT_FAILED if the device cannot be accessed (e.g. disconnected, in use, or unavailable).
+ *
+ * \relates k4a_device_t
+ *
+ * \remarks
+ * This function performs a lightweight check and does not keep the device opened.
+ * Use it to verify accessibility before calling ::k4a_device_open.
+ *
+ * \xmlonly
+ * <requirements>
+ *   <requirement name="Header">k4a.h (include k4a/k4a.h)</requirement>
+ *   <requirement name="Library">k4a.lib</requirement>
+ *   <requirement name="DLL">k4a.dll</requirement>
+ * </requirements>
+ * \endxmlonly
+ */
+K4A_EXPORT k4a_result_t k4a_device_check_accessibility(uint32_t index);
 
 /** Sets and clears the callback function to receive debug messages from the Azure Kinect device.
  *

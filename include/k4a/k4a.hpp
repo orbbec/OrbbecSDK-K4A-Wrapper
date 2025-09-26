@@ -27,22 +27,22 @@ namespace k4a
  * @{
  */
 
-
 /** \class context_helper k4a.hpp <k4a/k4a.hpp>
  * Set the directory for OrbbecSDK extensions
  *
- * \remarks The extensions directory is used to search for dynamic libraries that provide additional functionality to the SDK， such as the Frame filters.
- * \remarks In platforms such as Unity, the executable file's location is typically regarded as the current directory. When the OrbbecSDK and the executable file
- *  are not situated in the same directory, it is likely that the OrbbecSDK will fail to locate the extensions within the same directory as itself. In the event
+ * \remarks The extensions directory is used to search for dynamic libraries that provide additional functionality to
+ * the SDK， such as the Frame filters. \remarks In platforms such as Unity, the executable file's location is typically
+ * regarded as the current directory. When the OrbbecSDK and the executable file are not situated in the same directory,
+ * it is likely that the OrbbecSDK will fail to locate the extensions within the same directory as itself. In the event
  *  of this occurrence, please utilize this interface to designate the path of the extensions library.
-*/
+ */
 struct context_helper
 {
-    static void setObExtensionsDirectory(std::string directory){
+    static void setObExtensionsDirectory(std::string directory)
+    {
         k4a_set_orbbec_extensions_directory(directory.c_str());
     }
 };
-
 
 /** Exception type thrown when a K4A API call fails
  */
@@ -58,17 +58,19 @@ public:
  * \sa k4a_transformation_t
  *
  * \remarks This function only needs to be called when on the Linux platform
-*/
-class depth_engine_helper{
+ */
+class depth_engine_helper
+{
 public:
-
     depth_engine_helper(k4a_depthengine_t handle) : m_handle(handle) {}
 
-    ~depth_engine_helper(){
+    ~depth_engine_helper()
+    {
         release();
     }
 
-    static depth_engine_helper create(){
+    static depth_engine_helper create()
+    {
         k4a_depthengine_t handle = nullptr;
         k4a_result_t result = k4a_depth_engine_helper_create(&handle);
 
@@ -76,11 +78,13 @@ public:
         {
             throw error("Failed to create depthengine handle!");
         }
-       return depth_engine_helper(handle);
+        return depth_engine_helper(handle);
     }
 
-    void release(){
-        if(m_handle){
+    void release()
+    {
+        if (m_handle)
+        {
             k4a_depth_engine_helper_release(m_handle);
             m_handle = nullptr;
         }
@@ -1379,10 +1383,12 @@ public:
                                         int32_t *max_value,
                                         int32_t *step_value,
                                         int32_t *default_value,
-                                        k4a_color_control_mode_t *default_mode) {
+                                        k4a_color_control_mode_t *default_mode)
+    {
 
-        k4a_result_t result = k4a_device_get_color_control_capabilities(m_handle, command, supports_auto, min_value, max_value, step_value, default_value, default_mode);
-        if (K4A_RESULT_SUCCEEDED!= result)
+        k4a_result_t result = k4a_device_get_color_control_capabilities(
+            m_handle, command, supports_auto, min_value, max_value, step_value, default_value, default_mode);
+        if (K4A_RESULT_SUCCEEDED != result)
         {
             throw error("Failed to read color control capabilities!");
         }
@@ -1461,14 +1467,16 @@ public:
     /** Get the device jack status for the synchronization in connector
      * Throws error on failure.
      *
-     * \attention Orbbec cameras must preset the synchronization mode in advance, which can be achieved through k4aviewer advance preset,
-     * This synchronization mode is implemented using the mapping orbbecsdk synchronization mode.
+     * \attention Orbbec cameras must preset the synchronization mode in advance, which can be achieved through
+     * k4aviewer advance preset, This synchronization mode is implemented using the mapping orbbecsdk synchronization
+     * mode.
      *
      * \sa k4a_device_get_sync_jack
      */
     bool is_sync_in_connected() const
     {
-        if(k4a_device_get_wired_sync_mode(m_handle) == K4A_WIRED_SYNC_MODE_SUBORDINATE){
+        if (k4a_device_get_wired_sync_mode(m_handle) == K4A_WIRED_SYNC_MODE_SUBORDINATE)
+        {
             return true;
         }
         return false;
@@ -1477,17 +1485,45 @@ public:
     /** Get the device jack status for the synchronization out connector
      * Throws error on failure.
      *
-     * \attention Orbbec cameras must preset the synchronization mode in advance, which can be achieved through k4aviewer advance preset,
-     * This synchronization mode is implemented using the mapping orbbecsdk synchronization mode.
+     * \attention Orbbec cameras must preset the synchronization mode in advance, which can be achieved through
+     * k4aviewer advance preset, This synchronization mode is implemented using the mapping orbbecsdk synchronization
+     * mode.
      *
      * \sa k4a_device_get_sync_jack
      */
     bool is_sync_out_connected() const
     {
-        if(k4a_device_get_wired_sync_mode(m_handle) == K4A_WIRED_SYNC_MODE_MASTER){
+        if (k4a_device_get_wired_sync_mode(m_handle) == K4A_WIRED_SYNC_MODE_MASTER)
+        {
             return true;
         }
         return false;
+    }
+
+    /** Determine whether the device at the specified index is accessible.
+     *
+     * \param index
+     * Device index, in the range [0, k4a::device::get_installed_count()).
+     *
+     * \retval true
+     * The device is accessible.
+     *
+     * \retval false
+     * The device is not accessible.
+     *
+     * \sa k4a_device_check_accessibility
+     */
+    static bool is_accessible(uint32_t index)
+    {
+        k4a_result_t result = k4a_device_check_accessibility(index);
+        if (result == K4A_RESULT_SUCCEEDED)
+        {
+            return true;
+        }
+        else
+        {
+            return false;
+        }
     }
 
     /** Get the version numbers of the K4A subsystems' firmware
@@ -1532,28 +1568,33 @@ public:
     {
         return k4a_device_get_installed_count();
     }
+
     /**
      * @brief switch the device clock sync mode object
      *
      * \sa k4a_device_switch_device_clock_sync_mode
      */
-    void switch_device_clock_sync_mode(k4a_device_clock_sync_mode_t timestamp_mode, int param){
-        k4a_result_t result =  k4a_device_switch_device_clock_sync_mode(m_handle, timestamp_mode, param);
+    void switch_device_clock_sync_mode(k4a_device_clock_sync_mode_t timestamp_mode, int param)
+    {
+        k4a_result_t result = k4a_device_switch_device_clock_sync_mode(m_handle, timestamp_mode, param);
         if (K4A_RESULT_SUCCEEDED != result)
         {
             throw error("Failed to switch device clock sync mode!");
         }
     }
 
-    void set_soft_filter(bool filter_switch){
+    void set_soft_filter(bool filter_switch)
+    {
         k4a_device_enable_soft_filter(m_handle, filter_switch);
     }
 
-    k4a_wired_sync_mode_t get_wired_sync_mode(){
+    k4a_wired_sync_mode_t get_wired_sync_mode()
+    {
         return k4a_device_get_wired_sync_mode(m_handle);
     }
 
-    int get_pid(){
+    int get_pid()
+    {
         return k4a_device_get_pid(m_handle);
     }
 
