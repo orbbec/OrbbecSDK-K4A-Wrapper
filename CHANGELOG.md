@@ -1,16 +1,36 @@
 ## Change Log
+# release v1.10.5
+1. Update Orbbec SDK version to v1.10.28.
+2. Fixed a memory leak caused by frequently opening and closing the device.
 
-# release v1.10.1
+# release v1.10.4 
+1. Update Orbbec SDK version to v1.10.18.
+2. Added support for 4K resolution in MJPEG format on the Femto Mega network.
+3. Added Device Reboot interface.
+
+# release v1.10.3
+1.Adapt to Femto Mega I;
+2.Fix the playback issue of K4aViewer;
+3.Correct the IMU data of Femto Bolt.
+
+
+# release v1.10.2
 1.adjust imu queue default size;
 2.adapt to image related Interface;
 3.remove excess compilation items;
 4.palyback pre-init ob_context;
 5.adjust the order of IMU starting;
-6.adapt to mega-i device;
-7.update orbbecsdk version to last.
+6.update orbbecsdk version to last.
 
 # release v1.10.1
-1. update orbbecsdk version to v1.10.5.
+1.update orbbecsdk version to v1.10.5.
+2.adjust imu queue default size;
+3.adapt to image related Interface;
+4.remove excess compilation items;
+5.playback pre-init ob_context;
+6.adjust the order of IMU starting;
+7.adapt to mega-i device;
+8.update orbbecsdk version to last.
 
 # release v1.9.4
 1. update orbbecsdk version to v1.10.2;

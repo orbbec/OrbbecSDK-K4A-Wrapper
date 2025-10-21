@@ -22,7 +22,7 @@ extern "C" {
 
 #define WRAPPER_VERSION_MAJOR 1
 #define WRAPPER_VERSION_MINOR 10
-#define WRAPPER_VERSION_PATCH 4
+#define WRAPPER_VERSION_PATCH 5
 
 /**
  * \defgroup Functions Functions
@@ -45,7 +45,7 @@ extern "C" {
  *   <requirement name="DLL">k4a.dll</requirement>
  * </requirements>
  * \endxmlonly
-*/
+ */
 K4A_EXPORT k4a_result_t k4a_device_reboot(k4a_device_t device);
 
 /** get device pid
@@ -59,9 +59,8 @@ K4A_EXPORT k4a_result_t k4a_device_reboot(k4a_device_t device);
  *   <requirement name="DLL">k4a.dll</requirement>
  * </requirements>
  * \endxmlonly
-*/
+ */
 K4A_EXPORT int k4a_device_get_pid(k4a_device_t device);
-
 
 /** get device sync mode
  *
@@ -76,7 +75,7 @@ K4A_EXPORT int k4a_device_get_pid(k4a_device_t device);
  *   <requirement name="DLL">k4a.dll</requirement>
  * </requirements>
  * \endxmlonly
-*/
+ */
 K4A_EXPORT k4a_wired_sync_mode_t k4a_device_get_wired_sync_mode(k4a_device_t device);
 
 /** enable/disable soft filter for depth camera
@@ -96,7 +95,7 @@ K4A_EXPORT k4a_wired_sync_mode_t k4a_device_get_wired_sync_mode(k4a_device_t dev
  *   <requirement name="DLL">k4a.dll</requirement>
  * </requirements>
  * \endxmlonly
-*/
+ */
 K4A_EXPORT k4a_result_t k4a_device_enable_soft_filter(k4a_device_t device_handle, bool enable);
 
 /** switch device clock sync mode
@@ -108,12 +107,14 @@ K4A_EXPORT k4a_result_t k4a_device_enable_soft_filter(k4a_device_t device_handle
  * Device clock synchronization mode
  *
  * \param param
- * If timestamp_mode is K4A_DEVICE_CLOCK_SYNC_MODE_RESET: The delay time of executing the timestamp reset function after receiving the command or signal in microseconds.
- * If timestamp_mode is K4A_DEVICE_CLOCK_SYNC_MODE_SYNC: The interval for auto-repeated synchronization, in microseconds. If the value is 0, synchronization is performed only once.
+ * If timestamp_mode is K4A_DEVICE_CLOCK_SYNC_MODE_RESET: The delay time of executing the timestamp reset function after
+ * receiving the command or signal in microseconds. If timestamp_mode is K4A_DEVICE_CLOCK_SYNC_MODE_SYNC: The interval
+ * for auto-repeated synchronization, in microseconds. If the value is 0, synchronization is performed only once.
  *
  * \remarks This API is used for device clock synchronization mode switching.
  *
- * \remarks It is necessary to ensure that the mode switching of all devices is completed before any device start_cameras.
+ * \remarks It is necessary to ensure that the mode switching of all devices is completed before any device
+ * start_cameras.
  *
  * \remarks It is necessary to ensure that the master and slave devices are configured in the same mode.
  *
@@ -124,12 +125,15 @@ K4A_EXPORT k4a_result_t k4a_device_enable_soft_filter(k4a_device_t device_handle
  *   <requirement name="DLL">k4a.dll</requirement>
  * </requirements>
  * \endxmlonly
-*/
-K4A_EXPORT k4a_result_t k4a_device_switch_device_clock_sync_mode(k4a_device_t device_handle, k4a_device_clock_sync_mode_t timestamp_mode, uint32_t param);
+ */
+K4A_EXPORT k4a_result_t k4a_device_switch_device_clock_sync_mode(k4a_device_t device_handle,
+                                                                 k4a_device_clock_sync_mode_t timestamp_mode,
+                                                                 uint32_t param);
 
 /** create depthengine helper
  *
- * \remarks This API is currently mainly used to initialize depthengine, This function only needs to be called when on the Linux platform
+ * \remarks This API is currently mainly used to initialize depthengine, This function only needs to be called when on
+ * the Linux platform
  *
  * \xmlonly
  * <requirements>
@@ -138,8 +142,8 @@ K4A_EXPORT k4a_result_t k4a_device_switch_device_clock_sync_mode(k4a_device_t de
  *   <requirement name="DLL">k4a.dll</requirement>
  * </requirements>
  * \endxmlonly
-*/
-K4A_EXPORT k4a_result_t k4a_depth_engine_helper_create(k4a_depthengine_t* handle);
+ */
+K4A_EXPORT k4a_result_t k4a_depth_engine_helper_create(k4a_depthengine_t *handle);
 
 /** release depthengine helper
  *
@@ -152,7 +156,7 @@ K4A_EXPORT k4a_result_t k4a_depth_engine_helper_create(k4a_depthengine_t* handle
  *   <requirement name="DLL">k4a.dll</requirement>
  * </requirements>
  * \endxmlonly
-*/
+ */
 K4A_EXPORT void k4a_depth_engine_helper_release(k4a_depthengine_t handle);
 
 /** Gets the number of connected devices

@@ -1,17 +1,16 @@
-# release v1.10.1
-1.adjust imu queue default size;
-2.adapt to image related Interface;
-3.remove excess compilation items;
-4.palyback pre-init ob_context;
-5.adjust the order of IMU starting;
-6.adapt to mega-i device;
-7.update orbbecsdk version to last.
+# release v1.10.5
+1. Update Orbbec SDK version to v1.10.28.
+2. Fixed a memory leak caused by frequently opening and closing the device.
 
 ## Product support
-| **products list** | **firmware version** |**platform**|
-| --- | --- | --- |
-| Orbbec Femto Bolt  | 1.0.6/1.0.9/1.1.1  |Windows10+, Ubuntu18.04+ |
-| Orbbec Femto Mega  | 1.1.5/1.1.7/1.2.8  |Windows10+, Ubuntu20.04+ |
+| **products list** | **Minimal Firmware Version** |**platform**|**Notes**|
+| --- | --- | --- |  ---|
+| Orbbec Femto Bolt  | 1.0.6  |Windows10+, Ubuntu18.04+ |        |
+| Orbbec Femto Mega  | 1.1.7  |Windows10+, Ubuntu20.04+ |        |
+| Orbbec Femto Mega I  | 2.0.2  |Windows10+, Ubuntu18.04+ | closed-source OrbbecSDK version(v1.x.x) only supports firmware below v2.0.4    |
+
+
+
 ## Catalog Introduction
 - /
   - bin : Executable files and dynamic loading libraries
