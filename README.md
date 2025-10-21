@@ -44,7 +44,6 @@ Here is the device support list of main branch (Orbbec SDK v1) and v2-main branc
   </tbody>
 </table>
 
-**Note**: If you do not find your device, please contact our FAE or sales representative for help.
 
 **Definition**:
 
