@@ -20,8 +20,8 @@ Here is the device support list of main branch (Orbbec SDK v1) and v2-main branc
     <tr style="background-color: #1f4e78; color: white; text-align: center;">
       <th>Product Series</th>
       <th>Product</th>
-      <th><a href="https://github.com/orbbec/pyorbbecsdk/tree/main" style="color: black; text-decoration: none;">Branch main</a></th>
-      <th><a href="https://github.com/orbbec/pyorbbecsdk/tree/v2-main" style="color: black; text-decoration: none;">Branch v2-main</a></th>
+      <th><a href="https://github.com/orbbec/OrbbecSDK-K4A-Wrapper/tree/main" style="color: black; text-decoration: none;">Branch main</a></th>
+      <th><a href="https://github.com/orbbec/OrbbecSDK-K4A-Wrapper/tree/v2-main" style="color: black; text-decoration: none;">Branch v2-main</a></th>
     </tr>
   </thead>
   <tbody>
