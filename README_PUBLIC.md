@@ -1,11 +1,14 @@
-# release v2.0.8
-1.update orbbecsdk version to v2.1.1
+# release v2.0.11
+TODO:
 
-## Product support
-| **products list** | **firmware version** |**platform**|
-| --- | --- | --- |
-| Orbbec Femto Bolt  | 1.0.6/1.0.9/1.1.1  |Windows10+, Ubuntu18.04+ |
-| Orbbec Femto Mega  | 1.1.5/1.1.7/1.2.8  |Windows10+, Ubuntu20.04+ |
+## Supported Devices
+
+| **Products List** | **Minimal Firmware Version** | **Recommended FW Version**    |
+|-------------------|------------------------------|-------------------------------|
+| Femto Bolt        | 1.1.2                  |              1.1.2                       |
+| Femto Mega        | 1.3.0                  |              1.3.1                       |
+| Femto Mega I        | 2.0.4                  |            2.0.4                     |
+
 ## Catalog Introduction
 - /
   - bin : Executable files and dynamic loading libraries

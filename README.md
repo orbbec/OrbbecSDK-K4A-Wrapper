@@ -8,6 +8,59 @@ Welcome to the Orbbec SDK K4A Wrapper!
 
 *The usage of this library is same as [Native K4A](./README_K4A.md)*
 
+> [!IMPORTANT]
+>
+> the v2-main branch is base on the [Orbbec SDK v2](https://github.com/orbbec/OrbbecSDK_v2),  Orbbec SDK v2 is an open-source cross-platform SDK library based on Orbbec RGB-D cameras. The differences between Orbbec SDK v2 and [Orbbec SDK v1](https://github.com/orbbec/OrbbecSDK) can be found in the [README](https://github.com/orbbec/OrbbecSDK_v2). Before you begin using this version of K4a Wrapper, it's crucial to check the following device support list to verify the compatibility.
+
+
+Here is the device support list of main branch (Orbbec SDK v1) and v2-main branch (Orbbec SDK v2):
+
+<table border="1" style="border-collapse: collapse; text-align: left; width: 100%;">
+  <thead>
+    <tr style="background-color: #1f4e78; color: white; text-align: center;">
+      <th>Product Series</th>
+      <th>Product</th>
+      <th><a href="https://github.com/orbbec/pyorbbecsdk/tree/main" style="color: black; text-decoration: none;">Branch main</a></th>
+      <th><a href="https://github.com/orbbec/pyorbbecsdk/tree/v2-main" style="color: black; text-decoration: none;">Branch v2-main</a></th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td rowspan="3" style="text-align: center; font-weight: bold;">Femto</td>
+      <td>Femto Bolt</td>
+      <td>full maintenance</td>
+      <td>recommended for new designs</td>
+    </tr>
+    <tr>
+      <td>Femto Mega</td>
+      <td>full maintenance</td>
+      <td>recommended for new designs</td>
+    </tr>
+    <tr>
+      <td>Femto Mega I</td>
+      <td>full maintenance</td>
+      <td>recommended for new designs</td>
+    </tr>
+  </tbody>
+</table>
+
+**Note**: If you do not find your device, please contact our FAE or sales representative for help.
+
+**Definition**:
+
+1. recommended for new designs: we will provide full supports with new features,  bug fix and performance optimization;
+2. full maintenance: we will provide bug fix support;
+
+
+## Supported Devices
+
+
+| **Products List** | **Minimal Firmware Version** | **Recommended FW Version**    |
+|-------------------|------------------------------|-------------------------------|
+| Femto Bolt        | 1.1.2                  |              1.1.2                       |
+| Femto Mega        | 1.3.0                  |              1.3.1                       |
+| Femto Mega I        | 2.0.4                  |            2.0.4                     |
+
 ## Introduction
 
 This repository contains the K4A wrapper for Orbbec SDK, allowing users to develop applications using the K4A API and access Orbbec cameras. Additionally, users can replace the native K4A library in their application with this library without any code changes.
@@ -149,13 +202,6 @@ git submodule update --init --recursive
 * API documentation: [https://orbbec.github.io/docs/OrbbecSDK_K4A_Wrapper](https://orbbec.github.io/docs/OrbbecSDK_K4A_Wrapper).
 * Github pages: [https://orbbec.github.io/OrbbecSDK-K4A-Wrapper/](https://orbbec.github.io/OrbbecSDK-K4A-Wrapper/).
 * How to seamlessly replace the Azure Kinect camera with the Femto camera: [Access_AKDK_Application_Software_with_Femto_Bolt.pdf](https://orbbec.github.io/OrbbecSDK-K4A-Wrapper/src/orbbec/docs/Access_AKDK_Application_Software_with_Femto_Bolt.pdf)
-
-## Versioning
-
-| **products list** | **firmware version** |**windows platform**|**linux platform**|
-| --- | --- | --- | --- |
-| Orbbec Femto Bolt  | 1.0.6/1.0.9/1.1.1  |Windows10, Windows11 | Ubuntu18.04, Ubuntu20.04, Ubuntu22.04|
-| Orbbec Femto Mega  | 1.1.5/1.1.7/1.2.8  |Windows10, Windows11 | Ubuntu20.04, Ubuntu22.04|
 
 
 ## Testing
