@@ -51,6 +51,11 @@ Here is the device support list of main branch (Orbbec SDK v1) and v2-main branc
 2. full maintenance: we will provide bug fix support;
 
 
+## Supported Platforms
+- Windows 10 or later: x86 and x64 architectures
+- Linux x64: tested on Ubuntu 18.04,Ubuntu 20.04 and 22.04
+- Linux ARM64: tested on NVIDIA Jetson AGX Orin , NVIDIA Jetson Orin NX , NVIDIA Jetson Orin Nano , NVIDIA Jetson AGX Xavier , NVIDIA Jetson Xavier NX
+
 ## Supported Devices
 
 
@@ -198,7 +203,7 @@ git submodule update --init --recursive
 
 ## Documentation
 
-* API documentation: [https://orbbec.github.io/docs/OrbbecSDK_K4A_Wrapper](https://orbbec.github.io/docs/OrbbecSDK_K4A_Wrapper).
+* API documentation: [https://orbbec.github.io/docs/OrbbecSDK_K4A_Wrapper/main/index.html](https://orbbec.github.io/docs/OrbbecSDK_K4A_Wrapper/main/index.html).
 * Github pages: [https://orbbec.github.io/OrbbecSDK-K4A-Wrapper/](https://orbbec.github.io/OrbbecSDK-K4A-Wrapper/).
 * How to seamlessly replace the Azure Kinect camera with the Femto camera: [Access_AKDK_Application_Software_with_Femto_Bolt.pdf](https://orbbec.github.io/OrbbecSDK-K4A-Wrapper/src/orbbec/docs/Access_AKDK_Application_Software_with_Femto_Bolt.pdf)
 
