@@ -475,52 +475,258 @@ k4a_result_t update_imu_raw_calibration_data_from_orbbec_sdk(k4a_device_context_
     }
 
     ob_error *ob_err = NULL;
-    ob_calibration_param calibration_param = ob_pipeline_get_calibration_param(device_ctx->pipe, nullptr, &ob_err);
-    CHECK_OB_ERROR_RETURN_K4A_RESULT(&ob_err);
+    ob_error *accel_ob_err = NULL;
+    ob_error *gyro_ob_err = NULL;
 
-    std::string calibration_json_str = device_ctx->json->calibration_json;
-    // gyro
-    size_t offset = calibration_json_str.find("CALIBRATION_InertialSensorId_LSM6DSM", 0);
-    size_t begin = calibration_json_str.find("\"Rt\": {\"Rotation\": [", offset);
-    size_t end = calibration_json_str.find("]},", begin) + 3;
+    // Get IMU extrinsics directly from sensor stream profiles instead of ob_pipeline_get_calibration_param,
+    // because the pipeline-based approach requires a valid Config, but K4A starts IMU separately via
+    // ob_sensor_start() without Config. The sensor-based approach queries the extrinsics graph that
+    // was already populated during device initialization (AlgParamManager::registerBasicExtrinsics).
 
-    k4a_calibration_extrinsics_t *depth_to_gyro_extrinsics =
-        (k4a_calibration_extrinsics_t *)&calibration_param.extrinsics[OB_SENSOR_DEPTH][OB_SENSOR_ACCEL];
+    ob_sensor *depth_sensor = NULL;
+    ob_stream_profile_list *depth_profile_list = NULL;
+    ob_stream_profile *depth_profile = NULL;
 
-    std::stringstream ss;
-    ss << "\"Rt\": {\"Rotation\": [" << depth_to_gyro_extrinsics->rotation[0] << ","
-       << depth_to_gyro_extrinsics->rotation[1] << "," << depth_to_gyro_extrinsics->rotation[2] << ","
-       << depth_to_gyro_extrinsics->rotation[3] << "," << depth_to_gyro_extrinsics->rotation[4] << ","
-       << depth_to_gyro_extrinsics->rotation[5] << "," << depth_to_gyro_extrinsics->rotation[6] << ","
-       << depth_to_gyro_extrinsics->rotation[7] << "," << depth_to_gyro_extrinsics->rotation[8]
-       << "], \"Translation\": [" << depth_to_gyro_extrinsics->translation[0] / 1000.f << ","
-       << depth_to_gyro_extrinsics->translation[1] / 1000.f << "," << depth_to_gyro_extrinsics->translation[2] / 1000.f
-       << "]},";
-    calibration_json_str.replace(begin, end - begin, ss.str());
+    ob_sensor *accel_sensor = NULL;
+    ob_stream_profile_list *accel_profile_list = NULL;
+    ob_stream_profile *accel_profile = NULL;
 
-    // accel
-    offset = calibration_json_str.find("CALIBRATION_InertialSensorId_LSM6DSM", begin);
-    begin = calibration_json_str.find("\"Rt\": {\"Rotation\": [", offset);
-    end = calibration_json_str.find("]},", begin) + 3;
+    ob_sensor *gyro_sensor = NULL;
+    ob_stream_profile_list *gyro_profile_list = NULL;
+    ob_stream_profile *gyro_profile = NULL;
 
-    k4a_calibration_extrinsics_t *depth_to_accel_extrinsics =
-        (k4a_calibration_extrinsics_t *)&calibration_param.extrinsics[OB_SENSOR_DEPTH][OB_SENSOR_ACCEL];
-    std::stringstream ss2;
-    ss2 << "\"Rt\": {\"Rotation\": [" << depth_to_accel_extrinsics->rotation[0] << ","
-        << depth_to_accel_extrinsics->rotation[1] << "," << depth_to_accel_extrinsics->rotation[2] << ","
-        << depth_to_accel_extrinsics->rotation[3] << "," << depth_to_accel_extrinsics->rotation[4] << ","
-        << depth_to_accel_extrinsics->rotation[5] << "," << depth_to_accel_extrinsics->rotation[6] << ","
-        << depth_to_accel_extrinsics->rotation[7] << "," << depth_to_accel_extrinsics->rotation[8]
-        << "], \"Translation\": [" << depth_to_accel_extrinsics->translation[0] / 1000.f << ","
-        << depth_to_accel_extrinsics->translation[1] / 1000.f << ","
-        << depth_to_accel_extrinsics->translation[2] / 1000.f << "]},";
-    calibration_json_str.replace(begin, end - begin, ss2.str());
+    do
+    {
+        // Get depth sensor and profile
+        depth_sensor = ob_device_get_sensor(device_ctx->device, OB_SENSOR_DEPTH, &ob_err);
+        CHECK_OB_ERROR_BREAK(&ob_err);
 
-    memcpy(device_ctx->json->calibration_json, calibration_json_str.c_str(), calibration_json_str.size());
-    device_ctx->json->calibration_json[calibration_json_str.size()] = '\0';
-    device_ctx->json->json_actual_size = (uint32_t)calibration_json_str.size();
+        depth_profile_list = ob_sensor_get_stream_profile_list(depth_sensor, &ob_err);
+        CHECK_OB_ERROR_BREAK(&ob_err);
 
-    result = K4A_RESULT_SUCCEEDED;
+        uint32_t depth_count = ob_stream_profile_list_count(depth_profile_list, &ob_err);
+        CHECK_OB_ERROR_BREAK(&ob_err);
+        if (depth_count == 0)
+        {
+            LOG_ERROR("depth_profile_list is empty", 0);
+            break;
+        }
+        depth_profile = ob_stream_profile_list_get_profile(depth_profile_list, 0, &ob_err);
+        CHECK_OB_ERROR_BREAK(&ob_err);
+
+        // Get accel sensor and profile (match same config as k4a_device_start_imu: 500Hz, 4g)
+        accel_sensor = ob_device_get_sensor(device_ctx->device, OB_SENSOR_ACCEL, &accel_ob_err);
+        if (accel_ob_err == NULL)
+        {
+            accel_profile_list = ob_sensor_get_stream_profile_list(accel_sensor, &accel_ob_err);
+            if (accel_ob_err == NULL)
+            {
+                uint32_t accel_count = ob_stream_profile_list_count(accel_profile_list, &accel_ob_err);
+                for (uint32_t i = 0; i < accel_count && accel_ob_err == NULL; i++)
+                {
+                    ob_stream_profile *candidate = ob_stream_profile_list_get_profile(accel_profile_list, i, &accel_ob_err);
+                    if (accel_ob_err != NULL)
+                    {
+                        break;
+                    }
+
+                    ob_accel_sample_rate accel_rate = ob_accel_stream_profile_sample_rate(candidate, &accel_ob_err);
+                    if (accel_ob_err != NULL)
+                    {
+                        ob_delete_stream_profile(candidate, &accel_ob_err);
+                        break;
+                    }
+
+                    ob_accel_full_scale_range accel_range = ob_accel_stream_profile_full_scale_range(candidate, &accel_ob_err);
+                    if (accel_ob_err != NULL)
+                    {
+                        ob_delete_stream_profile(candidate, &accel_ob_err);
+                        break;
+                    }
+
+                    if (accel_rate == OB_SAMPLE_RATE_500_HZ && accel_range == OB_ACCEL_FS_4g)
+                    {
+                        accel_profile = candidate;
+                        break;
+                    }
+
+                    ob_delete_stream_profile(candidate, &accel_ob_err);
+                }
+            }
+        }
+
+        // Get gyro sensor and profile (match same config as k4a_device_start_imu: 500Hz, 500dps)
+        gyro_sensor = ob_device_get_sensor(device_ctx->device, OB_SENSOR_GYRO, &gyro_ob_err);
+        if (gyro_ob_err == NULL)
+        {
+            gyro_profile_list = ob_sensor_get_stream_profile_list(gyro_sensor, &gyro_ob_err);
+            if (gyro_ob_err == NULL)
+            {
+                uint32_t gyro_count = ob_stream_profile_list_count(gyro_profile_list, &gyro_ob_err);
+                for (uint32_t i = 0; i < gyro_count && gyro_ob_err == NULL; i++)
+                {
+                    ob_stream_profile *candidate = ob_stream_profile_list_get_profile(gyro_profile_list, i, &gyro_ob_err);
+                    if (gyro_ob_err != NULL)
+                    {
+                        break;
+                    }
+
+                    ob_gyro_sample_rate gyro_rate = ob_gyro_stream_profile_sample_rate(candidate, &gyro_ob_err);
+                    if (gyro_ob_err != NULL)
+                    {
+                        ob_delete_stream_profile(candidate, &gyro_ob_err);
+                        break;
+                    }
+
+                    ob_gyro_full_scale_range gyro_range = ob_gyro_stream_profile_full_scale_range(candidate, &gyro_ob_err);
+                    if (gyro_ob_err != NULL)
+                    {
+                        ob_delete_stream_profile(candidate, &gyro_ob_err);
+                        break;
+                    }
+
+                    if (gyro_rate == OB_SAMPLE_RATE_500_HZ && gyro_range == OB_GYRO_FS_500dps)
+                    {
+                        gyro_profile = candidate;
+                        break;
+                    }
+
+                    ob_delete_stream_profile(candidate, &gyro_ob_err);
+                }
+            }
+        }
+
+        // Build calibration_param-like structure for the JSON replacement below
+        struct {
+            ob_extrinsic extrinsics[OB_SENSOR_TYPE_COUNT][OB_SENSOR_TYPE_COUNT];
+        } calibration_extrinsics;
+
+        // Initialize all to identity
+        for (int i = 0; i < OB_SENSOR_TYPE_COUNT; i++)
+        {
+            for (int j = 0; j < OB_SENSOR_TYPE_COUNT; j++)
+            {
+                float identity_rot[9] = {1, 0, 0, 0, 1, 0, 0, 0, 1};
+                memcpy(calibration_extrinsics.extrinsics[i][j].rot, identity_rot, sizeof(identity_rot));
+                memset(calibration_extrinsics.extrinsics[i][j].trans, 0, sizeof(float) * 3);
+            }
+        }
+
+        // Fill IMU extrinsics if profiles are available
+        if (accel_profile != NULL)
+        {
+            calibration_extrinsics.extrinsics[OB_SENSOR_ACCEL][OB_SENSOR_DEPTH] =
+                ob_stream_profile_get_extrinsic_to(accel_profile, depth_profile, &ob_err);
+            calibration_extrinsics.extrinsics[OB_SENSOR_DEPTH][OB_SENSOR_ACCEL] =
+                ob_stream_profile_get_extrinsic_to(depth_profile, accel_profile, &ob_err);
+        }
+
+        if (gyro_profile != NULL)
+        {
+            calibration_extrinsics.extrinsics[OB_SENSOR_GYRO][OB_SENSOR_DEPTH] =
+                ob_stream_profile_get_extrinsic_to(gyro_profile, depth_profile, &ob_err);
+            calibration_extrinsics.extrinsics[OB_SENSOR_DEPTH][OB_SENSOR_GYRO] =
+                ob_stream_profile_get_extrinsic_to(depth_profile, gyro_profile, &ob_err);
+        }
+
+        // If accel is available but gyro is not, reuse accel extrinsics for gyro
+        // (common on devices where gyro and accel share the same IMU chip)
+        if (gyro_profile == NULL && accel_profile != NULL)
+        {
+            calibration_extrinsics.extrinsics[OB_SENSOR_GYRO][OB_SENSOR_DEPTH] =
+                calibration_extrinsics.extrinsics[OB_SENSOR_ACCEL][OB_SENSOR_DEPTH];
+            calibration_extrinsics.extrinsics[OB_SENSOR_DEPTH][OB_SENSOR_GYRO] =
+                calibration_extrinsics.extrinsics[OB_SENSOR_DEPTH][OB_SENSOR_ACCEL];
+        }
+
+        std::string calibration_json_str = device_ctx->json->calibration_json;
+
+        // Replace gyro extrinsics in JSON
+        size_t offset = calibration_json_str.find("CALIBRATION_InertialSensorId_LSM6DSM", 0);
+        size_t begin = calibration_json_str.find("\"Rt\": {\"Rotation\": [", offset);
+        size_t end = calibration_json_str.find("]},", begin) + 3;
+
+        k4a_calibration_extrinsics_t *depth_to_gyro_extrinsics =
+            (k4a_calibration_extrinsics_t *)&calibration_extrinsics.extrinsics[OB_SENSOR_DEPTH][OB_SENSOR_GYRO];
+
+        std::stringstream ss;
+        ss << "\"Rt\": {\"Rotation\": [" << depth_to_gyro_extrinsics->rotation[0] << ","
+           << depth_to_gyro_extrinsics->rotation[1] << "," << depth_to_gyro_extrinsics->rotation[2] << ","
+           << depth_to_gyro_extrinsics->rotation[3] << "," << depth_to_gyro_extrinsics->rotation[4] << ","
+           << depth_to_gyro_extrinsics->rotation[5] << "," << depth_to_gyro_extrinsics->rotation[6] << ","
+           << depth_to_gyro_extrinsics->rotation[7] << "," << depth_to_gyro_extrinsics->rotation[8]
+           << "], \"Translation\": [" << depth_to_gyro_extrinsics->translation[0] / 1000.f << ","
+           << depth_to_gyro_extrinsics->translation[1] / 1000.f << "," << depth_to_gyro_extrinsics->translation[2] / 1000.f
+           << "]},";
+        calibration_json_str.replace(begin, end - begin, ss.str());
+
+        // Replace accel extrinsics in JSON
+        offset = calibration_json_str.find("CALIBRATION_InertialSensorId_LSM6DSM", begin);
+        begin = calibration_json_str.find("\"Rt\": {\"Rotation\": [", offset);
+        end = calibration_json_str.find("]},", begin) + 3;
+
+        k4a_calibration_extrinsics_t *depth_to_accel_extrinsics =
+            (k4a_calibration_extrinsics_t *)&calibration_extrinsics.extrinsics[OB_SENSOR_DEPTH][OB_SENSOR_ACCEL];
+        std::stringstream ss2;
+        ss2 << "\"Rt\": {\"Rotation\": [" << depth_to_accel_extrinsics->rotation[0] << ","
+            << depth_to_accel_extrinsics->rotation[1] << "," << depth_to_accel_extrinsics->rotation[2] << ","
+            << depth_to_accel_extrinsics->rotation[3] << "," << depth_to_accel_extrinsics->rotation[4] << ","
+            << depth_to_accel_extrinsics->rotation[5] << "," << depth_to_accel_extrinsics->rotation[6] << ","
+            << depth_to_accel_extrinsics->rotation[7] << "," << depth_to_accel_extrinsics->rotation[8]
+            << "], \"Translation\": [" << depth_to_accel_extrinsics->translation[0] / 1000.f << ","
+            << depth_to_accel_extrinsics->translation[1] / 1000.f << ","
+            << depth_to_accel_extrinsics->translation[2] / 1000.f << "]},";
+        calibration_json_str.replace(begin, end - begin, ss2.str());
+
+        memcpy(device_ctx->json->calibration_json, calibration_json_str.c_str(), calibration_json_str.size());
+        device_ctx->json->calibration_json[calibration_json_str.size()] = '\0';
+        device_ctx->json->json_actual_size = (uint32_t)calibration_json_str.size();
+
+        result = K4A_RESULT_SUCCEEDED;
+
+    } while (0);
+
+    // Cleanup
+    if (depth_profile != NULL)
+    {
+        ob_delete_stream_profile(depth_profile, &ob_err);
+        CHECK_OB_ERROR(&ob_err);
+    }
+    if (depth_profile_list != NULL)
+    {
+        ob_delete_stream_profile_list(depth_profile_list, &ob_err);
+        CHECK_OB_ERROR(&ob_err);
+    }
+    if (depth_sensor != NULL)
+    {
+        ob_delete_sensor(depth_sensor, &ob_err);
+        CHECK_OB_ERROR(&ob_err);
+    }
+    if (accel_profile != NULL)
+    {
+        ob_delete_stream_profile(accel_profile, &accel_ob_err);
+    }
+    if (accel_profile_list != NULL)
+    {
+        ob_delete_stream_profile_list(accel_profile_list, &accel_ob_err);
+    }
+    if (accel_sensor != NULL)
+    {
+        ob_delete_sensor(accel_sensor, &accel_ob_err);
+    }
+    if (gyro_profile != NULL)
+    {
+        ob_delete_stream_profile(gyro_profile, &gyro_ob_err);
+    }
+    if (gyro_profile_list != NULL)
+    {
+        ob_delete_stream_profile_list(gyro_profile_list, &gyro_ob_err);
+    }
+    if (gyro_sensor != NULL)
+    {
+        ob_delete_sensor(gyro_sensor, &gyro_ob_err);
+    }
+
     return result;
 }
 
