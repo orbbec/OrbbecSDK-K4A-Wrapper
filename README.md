@@ -61,7 +61,7 @@ Here is the device support list of main branch (Orbbec SDK v1) and v2-main branc
 
 | **Products List** | **Minimal Firmware Version** | **Recommended FW Version**    |
 |-------------------|------------------------------|-------------------------------|
-| Femto Bolt        | 1.1.2                  |              1.1.2                       |
+| Femto Bolt        | 1.1.2                  |              1.1.3                       |
 | Femto Mega        | 1.3.0                  |              1.3.1                       |
 | Femto Mega I        | 2.0.4                  |            2.0.4                     |
 

@@ -1,14 +1,11 @@
-# release v2.0.11
-1. Update OrbbecSDK to v2.5.5.
-2. Fix Linux x64 issue where k4aviewer could not display color point clouds for Femto Mega and Femto Mega I.
-3. Fix crash when closing k4aviewer during streaming.
-4. Fix network device enumeration timeout in k4aviewer and other samples causing unresponsive status.
+# release v2.0.12
+1. Fix IMU to depth and depth to IMU 3D coordinate transformation returning zero.
 
 ## Supported Devices
 
 | **Products List** | **Minimal Firmware Version** | **Recommended FW Version**    |
 |-------------------|------------------------------|-------------------------------|
-| Femto Bolt        | 1.1.2                  |              1.1.2                       |
+| Femto Bolt        | 1.1.2                  |              1.1.3                       |
 | Femto Mega        | 1.3.0                  |              1.3.1                       |
 | Femto Mega I        | 2.0.4                  |            2.0.4                     |
 
