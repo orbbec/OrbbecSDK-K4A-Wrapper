@@ -617,16 +617,20 @@ k4a_result_t update_imu_raw_calibration_data_from_orbbec_sdk(k4a_device_context_
         {
             calibration_extrinsics.extrinsics[OB_SENSOR_ACCEL][OB_SENSOR_DEPTH] =
                 ob_stream_profile_get_extrinsic_to(accel_profile, depth_profile, &ob_err);
+            CHECK_OB_ERROR_BREAK(&ob_err);
             calibration_extrinsics.extrinsics[OB_SENSOR_DEPTH][OB_SENSOR_ACCEL] =
                 ob_stream_profile_get_extrinsic_to(depth_profile, accel_profile, &ob_err);
+            CHECK_OB_ERROR_BREAK(&ob_err);
         }
 
         if (gyro_profile != NULL)
         {
             calibration_extrinsics.extrinsics[OB_SENSOR_GYRO][OB_SENSOR_DEPTH] =
                 ob_stream_profile_get_extrinsic_to(gyro_profile, depth_profile, &ob_err);
+            CHECK_OB_ERROR_BREAK(&ob_err);
             calibration_extrinsics.extrinsics[OB_SENSOR_DEPTH][OB_SENSOR_GYRO] =
                 ob_stream_profile_get_extrinsic_to(depth_profile, gyro_profile, &ob_err);
+            CHECK_OB_ERROR_BREAK(&ob_err);
         }
 
         // If accel is available but gyro is not, reuse accel extrinsics for gyro
@@ -705,26 +709,32 @@ k4a_result_t update_imu_raw_calibration_data_from_orbbec_sdk(k4a_device_context_
     if (accel_profile != NULL)
     {
         ob_delete_stream_profile(accel_profile, &accel_ob_err);
+        CHECK_OB_ERROR(&accel_ob_err);
     }
     if (accel_profile_list != NULL)
     {
         ob_delete_stream_profile_list(accel_profile_list, &accel_ob_err);
+        CHECK_OB_ERROR(&accel_ob_err);
     }
     if (accel_sensor != NULL)
     {
         ob_delete_sensor(accel_sensor, &accel_ob_err);
+        CHECK_OB_ERROR(&accel_ob_err);
     }
     if (gyro_profile != NULL)
     {
         ob_delete_stream_profile(gyro_profile, &gyro_ob_err);
+        CHECK_OB_ERROR(&gyro_ob_err);
     }
     if (gyro_profile_list != NULL)
     {
         ob_delete_stream_profile_list(gyro_profile_list, &gyro_ob_err);
+        CHECK_OB_ERROR(&gyro_ob_err);
     }
     if (gyro_sensor != NULL)
     {
         ob_delete_sensor(gyro_sensor, &gyro_ob_err);
+        CHECK_OB_ERROR(&gyro_ob_err);
     }
 
     return result;
